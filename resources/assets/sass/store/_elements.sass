@@ -218,6 +218,7 @@
             height: 35px
         div
             margin-left: 10px
+
 //////////////////////////////////////
 //                                  //
 //             ELEMENTS             //
@@ -360,6 +361,42 @@
             margin-bottom: 15px
             max-width: 200px
 
+
+.login-register-cta
+    padding: 0
+    margin-top: 20px
+    @include flex-center
+    position: absolute
+    bottom: 0
+    left: 0
+    height: 200px
+    .login-btn,.register-btn
+        padding: 10px 30px
+        color: #000
+        margin-bottom: 20px
+        position: relative
+        text-align: center
+        span.info
+            font-size: .8rem
+            color: #ccc
+        span.text
+            font-weight: 600
+    .login-btn
+        margin-right: 30px
+        background-color: #dc778b
+        color: #fff
+        
+    .register-btn
+        background-color: $third-color
+        color: #fff
+        
+
+@media (max-width: 768px)
+    .login-register-cta
+        position: relative
+        // span
+        //     position: absolute
+        //     top: -10px
 
 //////////////////////////////////////
 //                                  //
@@ -1041,6 +1078,7 @@ ul.pagination
             overflow: overlay
             max-height: 614px
     .products-details
+        position: relative
         // In skin.sass
     .action-info-container
         color: #383838

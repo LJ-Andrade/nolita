@@ -169,7 +169,20 @@
 				</div>
 				<input type="hidden" name="size_id" value="{{ $article->size->first()->id }}"> --}}
 			</div>
+			<div class="col-md-12 login-register-cta">
+			
+				<a href="{{ route('customer.login') }}" class="btn main-btn-sm login-btn">
+					<span class="info">Ya tenés cuenta ? </span> <br>
+					<span class="text">INGRESAR</span>
+				</a> 
+				<a href="{{ url('tienda/registro') }}" class="btn main-btn-sm register-btn">
+					<span class="info">No tenés cuenta ?</span> <br>
+					<span class="text">REGISTRATE</span>
+				</a>
+		
+			</div>
 			@endif
+			
 		</div>
 	</div>
 </div>
