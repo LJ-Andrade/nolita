@@ -28,6 +28,8 @@
 		<script src="{{ asset('store-ui/js/modernizr.min.js') }}"></script>
 		{!! $google_analytics !!}
 
+		@yield('meta')
+
 		<link rel="canonical" href="https://www.nolita.com.ar/"/>
 		
 		<!-- Facebook Pixel Code -->
@@ -42,7 +44,8 @@
 			'https://connect.facebook.net/en_US/fbevents.js');
 			fbq('init', '1002215936641276');
 			fbq('track', 'PageView');
-		</script>
+			fbq('track', 'ViewContent');
+		</script>	
 		<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1002215936641276&ev=PageView&noscript=1"/></noscript>
 		
 		<!-- End Facebook Pixel Code -->

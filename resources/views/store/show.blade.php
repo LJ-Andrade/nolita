@@ -1,5 +1,23 @@
 @extends('store.partials.main')
 
+@section('meta')
+	<meta property="og:title" content="{{ $article->name }}">
+	<meta property="og:description" content="{{ $article->description }}">
+	<meta property="og:url" content="{{ url()->full() }} ">
+	
+	@if($article->images->count() > 0)
+		<meta property="og:image" content="{{ url('')  . '/webimages/catalogo/'. $article->images[0]->name }}">
+	@else 
+		<meta property="og:image" content="http://nolita.test/images/gen/catalog-gen.jpg">
+	@endif
+	
+	<meta property="product:brand" content="Nolita">
+	<meta property="product:availability" content="{{ $totalStock }}">
+	<meta property="product:condition" content="new">
+	<meta property="product:price:amount" content="{{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount) }}">
+	<meta property="product:price:currency" content="AR">
+@endsection
+
 @section('content')
 {{-- Store current page allowing return here after edit --}}
 <input type="hidden" value="@if(isset($previousUrl)) {{ $previousUrl }}  @endif" name="previousUrl">

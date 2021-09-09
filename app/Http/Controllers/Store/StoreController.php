@@ -208,10 +208,24 @@ class StoreController extends Controller
         // Get only used colors and sizes
         $variants = $article->variants;
         $colorsId = []; $sizesId = [];
-        foreach($variants as $variant) 
-        { 
-            $colorsId[] = $variant->color_id;
-            $sizesId[] = $variant->size_id;
+
+        $totalStock = 0;
+        if($variants) {
+
+            foreach($variants as $variant) 
+            { 
+                $totalStock += $variant->stock;
+                $colorsId[] = $variant->color_id;
+                $sizesId[] = $variant->size_id;
+            }
+
+        } else {
+            dd("No hay variantes cargadas");
+        }
+
+
+        if($totalStock <= 0) {
+            $totalStock = "out of stock";
         }
 
         $atribute1 = CatalogSize::whereIn('id', $sizesId)->orderBy('name', 'ASC')->pluck('name','id');
@@ -240,7 +254,8 @@ class StoreController extends Controller
             ->with('colors', $colors)
             ->with('isFav', $isFav)
             ->with('user', $user)
-            ->with('previousUrl', $previousUrl);
+            ->with('previousUrl', $previousUrl)
+            ->with('totalStock', $totalStock);
     }
 
     public function checkVariantStock(Request $request)
