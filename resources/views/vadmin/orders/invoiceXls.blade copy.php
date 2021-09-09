@@ -15,7 +15,7 @@
     @foreach($order['rawdata']->items as $item)
     <tr>
         <td>{{ $item->article->code }}</td>
-        <td>{{ $item->article->name }}</td>
+        <td><a href="">{{ $item->article->name }}</a></td>
         {{-- <td>{{ $item->article->brand->name }}</td> --}}
         <td>{{ $item->size }} | {{ $item->color }} | {{ $item->textile }}</td>
         <td>$ {{ $item->final_price }}</td>

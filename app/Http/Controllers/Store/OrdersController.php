@@ -113,7 +113,7 @@ class OrdersController extends Controller
                 $sheet->loadView('vadmin.orders.invoiceXls', 
                 compact('order'));
             });
-        })->export('xls');         
+        })->export('xlsx');         
     }
 
     public function exportOrderCsv($id)

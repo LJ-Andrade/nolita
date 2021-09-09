@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Http\ViewComposers;
+namespace App\Http\ViewComposes;
 
 use Illuminate\Contracts\View\View;
 use App\Traits\CartTrait;

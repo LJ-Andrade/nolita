@@ -51,7 +51,11 @@
 		<div class="row">
 			@component('vadmin.components.list')
 				@slot('actions')
-					<a href="{{ route('vadmin.exportCustomersListSheet', ['params' => 'all', 'format' => 'xls']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
+					
+					{{-- <a class="icon-container blue" data-toggle="modal" data-target="#ExportCustomers" data-toggle="tooltip" title="Exportar para Gmail">
+						<i class="fas fa-file-excel"></i>
+					</a>  --}}
+					<a href="{{ route('vadmin.exportCustomersListSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
 						<i class="fas fa-file-excel"></i>
 					</a>
 					<a href="{{ route('vadmin.exportCustomersListSheet', ['params' => 'all', 'format' => 'csv']) }}" data-toggle="tooltip" title="Exportar a .CSV" class="icon-container blue">
@@ -170,6 +174,25 @@
 		@slot('button')
 		@endslot
 	@endcomponent
+
+	{{-- Export customers --}}
+	@component('vadmin.components.modal')
+		@slot('id', 'ExportCustomers')
+		@slot('title', 'Exportar clientes')
+		@slot('content')
+			<div class="filter-date">
+				<label for="">Elija un período (Si lo deja vacío se exportaran todos)</label> <br>
+				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportCustomersOrders', 'class' => 'form-group inner']) !!} 
+					{!! Form::date('init_date', null, ['class' => 'form-control']) !!}
+					{!! Form::date('expire_date', null, ['class' => 'form-control']) !!}
+					<button type="submit" class="btn btnMain btn-sm"> <i class="fas fa-bed"></i> EXPORTAR</button>
+				{!! Form::close() !!}	
+			</div>
+		@endslot
+		@slot('button')
+		@endslot
+	@endcomponent
+
 
 
 	{{-- Export customers with no closed orders --}}

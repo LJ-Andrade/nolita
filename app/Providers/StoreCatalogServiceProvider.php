@@ -8,7 +8,7 @@ class StoreCatalogServiceProvider extends ServiceProvider
     
     public function boot(View $view)
     {
-        View::composer(['store.index', 'store.category'], 'App\Http\ViewComposers\StoreCatalogComposer');
+        View::composer(['store.index', 'store.category'], 'App\Http\ViewComposes\StoreCatalogComposer');
     }
     
     public function register()
