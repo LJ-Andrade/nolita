@@ -118,7 +118,7 @@ class CustomerController extends Controller
     }
 
     public function exportByPeriod(Request $request)
-    {
+    {   
 
         $items = Customer::whereBetween('created_at', [$request->from, $request->to])->get();
  

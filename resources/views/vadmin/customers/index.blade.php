@@ -175,30 +175,6 @@
 		@endslot
 	@endcomponent
 
-	{{-- Export customers --}}
-	@component('vadmin.components.modal')
-		@slot('id', 'ExportCustomers')
-		@slot('title', 'Exportar clientes')
-		@slot('content')
-			<div class="filter-date">
-				<label for="">Elija un período</label> <br>
-				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'class' => 'form-group inner']) !!} 
-					{!! Form::date('from', null, ['class' => 'form-control', 'required' => '']) !!}
-					{!! Form::date('to', null, ['class' => 'form-control', 'required' => '']) !!}
-
-					{{-- <a href="{{ route('vadmin.exportAllCustomersSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
-						<i class="fas fa-file-excel"></i>
-					</a> --}}
-					
-					<button type="submit" class="btn btnMain btn-sm"> <i class="fas fa-bed"></i> EXPORTAR</button>
-				{!! Form::close() !!}	
-				<p> Si el perído que selecciona es muy extenso, puede que la cantidad de datos sea muy grande y no se pueda procesar la solicitud.</p>
-			</div>
-		@endslot
-		@slot('button')
-		@endslot
-	@endcomponent
-
 
 
 	{{-- Export customers with no closed orders --}}
@@ -237,6 +213,38 @@
 		@slot('button')
 		@endslot
 	@endcomponent
+
+		{{-- Export customers --}}
+	@component('vadmin.components.modal')
+		@slot('id', 'ExportCustomers')
+		@slot('title', 'Exportar clientes')
+		@slot('content')
+			<div class="filter-date">
+
+				<label for="">Elija un período</label> <br>
+				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'class' => 'form-group inner']) !!} 
+					{!! Form::date('from', null, ['class' => 'form-control', 'required' => '']) !!}
+					{!! Form::date('to', null, ['class' => 'form-control', 'required' => '']) !!}
+					<button  onClick="toggleExportTimer()" type="submit" class="btn btnMain btn-sm"> <i class="fas fa-bed"></i> EXPORTAR</button>
+					
+
+				{!! Form::close() !!}	
+				<p> Si el perído que selecciona es muy extenso, puede que la cantidad de datos sea muy grande y no se pueda procesar la solicitud.</p>
+
+
+				<br>
+				<div id="ExportLoader" class="Hidden"> 
+				<img src="{{ asset('images/gral/loader-sm.svg') }}" alt="Loader">
+				<b>Exportando, por favor, espere.</b>
+				</div>
+			</div>
+		@endslot
+		@slot('button')
+		@endslot
+	@endcomponent
+
+
+
 @endsection
 
 
@@ -247,6 +255,17 @@
 	@include('vadmin.components.bladejs')
 	<script>
 		allowEnterOnForms = true;
+
+		function toggleExportTimer() {
+
+			$('#ExportLoader').removeClass("Hidden");
+
+			setTimeout(function(){ 
+				$('#ExportLoader').addClass("Hidden");
+			}, 5000);
+
+		}
+
 	</script>
 @endsection
 
