@@ -117,6 +117,20 @@ class CustomerController extends Controller
         })->export($format);
     }
 
+    public function exportByPeriod(Request $request)
+    {
+
+        $items = Customer::whereBetween('created_at', [$request->from, $request->to])->get();
+ 
+        Excel::create('listado-de-clientes', function($excel) use($items){
+            $excel->sheet('Listado', function($sheet) use($items) {   
+                $sheet->loadView('vadmin.customers.invoice-sheet', 
+                compact('items'));
+            });
+        })->download('xlsx');
+
+    }
+
     public function exportForGmail(Request $request)
     {
         if($request->init_date != null && $request->expire_date != null)

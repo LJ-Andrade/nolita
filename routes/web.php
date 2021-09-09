@@ -182,6 +182,8 @@ Route::group(['prefix' => 'vadmin', 'middleware' => 'active-user'], function(){
     // Export Customers
     Route::get('exportCustomersListPdf/{params}/{action}', ['as' => 'vadmin.exportCustomersListPdf', 'uses' => 'CustomerController@exportPdf']);
     Route::get('exportCustomersListSheet/{params}/{format}', ['as' => 'vadmin.exportCustomersListSheet', 'uses' => 'CustomerController@exportSheet']);
+    Route::get('exportAllCustomersSheet', ['as' => 'vadmin.exportAllCustomersSheet', 'uses' => 'CustomerController@exportByPeriod']);
+    
     Route::get('exportCustomersForGmail', ['as' => 'vadmin.exportForGmail', 'uses' => 'CustomerController@exportForGmail']);
     Route::get('exportSleepCustomers', ['as' => 'vadmin.exportSleepCustomers', 'uses' => 'CustomerController@exportSleepCustomers']);
     Route::get('exportCustomersOrders', ['as' => 'vadmin.exportCustomersOrders', 'uses' => 'CustomerController@exportCustomersOrders']);

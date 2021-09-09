@@ -52,15 +52,15 @@
 			@component('vadmin.components.list')
 				@slot('actions')
 					
-					{{-- <a class="icon-container blue" data-toggle="modal" data-target="#ExportCustomers" data-toggle="tooltip" title="Exportar para Gmail">
+					<a class="icon-container blue" data-toggle="modal" data-target="#ExportCustomers" data-toggle="tooltip" title="Exportar para Gmail">
 						<i class="fas fa-file-excel"></i>
-					</a>  --}}
-					<a href="{{ route('vadmin.exportCustomersListSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
+					</a> 
+					{{-- <a href="{{ route('vadmin.exportAllCustomersSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
 						<i class="fas fa-file-excel"></i>
 					</a>
 					<a href="{{ route('vadmin.exportCustomersListSheet', ['params' => 'all', 'format' => 'csv']) }}" data-toggle="tooltip" title="Exportar a .CSV" class="icon-container blue">
 						<i class="fas fa-file-excel"></i>
-					</a>
+					</a> --}}
 					<a class="icon-container blue" data-toggle="modal" data-target="#ExportGmailModal" data-toggle="tooltip" title="Exportar para Gmail">
 						<i class="fab fa-google"></i>
 					</a> 
@@ -181,12 +181,18 @@
 		@slot('title', 'Exportar clientes')
 		@slot('content')
 			<div class="filter-date">
-				<label for="">Elija un período (Si lo deja vacío se exportaran todos)</label> <br>
-				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportCustomersOrders', 'class' => 'form-group inner']) !!} 
-					{!! Form::date('init_date', null, ['class' => 'form-control']) !!}
-					{!! Form::date('expire_date', null, ['class' => 'form-control']) !!}
+				<label for="">Elija un período</label> <br>
+				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'class' => 'form-group inner']) !!} 
+					{!! Form::date('from', null, ['class' => 'form-control', 'required' => '']) !!}
+					{!! Form::date('to', null, ['class' => 'form-control', 'required' => '']) !!}
+
+					{{-- <a href="{{ route('vadmin.exportAllCustomersSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
+						<i class="fas fa-file-excel"></i>
+					</a> --}}
+					
 					<button type="submit" class="btn btnMain btn-sm"> <i class="fas fa-bed"></i> EXPORTAR</button>
 				{!! Form::close() !!}	
+				<p> Si el perído que selecciona es muy extenso, puede que la cantidad de datos sea muy grande y no se pueda procesar la solicitud.</p>
 			</div>
 		@endslot
 		@slot('button')
