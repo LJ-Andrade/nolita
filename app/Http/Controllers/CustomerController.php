@@ -119,13 +119,15 @@ class CustomerController extends Controller
 
     public function exportByPeriod(Request $request)
     {   
-
+        $filename = 'Clientes(' . date("d-m-Y", strtotime($request->from)) .'-a-'.date("d-m-Y", strtotime($request->to)) . ')';
+        
         $items = Customer::whereBetween('created_at', [$request->from, $request->to])->get();
- 
-        Excel::create('listado-de-clientes', function($excel) use($items){
-            $excel->sheet('Listado', function($sheet) use($items) {   
+        $dates = [ 'from' => date("d-m-Y", strtotime($request->from)), 'to' => date("d-m-Y", strtotime($request->to))];
+        
+        Excel::create($filename, function($excel) use($items, $dates){
+            $excel->sheet('Listado', function($sheet) use($items, $dates) {   
                 $sheet->loadView('vadmin.customers.invoice-sheet', 
-                compact('items'));
+                compact('items', 'dates'));
             });
         })->download('xlsx');
 

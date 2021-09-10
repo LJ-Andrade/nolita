@@ -231,7 +231,7 @@
 				{!! Form::close() !!}	
 				<p> Si el perído que selecciona es muy extenso, puede que la cantidad de datos sea muy grande y no se pueda procesar la solicitud.</p>
 
-
+				{{-- Loader --}}
 				<br>
 				<div id="ExportLoader" class="Hidden"> 
 				<img src="{{ asset('images/gral/loader-sm.svg') }}" alt="Loader">

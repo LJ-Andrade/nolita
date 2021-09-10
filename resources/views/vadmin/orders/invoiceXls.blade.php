@@ -1,6 +1,7 @@
 @extends('vadmin.partials.invoice-excel')
 
 @section('content')
+
     <table>
     <tr>
         <th>Código</th>

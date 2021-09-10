@@ -4,6 +4,11 @@
 <table class="table">
     <thead>
         <tr>
+            <th></th>
+            <th>Desde: {{ $dates['from'] }}</th>
+            <th>Hasta: {{ $dates['to'] }}</th>
+        </tr>
+        <tr>
             <th>Cód.</th>
             <th>Nombre y Apellido</th>
             <th>Nombre de Usuario</th>
