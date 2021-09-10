@@ -6,8 +6,12 @@
         <tr>
             <th></th>
             <th>Desde: {{ $dates['from'] }}</th>
+        </tr>
+        <tr>
+            <th></th>
             <th>Hasta: {{ $dates['to'] }}</th>
         </tr>
+            
         <tr>
             <th>Cód.</th>
             <th>Nombre y Apellido</th>

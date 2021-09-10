@@ -223,10 +223,10 @@
 			<div class="filter-date">
 
 				<label for="">Elija un período</label> <br>
-				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'class' => 'form-group inner']) !!} 
+				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'id' => 'ExportAllForm', 'class' => 'form-group inner']) !!} 
 					{!! Form::date('from', null, ['class' => 'form-control', 'required' => '']) !!}
 					{!! Form::date('to', null, ['class' => 'form-control', 'required' => '']) !!}
-					<button  onClick="toggleExportTimer()" type="submit" class="btn btnMain btn-sm"> 
+					<button  type="submit" class="btn btnMain btn-sm"> 
 						<i class="fas fa-download"></i> EXPORTAR
 					</button>
 					
@@ -258,6 +258,10 @@
 	@include('vadmin.components.bladejs')
 	<script>
 		allowEnterOnForms = true;
+
+		$(document).on('submit','#ExportAllForm',function(){
+			toggleExportTimer();
+		});
 
 		function toggleExportTimer() {
 
