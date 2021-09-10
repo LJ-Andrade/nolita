@@ -50,7 +50,7 @@
         <td>{{ $item->phone2 }}</td>
         <td>@if($item->staticstics('totalCarts') != 0) {{ $item->staticstics('totalCarts') }} @endif</td>
         <td>@if($item->staticstics('totalItems') != 0) {{ $item->staticstics('totalItems') }} @endif</td>
-        <td>@if($item->staticstics('totalSpent') != 0) ${{ $item->staticstics('totalSpent') }} @endif</td>
+        <td>@if($item->staticstics('totalSpent') != 0) {{ $item->staticstics('totalSpent') }} @endif</td>
     </tr>
     @endforeach			
     </tbody>
