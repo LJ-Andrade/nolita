@@ -52,7 +52,8 @@
 			@component('vadmin.components.list')
 				@slot('actions')
 					
-					<a class="icon-container blue" data-toggle="modal" data-target="#ExportCustomers" data-toggle="tooltip" title="Exportar para Gmail">
+					<a class="icon-container blue" data-toggle="modal" data-target="#ExportCustomers" data-toggle="tooltip" 
+					title="Exportar clientes y datos de ventas por período">
 						<i class="fas fa-file-excel"></i>
 					</a> 
 					{{-- <a href="{{ route('vadmin.exportAllCustomersSheet', ['params' => 'all', 'format' => 'xlsx']) }}" data-toggle="tooltip" title="Exportar a XLS" class="icon-container green">
@@ -180,7 +181,7 @@
 	{{-- Export customers with no closed orders --}}
 	@component('vadmin.components.modal')
 		@slot('id', 'ExportCustomersOrdersModal')
-		@slot('title', 'Exportar clientes que no han realizado compras')
+		@slot('title', 'Exportar compras')
 		@slot('content')
 			<div class="filter-date">
 				<label for="">Elija un período (Si lo deja vacío se exportaran todos)</label> <br>
@@ -225,7 +226,9 @@
 				{!! Form::open(['method' => 'GET', 'route' => 'vadmin.exportAllCustomersSheet', 'class' => 'form-group inner']) !!} 
 					{!! Form::date('from', null, ['class' => 'form-control', 'required' => '']) !!}
 					{!! Form::date('to', null, ['class' => 'form-control', 'required' => '']) !!}
-					<button  onClick="toggleExportTimer()" type="submit" class="btn btnMain btn-sm"> <i class="fas fa-bed"></i> EXPORTAR</button>
+					<button  onClick="toggleExportTimer()" type="submit" class="btn btnMain btn-sm"> 
+						<i class="fas fa-download"></i> EXPORTAR
+					</button>
 					
 
 				{!! Form::close() !!}	
