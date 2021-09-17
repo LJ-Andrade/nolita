@@ -10,12 +10,13 @@
 	@else 
 		<meta property="og:image" content="http://nolita.test/images/gen/catalog-gen.jpg">
 	@endif
-	
+
+	<meta property="product:retailer_item_id" content="{{ $article->id }}">
 	<meta property="product:brand" content="Nolita">
 	<meta property="product:availability" content="{{ $totalStock }}">
 	<meta property="product:condition" content="new">
 	<meta property="product:price:amount" content="{{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount) }}">
-	<meta property="product:price:currency" content="AR">
+	<meta property="product:price:currency" content="ARS">
 @endsection
 
 @section('content')

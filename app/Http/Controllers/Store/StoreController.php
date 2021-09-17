@@ -209,12 +209,12 @@ class StoreController extends Controller
         $variants = $article->variants;
         $colorsId = []; $sizesId = [];
 
-        $totalStock = 0;
+        $stock = 0;
         if($variants) {
 
             foreach($variants as $variant) 
             { 
-                $totalStock += $variant->stock;
+                $stock += $variant->stock;
                 $colorsId[] = $variant->color_id;
                 $sizesId[] = $variant->size_id;
             }
@@ -224,8 +224,10 @@ class StoreController extends Controller
         }
 
 
-        if($totalStock <= 0) {
+        if($stock <= 0) {
             $totalStock = "out of stock";
+        } else {
+            $totalStock = "in stock";
         }
 
         $atribute1 = CatalogSize::whereIn('id', $sizesId)->orderBy('name', 'ASC')->pluck('name','id');
