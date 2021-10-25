@@ -10,7 +10,6 @@
 	@else 
 		<meta property="og:image" content="http://nolita.test/images/gen/catalog-gen.jpg">
 	@endif
-
 	<meta property="product:retailer_item_id" content="{{ $article->id }}">
 	<meta property="product:brand" content="Nolita">
 	<meta property="product:availability" content="{{ $totalStock }}">
