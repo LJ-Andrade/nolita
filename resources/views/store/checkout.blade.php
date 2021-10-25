@@ -231,7 +231,7 @@
 			</div>{{-- / col-md-12 --}}
 		</div> {{-- / Row --}}
 	</div> {{-- / Container --}}
-	<div id="Error"></div>
+	{{-- <div id="Error"></div> --}}
 	<button type="button" class="SubmitDataBtn btn btn-block btn-bottom mobile-finish-button main-btn">
 		Continuar <i class="fas fa-arrow-right"></i>
 	</button>
