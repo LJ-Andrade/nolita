@@ -15,7 +15,7 @@
 	<meta property="product:brand" content="Nolita">
 	<meta property="product:availability" content="{{ $totalStock }}">
 	<meta property="product:condition" content="new">
-	<meta property="product:price:amount" content="{{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount) }}">
+	<meta property="product:price:amount" content="{{ intval(finalPriceRounded($article->reseller_price, $article->reseller_discount)) }}">
 	<meta property="product:price:currency" content="ARS">
 @endsection
 

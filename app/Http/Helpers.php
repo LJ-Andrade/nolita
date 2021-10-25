@@ -55,6 +55,13 @@ function calcValuePercentNeg($price, $percent)
     return convertAndRoundDecimal($result, 2);
 }
 
+function finalPriceRounded($price, $percent)
+{
+    $percent = $price * $percent / 100;
+    $result =  $price - $percent;
+    return ceil($result);
+}
+
 function calcValuePercentPos($price, $percent)
 {
     $percent = $price * $percent / 100;
