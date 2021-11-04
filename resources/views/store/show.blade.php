@@ -186,6 +186,7 @@
 					@endforeach
 				</div>
 				<input type="hidden" name="size_id" value="{{ $article->size->first()->id }}"> --}}
+
 			</div>
 			<div class="col-md-12 login-register-cta">
 			
@@ -199,6 +200,12 @@
 				</a>
 		
 			</div>
+			@endif
+
+			@if(env('SHOW_SECTION_BOTTOM_MESSAGE') != '')
+				<span style="color: #737373">
+					{{ env('SHOW_SECTION_BOTTOM_MESSAGE') }}
+				</span>
 			@endif
 			
 		</div>
@@ -249,7 +256,7 @@
 		</div>
 	</div>
 </div>
-<div id="Error"></div>
+{{-- <div id="Error"></div> --}}
 @endsection
 
 @section('scripts')
