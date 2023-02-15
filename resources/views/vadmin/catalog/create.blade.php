@@ -68,14 +68,6 @@
 		$.trumbowyg.svgPath = '{{ asset('plugins/texteditor/icons.svg') }}';
 		$('.Textarea-Editor').trumbowyg();
 
-		// $( function() {
-		// 	$( "#Sortable-List" ).sortable();
-		// 	$( "#Sortable-List" ).disableSelection();
-		// } );
-
-
-
-
 		$('#StoreArticleBtn').click(function(){
 			let formData = $('#StoreArticleForm').serialize();
 

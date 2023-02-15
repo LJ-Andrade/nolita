@@ -79,7 +79,7 @@
                     <span class="sub-title">Talles: </span>
                     @foreach($sizes as $size)
                         <label class="items checkbox-inline">
-                            <input class="VariantSize" type="checkbox" name="size" checked 
+                            <input class="VariantSize" type="checkbox" name="size" 
                             data-name="{{ $size->name }}" value="{{ $size->id }}"> {{ $size->name}}
                         </label>
                     @endforeach
