@@ -39,8 +39,7 @@ class CustomerResetPasswordNotification extends Notification
         return (new MailMessage)
             ->subject('Restablecer contraseña')
             ->line('Usted ha solicitado recuperar su contraseña')
-            ->action('Restablecer Contraseña', url('tienda/password/reset', $this->token))
-            ->line('Si tiene alguna duda puede escribirnos a '.APP_EMAIL_1);
+            ->action('Restablecer Contraseña', url('tienda/password/reset', $this->token));
     }
 
     /**
