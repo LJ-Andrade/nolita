@@ -64,6 +64,9 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "optimize-autoloader": true,
-        "platform": {"php": "7.2"}
+        "platform": {"php": "7.2"},
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }

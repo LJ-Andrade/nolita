@@ -18,8 +18,17 @@
                     <div><a href="{{ url('medidas') }}">Medidas</a></div>
                 </div>
                 <div class="CartResumen cart" onclick="checkoutSidebar();">
-                    <i class="icon-bag"></i><span class="TotalCartItems count">@if($activeCart['totalItems'] == 0) 0 @else {{ $activeCart['totalItems'] }} @endif</span>
-                    <span class="CartSubTotal subtotal">@if($activeCart['totalItems'] != 0) $ {{ $activeCart['cartSubTotal'] }} @endif</span>
+                    <i class="icon-bag"></i><span class="TotalCartItems count">
+			@if($activeCart)
+			@if($activeCart['totalItems'] == 0) 0 
+			@else {{ $activeCart['totalItems'] }} 
+			@endif
+			@endif
+			</span>
+                    <span class="CartSubTotal subtotal">
+			@if($activeCart)
+			@if($activeCart['totalItems'] != 0) $ {{ $activeCart['cartSubTotal'] }} @endif</span>
+			@endif
                 </div>
                 {{-- User Avatar --}}
                 <div class="account"><a href="#" onclick="event.preventDefault();"></a>
