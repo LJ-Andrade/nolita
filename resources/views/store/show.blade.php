@@ -108,7 +108,17 @@
 				@endif
 			</div>
 			@else
-			<br>
+			<div class="prices">
+				@if($article->reseller_discount > 0)
+					% {{ $article->reseller_discount }} de DESCUENTO!!
+					<br>
+					<span class="main-price"><b>${{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount) }}</b></span>
+					<span class="if-discount">($ {{ $article->reseller_price }})</span>
+					@else
+					<span class="main-price"><b>$ {{ $article->reseller_price }}</b></span>
+				@endif
+			</div>
+			{{-- <br> --}}
 			@endif
 			{{-- Article Description --}}
 			<p class="description">{{ strip_tags($article->description) }}</p>

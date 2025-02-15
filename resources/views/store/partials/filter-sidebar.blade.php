@@ -6,10 +6,11 @@
         <input class="form-control" name="buscar" type="search" placeholder="BUSCAR...">
     {!! Form::close() !!}
     <div class="featured-text">
-        <div class="text text-1"><a href="{{ route('store.search.tag', 'Edición Limitada') }}">#EDICIÓN LIMITADA</a></div>
+      {{--  <div class="text text-1"><a href="{{ route('store.search.tag', 'Edición Limitada') }}">#EDICIÓN LIMITADA</a></div> --}}
         <div class="text text-2"><a href="{{ route('store.search.tag', 'nuevo') }}">#NUEVOS INGRESOS</a></div>
-        <div class="text text-1"><a href="{{ route('store', ['filtrar' => 'descuentos']) }}">#CON DESCUENTO</a></div>
-        <div class="text text-1"><a href="{{ route('store.search.tag', 'niña') }}">#MINI NOLITA</a></div>
+	<div class="text text-1"><a href="{{ route('store', ['filtrar' => 'descuentos']) }}">#CON DESCUENTO</a></div>
+	<div class="text text-1"><a href="{{ route('store.search.tag', 'LOOKS NOLITA') }}">#LOOKS NOLITA</a></div>
+      {{--  <div class="text text-1"><a href="{{ route('store.search.tag', 'niña') }}">#MINI NOLITA</a></div> --}}
     </div>
 
     <div class="filter-item">
@@ -65,3 +66,4 @@
     </div>
     @endif --}}
 </div>
+

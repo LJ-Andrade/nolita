@@ -43,16 +43,16 @@ class StoreController extends Controller
     {
         $this->settings = Settings::find(1);
         // $this->middleware('auth:customer');
-        //$customer = auth()->guard('customer')->user();     
+        //$customer = auth()->guard('customer')->user();
     }
 
     public function index(Request $request)
-    {   
+    {
         $pagination = $this->getSetPaginationCookie($request->get('results'));
-        $order = 'DESC';
+        $order = 'desc';
         $orderBy = 'created_at';
-        
-        if($request->precio)
+
+	if($request->precio)
         {
             $orderBy = 'reseller_price';
             if($request->precio == 'menor')
@@ -60,17 +60,17 @@ class StoreController extends Controller
         }
 
         if(isset($request->buscar))
-        {   
+        {
             $tags = CatalogTag::with(['articles' => function($query) { $query->where('status', '=', '1'); }])->get();
             $categories = CatalogCategory::with(['articles' => function($query) { $query->where('status','=', '1'); }])->get();
             $articles = CatalogArticle::search($request->buscar, $categories, $tags)->active()->paginate($pagination);
-        } 
+        }
         else if(isset($request->filtrar))
         {
             if($request->filtrar == 'populares')
-            {  
+            {
                 $articles = CatalogArticle::has('hasFavs')->active()->orderBy($orderBy, $order)->paginate($pagination);
-            } 
+            }
             else if($request->filtrar == 'descuentos')
             {
                 $articles = CatalogArticle::where('reseller_discount', '>', '0')->active()->orderBy($orderBy, $order)->paginate($pagination);
@@ -99,7 +99,7 @@ class StoreController extends Controller
             $articles = CatalogArticle::whereHas('tags', function ($query) use($tag){
                 $query->where('catalog_tag_id', $tag);
             })->paginate($pagination);
-            
+
         }
         else if(isset($request->marca))
         {
@@ -110,12 +110,12 @@ class StoreController extends Controller
             // If you want random articles order
             //$articles = CatalogArticle::orderByRaw('RAND()')->active()->paginate($pagination);
 
+
             $articles = CatalogArticle::orderBy($orderBy, $order)->active()->paginate($pagination);
-        }      
-        
+        }
         return view('store.index')->with('articles', $articles);
     }
-    
+
     // Pagination
     public function getSetPaginationCookie($request)
     {
@@ -164,7 +164,7 @@ class StoreController extends Controller
         $pagination = $this->getSetPaginationCookie(null);
 
         $tag = CatalogTag::searchName($name)->first();
-		$articles = $tag->articles()->active()->paginate($pagination);
+		$articles = $tag->articles()->orderBy('updated_at', 'desc')->active()->paginate($pagination);
         $articles->each(function($articles){
             $articles->category;
             $articles->images;

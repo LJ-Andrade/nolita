@@ -124,11 +124,12 @@
 									</div>
 									{{-- =============== Footer =============== --}}
 									<div class="footer">
-										<div class="col-price pad0">
+										<div class="col-price pad0" >
+											<span class="price" style="color: #333333">
+												$ {{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount + 0) }}
+											</span>
 											@if(Auth::guard('customer')->check())
-												<span class="price">
-													$ {{ calcValuePercentNeg($article->reseller_price, $article->reseller_discount + 0) }}
-												</span>
+												
 											@endif
 										</div>
 										<div class="col-add pad0">
