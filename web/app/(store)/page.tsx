@@ -1,5 +1,5 @@
 import { ProductCard } from "components/catalog/product-card";
-import { getCollections, getProducts } from "lib/vadmin";
+import { getCollections, getProducts, getSiteContent, getVadminImageUrl } from "lib/vadmin";
 import Link from "next/link";
 
 export const metadata = {
@@ -44,29 +44,43 @@ function CategoryCard({
 }
 
 export default async function HomePage() {
-	const [products, collections] = await Promise.all([
+	const [products, collections, content] = await Promise.all([
 		getProducts(),
 		getCollections(),
+		getSiteContent('home'),
 	]);
 
 	const featuredProducts = products.slice(0, 4);
 	const categories = collections.filter((c) => c.handle !== "");
+	const heroImage = getVadminImageUrl(content.home_hero_banner);
 
 	return (
 		<>
 			{/* ── Hero ─────────────────────────────────────────────────────── */}
 			<section
-				className="relative flex min-h-[80vh] flex-col items-center justify-center text-center"
+				className="relative flex min-h-screen flex-col items-center justify-center text-center overflow-hidden"
 				style={{ backgroundColor: "var(--pb-surface)" }}
 			>
-				{/* Hero background (subtle pattern) */}
-				<div
-					className="absolute inset-0"
-					style={{
-						background:
-							"radial-gradient(ellipse at 50% 120%, #EEECEA 0%, #F7F7F5 70%)",
-					}}
-				/>
+				{/* Hero background */}
+				{heroImage ? (
+					<div 
+						className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+						style={{ 
+							backgroundImage: `url(${heroImage})`,
+						}}
+					>
+						{/* Subtle overlay to ensure text readability */}
+						<div className="absolute inset-0 bg-black/10" />
+					</div>
+				) : (
+					<div
+						className="absolute inset-0"
+						style={{
+							background:
+								"radial-gradient(ellipse at 50% 120%, #EEECEA 0%, #F7F7F5 70%)",
+						}}
+					/>
+				)}
 
 				<div className="relative z-10 px-6">
 					<p

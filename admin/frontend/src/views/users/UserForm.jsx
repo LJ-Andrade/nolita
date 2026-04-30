@@ -158,7 +158,7 @@ export default function UserForm() {
           { label: id ? "Editar" : "Crear" },
         ]}
       />
-      <div className="max-w-2xl mx-auto pb-10">
+      <div className="max-w-2xl pb-10">
       <Card>
         <CardHeader>
           <CardTitle>{id ? "Editar Usuario" : "Nuevo Usuario"}</CardTitle>

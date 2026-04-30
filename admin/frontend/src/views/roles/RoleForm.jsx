@@ -16,16 +16,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Save, X } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+
 export default function RoleForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [permissions, setPermissions] = useState([]);
+  const [roleName, setRoleName] = useState("");
 
   const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters."),
+    display_name: z.string().optional(),
     permissions: z.array(z.number()).optional(),
   });
 
@@ -33,6 +37,7 @@ export default function RoleForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      display_name: "",
       permissions: [],
     },
   });
@@ -50,8 +55,10 @@ export default function RoleForm() {
         .then(({ data }) => {
           form.reset({
             name: data.data.name,
+            display_name: data.data.display_name || "",
             permissions: data.data.permissions ? data.data.permissions.map((p) => p.id) : [],
           });
+          setRoleName(data.data.name);
           setFetching(false);
         })
         .catch(() => {
@@ -97,11 +104,21 @@ export default function RoleForm() {
       });
   };
 
+  const title = id ? `Editando rol "${roleName}"` : "Crear Rol";
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-4xl">
+      <PageHeader
+        title={title}
+        breadcrumbs={[
+          { label: 'ROLES', href: '/roles' },
+          { label: id ? "Editar" : "Crear" },
+        ]}
+      />
+
       <Card>
         <CardHeader>
-          <CardTitle>{id ? `Editando Rol ${name}` : "Crear Nuevo Rol"}</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
           {fetching ? (
@@ -110,35 +127,49 @@ export default function RoleForm() {
             </div>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{"Nombre"}</FormLabel>
+                      <FormLabel>{"Nombre (key)"}</FormLabel>
                       <FormControl>
-                        <Input placeholder={"Nombre del Rol"} {...field} />
+                        <Input placeholder={"Nombre interno del rol"} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="display_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{"Nombre para mostrar"}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={"Nombre visible (ej: Empleado)"} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-4 pt-4 border-t">
                   <h3 className="text-lg font-medium">{"Permisos"}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 border rounded-md p-4 bg-muted/30 max-h-[400px] overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 border rounded-lg p-4 bg-muted/30 max-h-[500px] overflow-y-auto shadow-inner">
                     {permissions.length === 0 ? (
                       <p className="text-muted-foreground italic col-span-full">{"No se encontraron permisos."}</p>
                     ) : (
                       permissions.map((permission) => (
-                        <div key={permission.id} className="flex items-center space-x-2">
+                        <div key={permission.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-card/50 transition-colors">
                           <input
                             type="checkbox"
                             id={`permission-${permission.id}`}
                             checked={form.watch("permissions")?.includes(permission.id)}
                             onChange={() => togglePermission(permission.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                           />
                           <label
                             htmlFor={`permission-${permission.id}`}
@@ -152,16 +183,17 @@ export default function RoleForm() {
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
+                <div className="flex justify-end space-x-2 pt-6 border-t">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => navigate('/roles')}
                   >
+                    <X className="mr-2 h-4 w-4" />
                     {"Cancelar"}
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (id ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />)}
                     {id ? "Actualizar Rol" : "Crear Rol"}
                   </Button>
                 </div>

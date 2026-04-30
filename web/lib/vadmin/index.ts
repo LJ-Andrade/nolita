@@ -22,6 +22,7 @@ export async function vadminFetch<T>({
   params,
   body,
   path,
+  silentStatuses = [],
 }: {
   cache?: RequestCache;
   headers?: HeadersInit;
@@ -29,6 +30,7 @@ export async function vadminFetch<T>({
   params?: Record<string, string | boolean | undefined>;
   body?: any;
   path: string;
+  silentStatuses?: number[];
 }): Promise<{ status: number; body: T } | never> {
   try {
     const url = new URL(`${endpoint}/${path}`);
@@ -77,7 +79,7 @@ export async function vadminFetch<T>({
       body: data,
     };
   } catch (e: any) {
-    const isSilent = e.status === 404;
+    const isSilent = e.status === 404 || silentStatuses.includes(e.status);
     if (!isSilent) {
       console.error(`[vadminFetch Error] path: ${path}`, {
         message: e.message,
@@ -99,7 +101,16 @@ export async function vadminFetch<T>({
     throw e;
   }
 }
-
+export function getVadminImageUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  
+  // Extract base domain from endpoint (e.g. http://localhost:8000/api -> http://localhost:8000)
+  const baseUrl = endpoint.replace("/api", "");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  
+  return `${baseUrl}${cleanPath}`;
+}
 
 // CATALOG
 export async function getProducts({
@@ -230,3 +241,19 @@ export async function getPages(): Promise<Page[]> {
   return [];
 }
 
+export async function getSiteContent(section?: string): Promise<Record<string, string>> {
+  "use cache";
+  cacheTag(TAGS.collections); // Using collections tag as a proxy or define a new one if needed
+  cacheLife("days");
+
+  try {
+    const res = await vadminFetch<{ data: Record<string, string> }>({
+      path: "public/site-content",
+      params: { section },
+    });
+    return res.body.data;
+  } catch (e) {
+    console.error("Error fetching site content:", e);
+    return {};
+  }
+}

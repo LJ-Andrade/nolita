@@ -1,14 +1,18 @@
 "use server";
 
 import { checkout } from "lib/vadmin/cart";
-import { TAGS } from "lib/constants";
-import { updateTag } from "next/cache";
-import { redirect } from "next/navigation";
 
-export async function completeOrder(formData: FormData) {
+export type CheckoutState = {
+  status: "idle" | "success" | "error";
+  message: string;
+};
+
+export async function completeOrder(
+  _previousState: CheckoutState,
+  formData: FormData,
+): Promise<CheckoutState> {
   const data = {
-    first_name: formData.get("first_name"),
-    last_name: formData.get("last_name"),
+    name: formData.get("name"),
     email: formData.get("email"),
     phone: formData.get("phone"),
     address: formData.get("address"),
@@ -21,11 +25,14 @@ export async function completeOrder(formData: FormData) {
   const result = await checkout(data);
 
   if (result.success) {
-    updateTag(TAGS.cart);
-    redirect("/checkout/success");
-  } else {
-    // Handle error - maybe redirect back with error message?
-    // For now simple redirect to error or just stay
-    return result;
+    return {
+      status: "success",
+      message: result.message || "Checkout successful",
+    };
   }
+
+  return {
+    status: "error",
+    message: result.message || "No pudimos finalizar el pedido.",
+  };
 }

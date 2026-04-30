@@ -188,8 +188,12 @@ export default function PermissionsList() {
 			/>
 
 			<Card>
-				<CardHeader>
-					<CardTitle>{"Gestionar Permisos"}</CardTitle>
+				<CardHeader className="flex flex-row items-center justify-start gap-2">
+					<Can permission="create permissions">
+						<Button onClick={() => navigate("/permisos/crear")}>
+							<Plus className="mr-2 h-4 w-4" /> Nuevo Permiso
+						</Button>
+					</Can>
 				</CardHeader>
 				<CardContent>
 					<Collapsible

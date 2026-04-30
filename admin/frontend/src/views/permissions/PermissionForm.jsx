@@ -16,12 +16,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Save, X } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+
 export default function PermissionForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [permissionName, setPermissionName] = useState("");
 
   const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters."),
@@ -43,6 +46,7 @@ export default function PermissionForm() {
           form.reset({
             name: data.data.name,
           });
+          setPermissionName(data.data.name);
           setFetching(false);
         })
         .catch(() => {
@@ -76,11 +80,21 @@ export default function PermissionForm() {
       });
   };
 
+  const title = id ? `Editando permiso "${permissionName}"` : "Crear Permiso";
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl">
+      <PageHeader
+        title={title}
+        breadcrumbs={[
+          { label: 'PERMISOS', href: '/permisos' },
+          { label: id ? "Editar" : "Crear" },
+        ]}
+      />
+
       <Card>
         <CardHeader>
-          <CardTitle>{id ? `Editando Permiso ${name}` : "Crear Nuevo Permiso"}</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
           {fetching ? (
@@ -103,16 +117,17 @@ export default function PermissionForm() {
                     </FormItem>
                   )}
                 />
-                <div className="flex justify-end space-x-2 pt-4">
+                <div className="flex justify-end space-x-2 pt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => navigate('/permisos')}
                   >
+                    <X className="mr-2 h-4 w-4" />
                     {"Cancelar"}
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (id ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />)}
                     {id ? "Actualizar Permiso" : "Crear Permiso"}
                   </Button>
                 </div>

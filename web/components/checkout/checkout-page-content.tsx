@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import CheckoutForm from "./checkout-form";
 import MethodSelector from "./method-selector";
 import OrderSummary from "./order-summary";
 import { Cart, DeliveryMethod, PaymentMethod } from "lib/vadmin/types";
-import { completeOrder } from "app/(store)/checkout/actions";
+import {
+  completeOrder,
+  type CheckoutState,
+} from "app/(store)/checkout/actions";
 import { useFormStatus } from "react-dom";
 import LoadingDots from "components/loading-dots";
+import PurchaseProcessingNotice from "components/checkout/purchase-processing-notice";
+import webTexts from "../../web-texts.json";
+
+const checkoutTexts = webTexts.checkoutProcessingNotice;
+const MIN_PROCESSING_MS = 1000;
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,16 +34,24 @@ export default function CheckoutPageContent({
   cart,
   deliveryMethods,
   paymentMethods,
-  session
+  session,
 }: {
   cart: Cart;
   deliveryMethods: DeliveryMethod[];
   paymentMethods: PaymentMethod[];
   session: any;
 }) {
+  const [checkoutState, checkoutAction, isCheckoutPending] = useActionState<
+    CheckoutState,
+    FormData
+  >(completeOrder, {
+    status: "idle",
+    message: "",
+  });
   const [selectedDeliveryFee, setSelectedDeliveryFee] = useState(
     parseFloat(deliveryMethods[0]?.fee || "0")
   );
+  const [showCompletion, setShowCompletion] = useState(false);
 
   const handleDeliveryChange = (methodId: string) => {
     const method = deliveryMethods.find((m) => m.id === methodId);
@@ -44,25 +60,68 @@ export default function CheckoutPageContent({
     }
   };
 
+  const isCheckoutProcessing =
+    isCheckoutPending || checkoutState.status === "success";
+
+  useEffect(() => {
+    if (checkoutState.status !== "success") {
+      setShowCompletion(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setShowCompletion(true);
+    }, MIN_PROCESSING_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [checkoutState.status]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-      <h1 className="mb-12 text-4xl font-medium font-serif">Finalizar Compra</h1>
-      
-      <form action={completeOrder} className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-        <div className="space-y-12 lg:col-span-8">
-          <CheckoutForm initialData={session} />
-          <MethodSelector 
-            deliveryMethods={deliveryMethods} 
-            paymentMethods={paymentMethods} 
-            onDeliveryChange={handleDeliveryChange}
-          />
-        </div>
+      {!isCheckoutProcessing && (
+        <h1 className="mb-12 font-serif text-4xl font-medium">
+          Finalizar Compra
+        </h1>
+      )}
 
-        <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit">
-          <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} />
-          <SubmitButton />
-        </div>
-      </form>
+      {isCheckoutProcessing ? (
+        <section
+          aria-live="polite"
+          className="flex min-h-[62vh] items-center justify-center"
+        >
+          <PurchaseProcessingNotice
+            isComplete={showCompletion}
+            processingTitle={checkoutTexts.processingTitle}
+            completeTitle={checkoutTexts.completeTitle}
+            completeMessage={checkoutTexts.completeMessage}
+          />
+        </section>
+      ) : (
+        <form
+          action={checkoutAction}
+          className="grid grid-cols-1 gap-12 lg:grid-cols-12"
+        >
+          {checkoutState.status === "error" && (
+            <div className="rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 lg:col-span-12">
+              {checkoutState.message}
+            </div>
+          )}
+
+          <div className="space-y-12 lg:col-span-8">
+            <CheckoutForm initialData={session} />
+            <MethodSelector
+              deliveryMethods={deliveryMethods}
+              paymentMethods={paymentMethods}
+              onDeliveryChange={handleDeliveryChange}
+            />
+          </div>
+
+          <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">
+            <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} />
+            <SubmitButton />
+          </div>
+        </form>
+      )}
     </div>
   );
 }

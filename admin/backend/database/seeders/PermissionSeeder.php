@@ -2,56 +2,41 @@
 
 namespace Database\Seeders;
 
-use App\Models\Permission;
 use Illuminate\Database\Seeder;
+use App\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         $permissions = [
-            'users.view',
-            'users.create',
-            'users.edit',
-            'users.delete',
-            'roles.view',
-            'roles.manage',
-            'permissions.view',
-            'view blog',
-            'manage categories',
-            'manage tags',
-            'view articles',
-            'manage articles',
-            'create articles',
-            'edit articles',
-            'delete articles',
-            'view products',
-            'manage products',
-            'create products',
-            'edit products',
-            'delete products',
-            'view product categories',
-            'manage product categories',
-            'view product tags',
-            'manage product tags',
-            'view product colors',
-            'manage product colors',
-            'view product sizes',
-            'manage product sizes',
-            'view coupons',
-            'manage coupons',
-            'manage customers',
-            'manage payment methods',
-            'manage delivery methods',
-            'view activity logs',
-            'system.manage',
+            ['name' => 'view products', 'display_name' => 'Ver productos'],
+            ['name' => 'create products', 'display_name' => 'Crear productos'],
+            ['name' => 'edit products', 'display_name' => 'Editar productos'],
+            ['name' => 'delete products', 'display_name' => 'Eliminar productos'],
+            ['name' => 'manage products', 'display_name' => 'Gestionar productos'],
+            ['name' => 'view orders', 'display_name' => 'Ver pedidos'],
+            ['name' => 'edit orders', 'display_name' => 'Editar pedidos'],
+            ['name' => 'view profile', 'display_name' => 'Ver perfil'],
+            ['name' => 'edit profile', 'display_name' => 'Editar perfil'],
+            ['name' => 'users.view', 'display_name' => 'Ver usuarios'],
+            ['name' => 'users.create', 'display_name' => 'Crear usuarios'],
+            ['name' => 'users.edit', 'display_name' => 'Editar usuarios'],
+            ['name' => 'users.delete', 'display_name' => 'Eliminar usuarios'],
+            ['name' => 'roles.view', 'display_name' => 'Ver roles'],
+            ['name' => 'roles.manage', 'display_name' => 'Gestionar roles'],
+            ['name' => 'view activity logs', 'display_name' => 'Ver registros de actividad'],
+            ['name' => 'system.manage', 'display_name' => 'Gestionar sistema'],
         ];
 
         foreach ($permissions as $permission) {
-            Permission::updateOrCreate(['name' => $permission]);
+            Permission::updateOrCreate(
+                ['name' => $permission['name'], 'guard_name' => 'web'],
+                ['display_name' => $permission['display_name']]
+            );
         }
     }
 }

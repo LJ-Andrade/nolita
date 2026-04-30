@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -78,12 +79,14 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
+            'display_name' => 'nullable|string|max:255',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
         $role = Role::create([
             'name' => $validated['name'],
+            'display_name' => $validated['display_name'] ?? null,
         ]);
 
         if ($request->has('permissions')) {
@@ -109,11 +112,15 @@ class RoleController extends Controller
                 'max:255',
                 Rule::unique('roles')->ignore($role->id),
             ],
+            'display_name' => 'nullable|string|max:255',
             'permissions' => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
-        $role->update($validated);
+        $role->update([
+            'name' => $validated['name'],
+            'display_name' => $validated['display_name'] ?? null,
+        ]);
 
         if ($request->has('permissions')) {
             $role->permissions()->sync($request->permissions);

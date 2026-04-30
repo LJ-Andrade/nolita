@@ -45,6 +45,21 @@ export default async function RegisterPage({
           </div>
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">
+              DNI
+            </label>
+            <input
+              name="dni"
+              type="text"
+              required
+              pattern="[0-9]{8}"
+              maxLength={8}
+              title="El DNI debe tener exactamente 8 dígitos numéricos"
+              className="w-full border-b border-neutral-200 bg-transparent py-3 text-sm outline-none transition-colors focus:border-black"
+              placeholder="12345678"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">
               Email
             </label>
             <input

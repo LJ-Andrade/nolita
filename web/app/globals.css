@@ -109,3 +109,110 @@ button {
 .animate-carousel {
   animation: carousel 30s linear infinite;
 }
+
+@keyframes purchase-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+.animate-purchase-progress {
+  animation: purchase-progress 2.6s ease-in-out forwards;
+}
+
+@keyframes purchase-check-bounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.28) translateY(18px) rotate(-16deg);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1.32) translateY(-10px) rotate(7deg);
+  }
+  68% {
+    transform: scale(0.84) translateY(4px) rotate(-3deg);
+  }
+  84% {
+    transform: scale(1.08) translateY(-2px) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.animate-purchase-check-bounce {
+  animation: purchase-check-bounce 820ms cubic-bezier(0.17, 0.89, 0.28, 1.3) both;
+}
+
+@keyframes purchase-confetti-pop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--confetti-x), var(--confetti-y)) scale(1) rotate(var(--confetti-rotate));
+  }
+}
+.purchase-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: #16a34a;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.12);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: purchase-confetti-pop 760ms cubic-bezier(0.16, 0.9, 0.3, 1.15) both;
+}
+.purchase-confetti-1 {
+  --confetti-x: -42px;
+  --confetti-y: -38px;
+  --confetti-rotate: -160deg;
+  animation-delay: 90ms;
+}
+.purchase-confetti-2 {
+  --confetti-x: 8px;
+  --confetti-y: -52px;
+  --confetti-rotate: 130deg;
+  animation-delay: 120ms;
+}
+.purchase-confetti-3 {
+  --confetti-x: 44px;
+  --confetti-y: -32px;
+  --confetti-rotate: 210deg;
+  animation-delay: 100ms;
+}
+.purchase-confetti-4 {
+  --confetti-x: 52px;
+  --confetti-y: 8px;
+  --confetti-rotate: -95deg;
+  animation-delay: 150ms;
+}
+.purchase-confetti-5 {
+  --confetti-x: 30px;
+  --confetti-y: 44px;
+  --confetti-rotate: 175deg;
+  animation-delay: 170ms;
+}
+.purchase-confetti-6 {
+  --confetti-x: -20px;
+  --confetti-y: 50px;
+  --confetti-rotate: -210deg;
+  animation-delay: 130ms;
+}
+.purchase-confetti-7 {
+  --confetti-x: -54px;
+  --confetti-y: 14px;
+  --confetti-rotate: 120deg;
+  animation-delay: 155ms;
+}
+.purchase-confetti-8 {
+  --confetti-x: -28px;
+  --confetti-y: -54px;
+  --confetti-rotate: -70deg;
+  animation-delay: 115ms;
+}

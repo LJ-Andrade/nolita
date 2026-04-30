@@ -183,6 +183,17 @@ class OrderController extends Controller
      */
     public function checkout(Request $request)
     {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:50'],
+            'address' => ['required', 'string', 'max:1000'],
+            'city' => ['required', 'string', 'max:255'],
+            'postal_code' => ['required', 'string', 'max:20'],
+            'delivery_method_id' => ['required'],
+            'payment_method_id' => ['required'],
+        ]);
+
         $cart = Order::where('customer_id', $request->user()->id)
             ->where('status', 'pending')
             ->first();
@@ -196,7 +207,25 @@ class OrderController extends Controller
         }
 
         $cart->update([
-            'status' => 'completed'
+            'status' => 'completed',
+            'payment_method' => (string) $validated['payment_method_id'],
+            'shipping_address' => [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'postal_code' => $validated['postal_code'],
+                'delivery_method_id' => (string) $validated['delivery_method_id'],
+            ],
+            'billing_address' => [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'postal_code' => $validated['postal_code'],
+            ],
         ]);
 
         return response()->json([

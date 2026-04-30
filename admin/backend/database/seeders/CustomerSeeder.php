@@ -17,6 +17,7 @@ class CustomerSeeder extends Seeder
 				'password' => Hash::make('12121212'),
 				'phone' => '1234567890',
 				'address' => 'Calle Falsa 123',
+				'postal_code' => '1000',
 				'is_active' => true,
 			],
 			[
@@ -25,6 +26,7 @@ class CustomerSeeder extends Seeder
 				'password' => Hash::make('12121212'),
 				'phone' => '1234567890',
 				'address' => 'Calle Falsa 123',
+				'postal_code' => '1000',
 				'is_active' => true,
 			],
 			[
@@ -33,6 +35,7 @@ class CustomerSeeder extends Seeder
 				'password' => Hash::make('12121212'),
 				'phone' => '1234567890',
 				'address' => 'Calle Falsa 123',
+				'postal_code' => '1000',
 				'is_active' => true,
 			],
 		];

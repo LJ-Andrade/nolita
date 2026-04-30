@@ -190,27 +190,29 @@ export default function CustomersList() {
 								<TableHead className="w-10">
 									<Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
 								</TableHead>
-								<TableHead className="w-[60px]">{"ID"}</TableHead>
-								<TableHead>{"Nombre"}</TableHead>
-								<TableHead>{"Correo"}</TableHead>
-								<TableHead>{"Dirección"}</TableHead>
+							<TableHead className="w-[60px]">{"ID"}</TableHead>
+							<TableHead>{"Nombre"}</TableHead>
+							<TableHead>{"DNI"}</TableHead>
+							<TableHead>{"Correo"}</TableHead>
+							<TableHead>{"Dirección"}</TableHead>
+							<TableHead>{"CP"}</TableHead>
 								<TableHead>{"Estado"}</TableHead>
 								<TableHead className="text-right w-[150px]">{"Acciones"}</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
-							{loading && customers.length === 0 && (
-								<TableRow>
-									<TableCell colSpan={7} className="text-center">Cargando...</TableCell>
-								</TableRow>
-							)}
-							{!loading && customers.length === 0 && (
-								<TableRow>
-									<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-										No se encontraron clientes.
-									</TableCell>
-								</TableRow>
-							)}
+						{loading && customers.length === 0 && (
+							<TableRow>
+								<TableCell colSpan={9} className="text-center">Cargando...</TableCell>
+							</TableRow>
+						)}
+						{!loading && customers.length === 0 && (
+							<TableRow>
+								<TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+									No se encontraron clientes.
+								</TableCell>
+							</TableRow>
+						)}
 							{customers.map((customer) => (
 								<TableRow key={customer.id}>
 									<TableCell>
@@ -232,6 +234,9 @@ export default function CustomersList() {
 										</div>
 									</TableCell>
 									<TableCell>
+										<span className="font-mono text-sm">{customer.dni}</span>
+									</TableCell>
+									<TableCell>
 										<div className="flex flex-col gap-0.5 text-sm">
 											<div className="flex items-center gap-1.5 text-muted-foreground">
 												<Mail className="h-3 w-3" /> {customer.email || 'N/A'}
@@ -249,6 +254,11 @@ export default function CustomersList() {
 										) : (
 											<span className="text-xs text-muted-foreground italic">{"Ninguno"}</span>
 										)}
+									</TableCell>
+									<TableCell>
+										<span className="font-mono text-sm text-muted-foreground">
+											{customer.postal_code || "N/A"}
+										</span>
 									</TableCell>
 									<TableCell>
 										{customer.is_active ? (

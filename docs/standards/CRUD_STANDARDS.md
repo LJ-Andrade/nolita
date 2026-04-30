@@ -179,11 +179,63 @@ Both should show the EXACT same text:
     </div>
   </CardContent>
 </Card>
+
+---
+
+## 3. Settings & Preference Views (Single Page Config)
+
+### Structure
+
+```
+┌─────────────────────────────────────────────────┐
+│ PageHeader                                      │
+│ ├── Title: "Configuration Name"                │
+│ └── Breadcrumbs: [Parent] > [Current]          │
+└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ Container (max-w-4xl, LEFT aligned)             │
+│ └── Card                                        │
+│     ├── CardHeader                              │
+│     │   ├── CardTitle                           │
+│     │   └── CardDescription                     │
+│     └── CardContent                             │
+│         └── Settings / Toggles / Form           │
+└─────────────────────────────────────────────────┘
+```
+
+### Key Requirements
+
+- **Alignment**: Must be aligned to the **LEFT**. Do not use `mx-auto` for centering the main container.
+- **Width**: Use `max-w-4xl` to ensure the content doesn't feel lost on large screens while maintaining readability.
+- **PageHeader**: Essential for context and breadcrumbs.
+- **Consistency**: Use standard `Card` and `Separator` components.
+
+### Example: Notification Preferences
+
+```jsx
+<div className="space-y-6 max-w-4xl">
+  <PageHeader
+    title="Preferencias de Notificaciones"
+    breadcrumbs={[
+      { label: 'PERFIL' },
+      { label: 'Preferencias de Notificaciones' },
+    ]}
+  />
+  <Card>
+    <CardHeader>
+      <CardTitle>Preferencias de Notificaciones</CardTitle>
+      <CardDescription>Configura tus alertas.</CardDescription>
+    </CardHeader>
+    <CardContent>
+       {/* Content */}
+    </CardContent>
+  </Card>
+</div>
 ```
 
 ---
 
-## 3. Component Standards
+## 4. Component Standards
 
 ### Required Imports
 

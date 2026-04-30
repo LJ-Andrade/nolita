@@ -1,104 +1,167 @@
-﻿# Vadmin3 - Project Documentation
+# Plan B - Project Information
 
 ## Overview
-Admin panel with blog, generated using Laravel (API) + React (Frontend). Connected only via REST API.
+
+Plan B is split into two main applications:
+
+- `admin/`: VADMIN, the internal administration system.
+- `web/`: Public e-commerce storefront.
+
+VADMIN is the official backend provider for the whole project. The storefront must fetch data from VADMIN through `web/lib/vadmin`. Shopify code and environment variables are deprecated.
+
+## Project Structure
+
+```text
+planb/
++-- admin/
+|   +-- backend/      # Laravel API used by the admin panel and storefront
+|   +-- frontend/     # React/Vite VADMIN panel
++-- web/              # Next.js 15 storefront
++-- docs/             # Project documentation, specs, roadmap, and dev log
+```
+
+## Applications
+
+### VADMIN Backend
+
+Path: `admin/backend`
+
+Laravel API that owns the project data and business logic:
+
+- Authentication and profile endpoints.
+- Blog/content endpoints.
+- Catalog endpoints for products, categories, tags, colors, sizes, variants, and coupons.
+- Customer auth and order endpoints for the storefront.
+- Database migrations, models, controllers, resources, seeders, and API routes.
+
+Key files:
+
+- `admin/backend/routes/api.php`
+- `admin/backend/app/Http/Controllers/`
+- `admin/backend/app/Models/`
+- `admin/backend/app/Http/Resources/`
+- `admin/backend/database/migrations/`
+
+### VADMIN Panel
+
+Path: `admin/frontend`
+
+React/Vite administration panel used to manage VADMIN data:
+
+- Dashboard and admin navigation.
+- Blog/content management.
+- Catalog management.
+- Product categories, tags, colors, sizes, coupons, products, variants, media, and stock fields.
+- RBAC, dark/light mode, internationalization, media upload, and activity logs.
+
+Key files:
+
+- `admin/frontend/src/App.jsx`
+- `admin/frontend/src/views/`
+- `admin/frontend/src/components/`
+- `admin/frontend/src/i18n/locales/`
+
+### Storefront
+
+Path: `web`
+
+Next.js 15 App Router storefront used by public customers:
+
+- Product and collection pages.
+- Cart and checkout.
+- Customer login/register flows.
+- Delivery and payment method selection.
+- Maintenance page when the VADMIN API is unreachable.
+
+Key files:
+
+- `web/app/`
+- `web/components/`
+- `web/lib/vadmin/`
+- `web/app/maintenance/page.tsx`
+- `web/.env.local`
+
+## Data Flow
+
+```text
+admin/frontend --REST--> admin/backend
+web            --REST--> admin/backend
+```
+
+Rules:
+
+- `admin/backend` is the source of truth.
+- `admin/frontend` manages data through VADMIN API routes.
+- `web` consumes VADMIN data through `web/lib/vadmin`.
+- Maintenance mode redirects the storefront to `/maintenance` when the VADMIN API is unavailable.
+- Do not add new Shopify dependencies, Shopify fetchers, or `SHOPIFY_*` environment variables.
 
 ## Environment
 
-- **Server**: VPS with Nginx (production)
-- **Database**: MySQL (production)
-
-## Local Development
-
-The project can also be run locally. Check the `.env` files:
-- **Production (VPS)**: `APP_ENV=production`
-- **Local**: `APP_ENV=local` with SQLite database
-
-## Structure
-
-```
-/home/vadmin/htdocs/vadmin.studiovimana.com.ar/vadmin3/
-backend/          # Laravel API
-frontend/         # React source
-dist/         # Built static files (served by Nginx)
-frontend/src/     # React source code
-```
-
-## URLs
-- **Frontend**: 
-- **Backend API**: 
-
-## Tech Stack
-- **Backend**: Laravel 11, SQLite (dev) / MySQL (prod), Laravel Sanctum
-- **Frontend**: React (Vite), Tailwind CSS v4, shadcn/ui, Axios
+- Production server: VPS with Nginx.
+- Production database: MySQL.
+- Local backend database: SQLite when `APP_ENV=local`.
 
 ## Commands
 
-### Backend (Laravel)
+### VADMIN Backend
+
 ```bash
-cd backend
-
-# Install dependencies
+cd admin/backend
 composer install
-
-# Run migrations
 php artisan migrate
-
-# Clear cache
 php artisan cache:clear
 php artisan route:clear
 php artisan config:clear
-
-# Tinker (database debugging)
 php artisan tinker
 ```
 
-### Frontend (React)
+### VADMIN Panel
+
 ```bash
-cd frontend
-
-# Install dependencies
+cd admin/frontend
 npm install
-
-# Development
 npm run dev
-
-# Build production
 npm run build
 ```
 
-## Key Files
+### Storefront
 
-### Backend
-- `backend/routes/api.php` - API routes
-- `backend/app/Http/Controllers/` - Controllers
-- `backend/app/Models/` - Eloquent models
-- `backend/database/migrations/` - Database migrations
+```bash
+cd web
+npm install
+npm run dev
+npm run build
+```
 
-### Frontend
-- `frontend/src/App.jsx` - Main router
-- `frontend/src/views/` - Page components
-- `frontend/src/components/` - Reusable components
-- `frontend/src/i18n/locales/` - Translations (es.json, en.json)
+## Main API Areas
 
-## API Endpoints
+### Admin Auth
 
-### Auth
-- `POST /api/login` - Login
-- `GET /api/user` - Current user
-- `PUT /api/profile` - Update profile
+- `POST /api/login`
+- `GET /api/user`
+- `PUT /api/profile`
 
-### Blog
-- `GET /api/articles` - List articles
-- `POST /api/articles` - Create article
-- `PUT /api/articles/{id}` - Update article
-- `PATCH /api/articles/{id}` - Quick update
-- `DELETE /api/articles/{id}` - Delete article
+### Catalog
 
+- `/api/products`
+- `/api/product-categories`
+- `/api/product-tags`
+- `/api/product-colors`
+- `/api/product-sizes`
+- `/api/coupons`
 
-## Features
-- Role-Based Access Control (RBAC)
-- Dark/Light mode
-- Internationalization (ES/EN)
-- Media upload with crop
-- Activity logs
+### Public Storefront
+
+- `/api/public/products`
+- `/api/public/products/{slug}`
+- `/api/public/product-tags`
+- Customer auth endpoints.
+- Cart/order checkout endpoints.
+
+## Documentation Map
+
+- `docs/SPECS.md`: technical specifications and approved contracts.
+- `docs/ROADMAP.md`: completed, active, and upcoming work.
+- `docs/DEVLOG.md`: execution checklist and historical implementation notes.
+- `docs/PROJECT_INFO.md`: high-level architecture and project orientation.

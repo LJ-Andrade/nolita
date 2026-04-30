@@ -32,10 +32,14 @@ export default function Login() {
 			const user = data.user;
 			const roles = user.roles ? user.roles.map(role => role.name) : [];
 			const permissions = user.permissions || [];
+			const primaryRole = user.primary_role || null;
 
 			localStorage.setItem('ACCESS_TOKEN', data.access_token);
 			localStorage.setItem('USER_ROLES', JSON.stringify(roles));
 			localStorage.setItem('USER_PERMISSIONS', JSON.stringify(permissions));
+			localStorage.setItem('USER_PRIMARY_ROLE', JSON.stringify(primaryRole));
+			localStorage.setItem('TOKEN_EXPIRES_AT', data.expires_at);
+			localStorage.setItem('REMEMBER_ME', data.remember ? 'true' : 'false');
 
 			toast.success("¡Inicio de sesión exitoso!");
 			window.location.href = '/vadmin/';

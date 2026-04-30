@@ -27,6 +27,7 @@ import {
 	ShoppingBag,
 	Wallet,
 	Truck,
+	Layout,
 } from "lucide-react"
 
 
@@ -71,59 +72,25 @@ const items = [
 	{
 		title: "Usuarios y Roles",
 		icon: Users,
+		permission: "users.view",
 		children: [
 			{
 				title: "Usuarios",
 				url: "/usuarios",
 				icon: UserCircle,
-				permission: "view users",
+				permission: "users.view",
 			},
 			{
 				title: "Roles",
 				url: "/roles",
 				icon: ShieldCheck,
-				permission: "view roles",
+				permission: "roles.view",
 			},
 			{
 				title: "Permisos",
 				url: "/permisos",
-				icon: ShieldCheck,
-				permission: "view permissions",
-			},
-		],
-	},
-	{
-		title: "Blog",
-		icon: FileText,
-		children: [
-			{
-				title: "Artículos",
-				url: "/articulos",
-				icon: FileText,
-				permission: "view blog",
-			},
-			{
-				title: "AutoPost (IA)",
-				url: "/autopost",
-				icon: Sparkles,
-				permission: "manage articles",
-			},
-			{
-				title: "Categorías",
-				url: "/categorias",
-				icon: Folder,
-				permission: "view blog",
-			},
-			{
-				title: "Etiquetas",
-				url: "/etiquetas",
-				icon: Tags,
-				permission: "view blog",
-			},
-			{
-				title: "Configuración Blog",
-				url: "/blog-configuracion",
-				icon: Settings,
+				icon: KeyRound,
+				permission: "roles.manage",
 			},
 		],
 	},
@@ -135,48 +102,7 @@ const items = [
 				title: "Productos",
 				url: "/productos",
 				icon: Box,
-			},
-			{
-				title: "Categorías",
-				url: "/productos-categorias",
-				icon: Layers,
-			},
-			{
-				title: "Etiquetas",
-				url: "/productos-etiquetas",
-				icon: Tags,
-			},
-			{
-				title: "Colores",
-				url: "/productos-colores",
-				icon: Palette,
-			},
-			{
-				title: "Talles",
-				url: "/productos-talles",
-				icon: Ruler,
-			},
-			{
-				title: "Cupones",
-				url: "/cupones",
-				icon: Ticket,
-			},
-			{
-				title: "Métodos de Pago",
-				url: "/metodos-pago",
-				icon: Wallet,
-				permission: "manage payment methods",
-			},
-			{
-				title: "Métodos de Envío",
-				url: "/metodos-envio",
-				icon: Truck,
-				permission: "manage delivery methods",
-			},
-			{
-				title: "Configuración",
-				url: "/productos-configuracion",
-				icon: Settings,
+				permission: "view products",
 			},
 		],
 	},
@@ -190,17 +116,31 @@ const items = [
 		title: "Clientes",
 		url: "/clientes",
 		icon: Building2,
-		permission: "manage customers",
+		permission: "users.view",
 	},
 	{
 		title: "Mensajes Contacto",
 		url: "/mensajes-contacto",
 		icon: MessageSquare,
-		permission: "view blog",
+		permission: "users.view",
+	},
+	{
+		title: "Sitio",
+		icon: Monitor,
+		permission: "users.view",
+		children: [
+			{
+				title: "Contenido",
+				url: "/contenido-configuracion",
+				icon: Layout,
+				permission: "users.view",
+			},
+		],
 	},
 	{
 		title: "Sistema",
 		icon: Monitor,
+		permission: "users.view",
 		children: [
 			{
 				title: "Registros de Actividad",
@@ -213,19 +153,22 @@ const items = [
 	{
 		title: "Configuraciones",
 		icon: Settings,
+		permission: "users.view",
 		children: [
 			{
 				title: "General",
 				url: "/configuracion",
 				icon: Settings,
+				permission: "users.view",
 			},
 			{
 				title: "Info de Negocio",
 				url: "/info-negocio",
 				icon: Phone,
+				permission: "users.view",
 			},
 			{
-				title: "Configuración del Sistema",
+				title: "Sistema",
 				url: "/configuracion-del-sistema",
 				icon: Settings,
 				superAdminOnly: true,
@@ -241,11 +184,10 @@ const items = [
 ]
 
 const getUserRole = () => {
-	const userRoles = JSON.parse(localStorage.getItem('USER_ROLES') || '[]');
-	if (userRoles.includes('Super Admin')) return 'Super Admin';
-	if (userRoles.includes('Admin')) return 'Admin';
-	if (userRoles.length > 0) return userRoles[0];
-	return 'User';
+	const primaryRole = JSON.parse(localStorage.getItem('USER_PRIMARY_ROLE') || 'null');
+	if (primaryRole?.display_name) return primaryRole.display_name;
+	if (primaryRole?.name) return primaryRole.name;
+	return 'Usuario';
 };
 
 export function AppSidebar() {

@@ -26,6 +26,13 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'avatar_url' => $avatarUrl,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            'primary_role' => $this->whenLoaded('roles', function () {
+                $role = $this->roles->first();
+                return $role ? [
+                    'name' => $role->name,
+                    'display_name' => $role->display_name,
+                ] : null;
+            }),
             'permissions' => $this->whenLoaded('roles', function () {
                 return $this->roles->flatMap(function ($role) {
                     return $role->permissions->pluck('name');

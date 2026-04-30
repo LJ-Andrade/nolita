@@ -220,8 +220,12 @@ export default function RolesList() {
 			/>
 
 			<Card>
-				<CardHeader>
-					<CardTitle>{"Gestionar Roles"}</CardTitle>
+				<CardHeader className="flex flex-row items-center justify-start gap-2">
+					<Can permission="create roles">
+						<Button onClick={() => navigate("/roles/crear")}>
+							<Plus className="mr-2 h-4 w-4" /> Nuevo Rol
+						</Button>
+					</Can>
 				</CardHeader>
 				<CardContent>
 					<Collapsible
@@ -342,7 +346,7 @@ export default function RolesList() {
 										/>
 									</TableCell>
 									<TableCell className="w-[60px]">{role.id}</TableCell>
-									<TableCell>{role.name}</TableCell>
+									<TableCell>{role.display_name || role.name}</TableCell>
 									<TableCell className="text-right w-[130px]">{role.created_at ? formatDate(role.created_at) : ''}</TableCell>
 									<TableCell className="text-right w-[120px]">
 										<div className="flex items-center justify-end gap-1">

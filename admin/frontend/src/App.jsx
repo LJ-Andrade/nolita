@@ -37,12 +37,15 @@ import BlogSettings from './views/settings/BlogSettings';
 import ProductSettings from './views/settings/ProductSettings';
 import SystemConfigurations from './views/settings/SystemConfigurations';
 import SkinSettings from './views/settings/SkinSettings';
+import ContentSettings from './views/site/ContentSettings';
 import RolesList from './views/roles/RolesList';
 
 import RoleForm from './views/roles/RoleForm';
 import PermissionsList from './views/permissions/PermissionsList';
 import PermissionForm from './views/permissions/PermissionForm';
 import Profile from './views/Profile';
+import NotificationPreferences from './views/NotificationPreferences';
+import NotificationsPage from './views/NotificationsPage';
 import ActivityLogsList from './views/activity-logs/ActivityLogsList';
 import CustomersList from './views/customers/CustomersList';
 import CustomerForm from './views/customers/CustomerForm';
@@ -54,8 +57,25 @@ import DashboardLayout from './components/dashboard-layout';
 import { hasPermission, isSuperAdmin } from './components/can';
 
 const ProtectedRoute = ({ children, permission, superAdminOnly }) => {
-	const isAuthenticated = !!localStorage.getItem('ACCESS_TOKEN');
-	if (!isAuthenticated) return <Navigate to="/login" />;
+	const token = localStorage.getItem('ACCESS_TOKEN');
+	const expiresAt = localStorage.getItem('TOKEN_EXPIRES_AT');
+	
+	// Check if token exists and is not expired
+	const isAuthenticated = !!token;
+	const isTokenExpired = expiresAt && new Date(expiresAt) < new Date();
+	
+	if (!isAuthenticated || isTokenExpired) {
+		// Clear expired token data
+		if (isTokenExpired) {
+			localStorage.removeItem('ACCESS_TOKEN');
+			localStorage.removeItem('USER_ROLES');
+			localStorage.removeItem('USER_PERMISSIONS');
+			localStorage.removeItem('TOKEN_EXPIRES_AT');
+			localStorage.removeItem('REMEMBER_ME');
+		}
+		return <Navigate to="/login" />;
+	}
+	
 	if (superAdminOnly && !isSuperAdmin()) return <Navigate to="/" />;
 	if (permission && !hasPermission(permission)) return <Navigate to="/" />;
 	return (
@@ -66,7 +86,12 @@ const ProtectedRoute = ({ children, permission, superAdminOnly }) => {
 };
 
 function App() {
-	const isAuthenticated = !!localStorage.getItem('ACCESS_TOKEN');
+	const token = localStorage.getItem('ACCESS_TOKEN');
+	const expiresAt = localStorage.getItem('TOKEN_EXPIRES_AT');
+	
+	// Check if token exists and is not expired
+	const isTokenExpired = expiresAt && new Date(expiresAt) < new Date();
+	const isAuthenticated = !!token && !isTokenExpired;
 
 	return (
 		<Router basename="/vadmin">
@@ -234,19 +259,19 @@ function App() {
 				} />
 
 				<Route path="/permisos" element={
-					<ProtectedRoute permission="view permissions">
+					<ProtectedRoute permission="roles.manage">
 						<PermissionsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/permisos/crear" element={
-					<ProtectedRoute permission="create permissions">
+					<ProtectedRoute permission="roles.manage">
 						<PermissionForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/permisos/editar/:id" element={
-					<ProtectedRoute permission="edit permissions">
+					<ProtectedRoute permission="roles.manage">
 						<PermissionForm />
 					</ProtectedRoute>
 				} />
@@ -257,6 +282,18 @@ function App() {
 					</ProtectedRoute>
 				} />
 
+				<Route path="/perfil/notificaciones" element={
+					<ProtectedRoute>
+						<NotificationPreferences />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/mis-notificaciones" element={
+					<ProtectedRoute>
+						<NotificationsPage />
+					</ProtectedRoute>
+				} />
+
 				<Route path="/registros-actividad" element={
 					<ProtectedRoute permission="view activity logs">
 						<ActivityLogsList />
@@ -264,19 +301,19 @@ function App() {
 				} />
 
 				<Route path="/clientes" element={
-					<ProtectedRoute permission="manage customers">
+					<ProtectedRoute permission="users.view">
 						<CustomersList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/clientes/crear" element={
-					<ProtectedRoute permission="manage customers">
+					<ProtectedRoute permission="users.view">
 						<CustomerForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/clientes/editar/:id" element={
-					<ProtectedRoute permission="manage customers">
+					<ProtectedRoute permission="users.view">
 						<CustomerForm />
 					</ProtectedRoute>
 				} />
@@ -294,7 +331,7 @@ function App() {
 				} />
 
 				<Route path="/mensajes-contacto" element={
-					<ProtectedRoute permission="view blog">
+					<ProtectedRoute permission="users.view">
 						<ContactMessagesList />
 					</ProtectedRoute>
 				} />
@@ -440,6 +477,12 @@ function App() {
 				<Route path="/apariencia-configuracion" element={
 					<ProtectedRoute superAdminOnly={true}>
 						<SkinSettings />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/contenido-configuracion" element={
+					<ProtectedRoute>
+						<ContentSettings />
 					</ProtectedRoute>
 				} />
 

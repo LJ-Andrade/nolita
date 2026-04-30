@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
+import { Link } from "react-router-dom";
 import {
   Form,
   FormControl,
@@ -15,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, KeyRound, User, Mail, Shield } from "lucide-react";
+import { Loader2, KeyRound, User, Mail, Shield, Bell } from "lucide-react";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -278,6 +279,28 @@ export default function Profile() {
                       </div>
                     )}
                   </div>
+
+                  <div className="pt-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Bell className="h-5 w-5 text-primary" />
+                          <h4 className="font-semibold">{"Notificaciones"}</h4>
+                        </div>
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="transition-all hover:bg-primary/10"
+                        >
+                          <Link to="/perfil/notificaciones">
+                            Configurar
+                          </Link>
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {"Gestiona qué notificaciones quieres recibir por email y en el sistema."}
+                      </p>
+                    </div>
 
                   <div className="flex justify-end pt-6">
                     <Button type="submit" disabled={loading} className="px-8 shadow-md hover:shadow-lg transition-all">

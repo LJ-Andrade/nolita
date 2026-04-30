@@ -169,9 +169,10 @@ export default function OrderDetails() {
              <CardContent>
                {order.shipping_address ? (
                  <div className="space-y-1 text-sm">
-                   <p>{order.shipping_address.street}</p>
-                   <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</p>
-                   <p>{order.shipping_address.country}</p>
+                   <p>{order.shipping_address.name}</p>
+                   <p>{order.shipping_address.address}</p>
+                   <p>{order.shipping_address.city} {order.shipping_address.postal_code}</p>
+                   <p>{order.shipping_address.phone}</p>
                  </div>
                ) : (
                  <p className="text-muted-foreground text-sm">Sin dirección especificada</p>

@@ -2,72 +2,67 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Role;
-use App\Models\Permission;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
+	use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        // User::factory(10)->create();
+	/**
+	 * Seed the application's database.
+	 */
+	public function run(): void
+	{
+		// User::factory(10)->create();
 
-        $this->call([
-            ProductAttributeSeeder::class,
-            RoleSeeder::class,
-            PermissionSeeder::class,
-            PaymentMethodSeeder::class,
-            DeliveryMethodSeeder::class,
-            CustomerSeeder::class,
-        ]);
+		$this->call([
+			ProductAttributeSeeder::class,
+			PermissionSeeder::class,
+			RoleSeeder::class,
+			NotificationTypeSeeder::class,
+			PaymentMethodSeeder::class,
+			DeliveryMethodSeeder::class,
+			CustomerSeeder::class,
+		]);
 
-        $permissions = Permission::all();
-        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
-		$admin = Role::firstOrCreate(['name' => 'Admin']);
-        $superAdmin->permissions()->sync($permissions);
+		$javzero = User::firstOrCreate(
+			['email' => 'javzero1@gmail.com'],
+			[
+				'name' => 'Leandro Andrade',
+				'password' => bcrypt('12121212'),
+			]
+		);
+		$javzero->syncRoles(['Super Admin']);
 
-        $javzero = User::firstOrCreate(
-            ['email' => 'javzero1@gmail.com'],
-            [
-                'name' => 'Leandro Andrade',
-                'password' => bcrypt('12121212'),
-            ]
-        );
-        $javzero->roles()->sync($superAdmin);
-
-		
-        $violeta = User::firstOrCreate(
-            ['email' => 'violetaraffin@gmail.com'],
-            [
-                'name' => 'Violeta Raffin',
-                'password' => bcrypt('12121212'),
-            ]
-        );
-        $violeta->roles()->sync($superAdmin);
-
+		$violeta = User::firstOrCreate(
+			['email' => 'violetaraffin@gmail.com'],
+			[
+				'name' => 'Violeta Raffin',
+				'password' => bcrypt('12121212'),
+			]
+		);
+		// $violeta->syncRoles(['Admin']);
+		$violeta->syncRoles(['Employee']);
 
 		$geo = User::firstOrCreate(
-            ['email' => 'geo@gmail.com'],
-            [
-                'name' => 'Geo Georgie',
-                'password' => bcrypt('12121212'),
-            ]
-        );
-        $geo->roles()->sync($admin);
+			['email' => 'geo@gmail.com'],
+			[
+				'name' => 'Geo Georgie',
+				'password' => bcrypt('12121212'),
+			]
+		);
+		$geo->syncRoles(['Employee']);
 
-        $this->call([
-            CategorySeeder::class,
-            TagSeeder::class,
-            BusinessSettingsSeeder::class,
-            ProductSeeder::class,
-            PostSeeder::class,
-        ]);
-    }
+		$this->call([
+			CategorySeeder::class,
+			TagSeeder::class,
+			BusinessSettingsSeeder::class,
+			ProductSeeder::class,
+			PostSeeder::class,
+		]);
+	}
 }

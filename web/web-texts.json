@@ -1,0 +1,8 @@
+{
+	"checkoutProcessingNotice": {
+		"processingTitle": "Procesando la compra...",
+		"completeTitle": "Compra finalizada",
+		"completeMessage": "Muchas gracias!. <br>Nos pondremos en contacto a la brevedad",
+		"testButtonLabel": "Ejecutar animacion de compra finalizada"
+	}
+}

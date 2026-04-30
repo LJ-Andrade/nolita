@@ -21,6 +21,8 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AutopostController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\ImageSettingsController;
+use App\Http\Controllers\Api\NotificationPreferenceController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +38,7 @@ Route::get('/public/products/{slug}', [ProductController::class, 'publicShow']);
 Route::get('/public/product-categories', [ProductCategoryController::class, 'publicIndex']);
 Route::get('/public/product-tags', [ProductTagController::class, 'publicIndex']);
 Route::get('/public/business-info', [SystemSettingsController::class, 'publicInfo']);
+Route::get('/public/site-content', [\App\Http\Controllers\SiteContentController::class, 'publicIndex']);
 Route::post('/public/contact', [ContactController::class, 'store']);
 
 Route::get('/system-settings', [SystemSettingsController::class, 'index']);
@@ -59,10 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('users', UserController::class)->middleware('permission:users.view');
     Route::post('/users/{user}/avatar', [UserController::class, 'uploadAvatar']);
-    Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])->middleware('permission:delete users');
+    Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])->middleware('permission:users.delete');
     Route::apiResource('roles', RoleController::class)->middleware('permission:roles.view');
-    Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->middleware('permission:delete roles');
-    Route::apiResource('permissions', PermissionController::class)->middleware('permission:permissions.view');
+    Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->middleware('permission:roles.manage');
+    Route::apiResource('permissions', PermissionController::class)->middleware('permission:roles.manage');
 
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:view blog');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:view blog');
@@ -99,12 +102,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{product}/gallery/{media}', [ProductController::class, 'deleteGalleryImage'])->middleware('permission:manage products');
     Route::post('/products/bulk-delete', [ProductController::class, 'bulkDelete'])->middleware('permission:delete products');
 
-    Route::post('/product-categories/bulk-delete', [ProductCategoryController::class, 'bulkDelete'])->middleware('permission:manage product categories');
-    Route::get('/product-categories', [ProductCategoryController::class, 'index'])->middleware('permission:view product categories');
-    Route::get('/product-categories/{product_category}', [ProductCategoryController::class, 'show'])->middleware('permission:view product categories');
-    Route::post('/product-categories', [ProductCategoryController::class, 'store'])->middleware('permission:manage product categories');
-    Route::put('/product-categories/{product_category}', [ProductCategoryController::class, 'update'])->middleware('permission:manage product categories');
-    Route::delete('/product-categories/{product_category}', [ProductCategoryController::class, 'destroy'])->middleware('permission:manage product categories');
+    Route::post('/product-categories/bulk-delete', [ProductCategoryController::class, 'bulkDelete'])->middleware('permission:manage products');
+    Route::get('/product-categories', [ProductCategoryController::class, 'index'])->middleware('permission:view products');
+    Route::get('/product-categories/{product_category}', [ProductCategoryController::class, 'show'])->middleware('permission:view products');
+    Route::post('/product-categories', [ProductCategoryController::class, 'store'])->middleware('permission:manage products');
+    Route::put('/product-categories/{product_category}', [ProductCategoryController::class, 'update'])->middleware('permission:manage products');
+    Route::delete('/product-categories/{product_category}', [ProductCategoryController::class, 'destroy'])->middleware('permission:manage products');
 
     Route::get('/product-tags', [ProductTagController::class, 'index'])->middleware('permission:view product tags');
     Route::get('/product-tags/{product_tag}', [ProductTagController::class, 'show'])->middleware('permission:view product tags');
@@ -149,9 +152,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/image-settings/{imageSetting}', [ImageSettingsController::class, 'destroy']);
 
     // Customers
-    Route::post('admin/customers/bulk-delete', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'bulkDelete'])->middleware('permission:manage customers');
-    Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:manage customers');
-    Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:manage customers');
+    Route::post('admin/customers/bulk-delete', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:users.view');
+    Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:users.view');
 
     // Orders
     Route::post('admin/orders/bulk-delete', [\App\Http\Controllers\Api\Admin\OrderController::class, 'bulkDelete'])->middleware('permission:manage orders');
@@ -170,9 +173,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('delivery-methods/bulk-delete', [DeliveryMethodController::class, 'bulkDelete'])->middleware('permission:manage delivery methods');
 
     // Contact Messages
-    Route::apiResource('contact-messages', ContactController::class)->middleware('permission:view blog');
-    Route::post('contact-messages/bulk-delete', [ContactController::class, 'bulkDelete'])->middleware('permission:view blog');
-    Route::patch('contact-messages/{contact_message}/mark-read', [ContactController::class, 'markAsRead'])->middleware('permission:view blog');
+    Route::apiResource('contact-messages', ContactController::class)->middleware('permission:users.view');
+    Route::post('contact-messages/bulk-delete', [ContactController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::patch('contact-messages/{contact_message}/mark-read', [ContactController::class, 'markAsRead'])->middleware('permission:users.view');
+
+    // Site Content
+    Route::get('/site-content', [\App\Http\Controllers\SiteContentController::class, 'index']);
+    Route::put('/site-content/bulk', [\App\Http\Controllers\SiteContentController::class, 'bulkUpdate']);
+    Route::put('/site-content/{key}', [\App\Http\Controllers\SiteContentController::class, 'update']);
+    Route::post('/site-content/upload', [\App\Http\Controllers\SiteContentController::class, 'uploadImage']);
+
+    // Notifications
+    Route::get('/notification-preferences', [NotificationPreferenceController::class, 'index']);
+    Route::post('/notification-preferences/{notificationTypeId}/toggle', [NotificationPreferenceController::class, 'toggle']);
+    Route::put('/notification-preferences', [NotificationPreferenceController::class, 'updatePreferences']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll']);
 });
 
 // --- Ecommerce Public Routes ---
@@ -192,6 +213,7 @@ Route::prefix('customer')->group(function () {
     Route::middleware('auth:customer')->group(function () {
         Route::post('logout', [App\Http\Controllers\Api\CustomerAuthController::class, 'logout']);
         Route::get('me', [App\Http\Controllers\Api\CustomerAuthController::class, 'me']);
+        Route::put('me', [App\Http\Controllers\Api\CustomerAuthController::class, 'update']);
         
         // Cart / Orders
         Route::get('cart', [App\Http\Controllers\Api\OrderController::class, 'getCart']);

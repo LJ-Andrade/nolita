@@ -15,14 +15,14 @@ const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image()
     image.addEventListener('load', () => resolve(image))
-    image.addEventListener('error', (error) => rejecerror)
+    image.addEventListener('error', (error) => reject(error))
     image.setAttribute('crossOrigin', 'anonymous')
     image.src = url
   })
 
 async function getCroppedImg(imageSrc, pixelCrop) {
   const image = await createImage(imageSrc)
-  const canvas = document.createElementt("canvas")
+  const canvas = document.createElement("canvas")
   const ctx = canvas.getContext("2d")
 
   if (!ctx) {
@@ -98,7 +98,7 @@ export function ImageUpload({
       setIsDialogOpen(false)
       setImage(null)
     } catch (e) {
-      console.errore
+      console.error(e)
     } finally {
       setIsUploading(false)
     }
@@ -197,7 +197,7 @@ export function ImageUpload({
               max={3}
               step={0.1}
               aria-labelledby="Zoom"
-              onChange={(e) => setZoom(parseFloae.target.value)}
+              onChange={(e) => setZoom(parseFloat(e.target.value))}
               className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
             />
           </div>
@@ -214,7 +214,7 @@ export function ImageUpload({
             </Button>
             <Button onClick={handleCropSave} disabled={isUploading}>
               {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              Subir
             </Button>
           </DialogFooter>
         </DialogContent>

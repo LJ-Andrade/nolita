@@ -82,7 +82,7 @@ export default function UserMenu({ customer }: { customer: any }) {
             <MenuItem>
               {({ focus }) => (
                 <Link
-                  href="/profile"
+                  href="/perfil"
                   className={`${focus ? "bg-gray-50 text-black" : "text-gray-600"} block px-4 py-2 text-sm transition-colors`}
                 >
                   Mi Perfil

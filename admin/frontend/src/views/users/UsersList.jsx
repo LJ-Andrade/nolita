@@ -224,8 +224,12 @@ export default function UsersList() {
 			/>
 
 			<Card>
-				<CardHeader>
-					<CardTitle>{"Gestionar Usuarios"}</CardTitle>
+				<CardHeader className="flex flex-row items-center justify-start gap-2">
+					<Can permission="create users">
+						<Button onClick={() => navigate("/usuarios/crear")}>
+							<Plus className="mr-2 h-4 w-4" /> Nuevo Usuario
+						</Button>
+					</Can>
 				</CardHeader>
 				<CardContent>
 					<Collapsible

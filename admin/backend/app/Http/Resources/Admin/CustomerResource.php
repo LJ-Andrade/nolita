@@ -17,9 +17,11 @@ class CustomerResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'dni' => $this->dni,
             'email' => $this->email,
             'phone' => $this->phone,
             'address' => $this->address,
+            'postal_code' => $this->postal_code,
             'is_active' => $this->is_active,
             'avatar_url' => $this->getFirstMediaUrl('avatar'),
             'created_at' => $this->created_at,

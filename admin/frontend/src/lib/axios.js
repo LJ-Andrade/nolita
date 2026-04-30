@@ -55,6 +55,10 @@ axiosClient.interceptors.response.use(
 		if (response && [401, 419].includes(response.status)) {
 			// Clear local storage to prevent infinite loops or invalid states
 			localStorage.removeItem('ACCESS_TOKEN');
+			localStorage.removeItem('USER_ROLES');
+			localStorage.removeItem('USER_PERMISSIONS');
+			localStorage.removeItem('TOKEN_EXPIRES_AT');
+			localStorage.removeItem('REMEMBER_ME');
 
 			// Optional: Prevent redirect if we're already on login to avoid loops
 			if (window.location.pathname !== '/vadmin/login') {

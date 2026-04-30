@@ -94,6 +94,19 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 2. **Images**: Product images and UI media should use `--pb-radius` for a cohesive look.
 3. **Cards**: Product cards and similar containers should align with the global radius.
 
+### 5.3 Layout Standards (Admin)
+1.  **Alignment**: All administrative views must be **LEFT-ALIGNED**. Do not center main content containers.
+2.  **Width Management**:
+    - **Lists/Tables**: Occupy full available width.
+    - **Forms/Settings**: Use `max-w-4xl` (settings) or `max-w-2xl` (simple forms) to maintain readability.
+3.  **Components**:
+    - **PageHeader**: Mandatory for all views.
+    - **Glassmorphism**: Use `glass-panel` for dropdowns and floating elements.
+4.  **Dropdowns**: Standardized with `py-3` for items and `bg-primary/10` for hover states.
+
+> [!TIP]
+> For more details, refer to [CRUD_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/CRUD_STANDARDS.md).
+
 ---
 
 ## 6. Checkout Process

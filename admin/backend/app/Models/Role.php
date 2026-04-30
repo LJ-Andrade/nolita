@@ -4,17 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    /** @use HasFactory<\Database\Factories\RoleFactory> */
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'display_name', 'guard_name'];
+
+    protected $guard_name = 'web';
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -22,10 +22,5 @@ class Role extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('role');
-    }
-
-    public function permissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Permission::class);
     }
 }

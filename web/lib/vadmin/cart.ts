@@ -20,6 +20,7 @@ export async function getCart(): Promise<Cart | undefined> {
         Authorization: `Bearer ${token}`,
       },
       cache: "no-store",
+      silentStatuses: [401, 403, 404],
     });
     return res.body;
   } catch (e) {

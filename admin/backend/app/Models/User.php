@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -11,38 +10,25 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, LogsActivity;
+    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, LogsActivity, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $guard_name = 'web';
+
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,9 +37,6 @@ class User extends Authenticatable implements HasMedia
         ];
     }
 
-    /**
-     * Configure the activity log options.
-     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -63,19 +46,30 @@ class User extends Authenticatable implements HasMedia
             ->useLogName('user');
     }
 
-    /**
-     * The roles that belong to the user.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function notifications(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->belongsToMany(Role::class);
+        return $this->hasMany(\App\Models\Notification::class);
     }
 
-    /**
-     * Register the media collections for the user.
-     */
+    public function notificationPreferences(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserNotificationPreference::class);
+    }
+
+    public function isSubscribedTo(\App\Models\NotificationType $notificationType, string $channel = 'email'): bool
+    {
+        $pref = $this->notificationPreferences()->where('notification_type_id', $notificationType->id)->first();
+        if (!$pref) {
+            return $channel === 'browser';
+        }
+        return (bool) $pref->{$channel . '_enabled'};
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->notifications()->unread()->count();
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')

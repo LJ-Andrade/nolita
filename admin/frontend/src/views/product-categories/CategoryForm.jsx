@@ -38,8 +38,8 @@ export default function CategoryForm() {
     messages: {
       createSuccess: "Categoría creada correctamente",
       updateSuccess: "Categoría actualizada correctamente",
-      createError: "product_Error al crear la categoría",
-      updateError: "product_Error al actualizar la categoría",
+      createError: "Error al crear la categoría",
+      updateError: "Error al actualizar la categoría",
     },
   });
 
@@ -56,24 +56,24 @@ export default function CategoryForm() {
       <PageHeader
         title={
           id
-            ? `Editando Categoría ${name}`
+            ? `Editando Categoría ${entityName}`
             : "Crear Nueva Categoría"
         }
         breadcrumbs={[
           { label: 'PRODUCTOS' },
-          { label: "Categorías", href: '/product-categories' },
+          { label: "Categorías", href: '/productos-categorias' },
           { label: id ? "Editar" : "Crear" },
         ]}
       />
 
       <div className="max-w-2xl">
         <Form {...form}>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <Card>
               <CardHeader>
                 <CardTitle>
                   {id
-                    ? `Editando Categoría ${name}`
+                    ? `Editando Categoría ${entityName}`
                     : "Crear Nueva Categoría"}
                 </CardTitle>
               </CardHeader>

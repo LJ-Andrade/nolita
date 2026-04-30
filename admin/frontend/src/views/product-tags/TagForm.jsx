@@ -68,7 +68,7 @@ export default function TagForm() {
 
       <div className="max-w-2xl">
         <Form {...form}>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <Card>
               <CardHeader>
                 <CardTitle>
