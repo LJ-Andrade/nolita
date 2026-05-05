@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
 import MethodSelector from "./method-selector";
 import OrderSummary from "./order-summary";
@@ -35,11 +36,15 @@ export default function CheckoutPageContent({
   deliveryMethods,
   paymentMethods,
   session,
+  provinces,
+  localities,
 }: {
   cart: Cart;
   deliveryMethods: DeliveryMethod[];
   paymentMethods: PaymentMethod[];
   session: any;
+  provinces: { id: number; name: string }[];
+  localities: { id: number; name: string; province_id: number }[];
 }) {
   const [checkoutState, checkoutAction, isCheckoutPending] = useActionState<
     CheckoutState,
@@ -60,10 +65,13 @@ export default function CheckoutPageContent({
     }
   };
 
-  const isCheckoutProcessing =
-    isCheckoutPending || checkoutState.status === "success";
+  const isCheckoutProcessing = checkoutState.status === "success";
 
   useEffect(() => {
+    if (checkoutState.status === "error" && checkoutState.message) {
+      toast.error(checkoutState.message);
+    }
+
     if (checkoutState.status !== "success") {
       setShowCompletion(false);
       return;
@@ -74,7 +82,7 @@ export default function CheckoutPageContent({
     }, MIN_PROCESSING_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [checkoutState.status]);
+  }, [checkoutState.status, checkoutState.message]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
@@ -101,19 +109,14 @@ export default function CheckoutPageContent({
           action={checkoutAction}
           className="grid grid-cols-1 gap-12 lg:grid-cols-12"
         >
-          {checkoutState.status === "error" && (
-            <div className="rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 lg:col-span-12">
-              {checkoutState.message}
-            </div>
-          )}
 
           <div className="space-y-12 lg:col-span-8">
-            <CheckoutForm initialData={session} />
             <MethodSelector
               deliveryMethods={deliveryMethods}
               paymentMethods={paymentMethods}
               onDeliveryChange={handleDeliveryChange}
             />
+            <CheckoutForm initialData={session} provinces={provinces} localities={localities} />
           </div>
 
           <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">

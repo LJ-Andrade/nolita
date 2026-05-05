@@ -28,6 +28,7 @@ import {
 	Wallet,
 	Truck,
 	Layout,
+	MapPin,
 } from "lucide-react"
 
 
@@ -97,12 +98,55 @@ const items = [
 	{
 		title: "Tienda",
 		icon: Box,
+		permission: "users.view",
 		children: [
 			{
 				title: "Productos",
 				url: "/productos",
 				icon: Box,
 				permission: "view products",
+			},
+			{
+				title: "Categorías",
+				url: "/productos-categorias",
+				icon: Layers,
+				permission: "users.view",
+			},
+			{
+				title: "Etiquetas",
+				url: "/productos-etiquetas",
+				icon: Tags,
+				permission: "users.view",
+			},
+			{
+				title: "Colores",
+				url: "/productos-colores",
+				icon: Palette,
+				permission: "users.view",
+			},
+			{
+				title: "Talles",
+				url: "/productos-talles",
+				icon: Ruler,
+				permission: "users.view",
+			},
+			{
+				title: "Cupones",
+				url: "/cupones",
+				icon: Ticket,
+				permission: "users.view",
+			},
+			{
+				title: "Métodos de Pago",
+				url: "/metodos-pago",
+				icon: Wallet,
+				permission: "users.view",
+			},
+			{
+				title: "Métodos de Envío",
+				url: "/metodos-envio",
+				icon: Truck,
+				permission: "users.view",
 			},
 		],
 	},
@@ -147,6 +191,18 @@ const items = [
 				url: "/registros-actividad",
 				icon: History,
 				permission: "view activity logs",
+			},
+			{
+				title: "Provincias",
+				url: "/provincias",
+				icon: Building2,
+				permission: "users.view",
+			},
+			{
+				title: "Localidades",
+				url: "/localidades",
+				icon: MapPin,
+				permission: "users.view",
 			},
 		],
 	},

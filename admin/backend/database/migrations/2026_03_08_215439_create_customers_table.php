@@ -21,6 +21,8 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('postal_code', 20)->nullable();
             $table->boolean('is_active')->default(true);
+            $table->foreignId('province_id')->nullable()->constrained('provinces')->onDelete('set null');
+            $table->foreignId('locality_id')->nullable()->constrained('localities')->onDelete('set null');
             $table->timestamps();
         });
     }

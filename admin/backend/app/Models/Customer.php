@@ -20,7 +20,9 @@ class Customer extends Model implements HasMedia
         'phone',
         'address',
         'postal_code',
-        'is_active'
+        'is_active',
+        'province_id',
+        'locality_id'
     ];
 
     protected $hidden = [
@@ -31,6 +33,16 @@ class Customer extends Model implements HasMedia
         'is_active' => 'boolean',
         'password' => 'hashed',
     ];
+
+    public function province(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Province::class);
+    }
+
+    public function locality(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Locality::class);
+    }
 
     /**
      * Register media collections for the customer (logo).

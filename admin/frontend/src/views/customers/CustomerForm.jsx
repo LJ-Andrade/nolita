@@ -16,6 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,12 +36,20 @@ export default function CustomerForm() {
 	const [fetching, setFetching] = useState(false);
 	const [avatarUrl, setAvatarUrl] = useState(null);
 	const [pendingAvatar, setPendingAvatar] = useState(null);
+	const [provinces, setProvinces] = useState([]);
+	const [localities, setLocalities] = useState([]);
+	const [loadingProvinces, setLoadingProvinces] = useState(false);
+	const [loadingLocalities, setLoadingLocalities] = useState(false);
+	const [selectedProvinceId, setSelectedProvinceId] = useState("");
+	const [selectedLocalityId, setSelectedLocalityId] = useState("");
 
 	const formSchema = z.object({
 		name: z.string().min(2, "El nombre debe tener al menos 2 caracteres."),
 		dni: z.string()
 			.length(8, "El DNI debe tener exactamente 8 dígitos.")
-			.regex(/^[0-9]+$/, "El DNI debe contener solo números."),
+			.regex(/^[0-9]+$/, "El DNI debe contener solo números.")
+			.optional()
+			.or(z.literal("")),
 		email: z.string().email("Correo electrónico no válido."),
 		password: id
 			? z.string().optional().or(z.literal(""))
@@ -43,6 +58,8 @@ export default function CustomerForm() {
 		address: z.string().optional().or(z.literal("")),
 		postal_code: z.string().max(20, "El CP no puede superar 20 caracteres.").optional().or(z.literal("")),
 		is_active: z.boolean().default(true),
+		province_id: z.string().optional().or(z.literal("")),
+		locality_id: z.string().optional().or(z.literal("")),
 	});
 
 	const form = useForm({
@@ -56,8 +73,21 @@ export default function CustomerForm() {
 			address: "",
 			postal_code: "",
 			is_active: true,
+			province_id: "",
+			locality_id: "",
 		},
 	});
+
+	useEffect(() => {
+		setLoadingProvinces(true);
+		axiosClient.get('/admin/provinces')
+			.then(({ data }) => {
+				const provincesData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+				setProvinces(provincesData);
+				setLoadingProvinces(false);
+			})
+			.catch(() => setLoadingProvinces(false));
+	}, []);
 
 	useEffect(() => {
 		if (id) {
@@ -65,18 +95,28 @@ export default function CustomerForm() {
 			axiosClient
 				.get(`admin/customers/${id}`)
 				.then(({ data }) => {
+					const customerData = data.data;
 					form.reset({
-						name: data.data.name || "",
-						dni: data.data.dni || "",
-						email: data.data.email || "",
+						name: customerData.name || "",
+						dni: customerData.dni || "",
+						email: customerData.email || "",
 						password: "",
-						phone: data.data.phone || "",
-						address: data.data.address || "",
-						postal_code: data.data.postal_code || "",
-						is_active: !!data.data.is_active,
+						phone: customerData.phone || "",
+						address: customerData.address || "",
+						postal_code: customerData.postal_code || "",
+						is_active: !!customerData.is_active,
+						province_id: "",
+						locality_id: "",
 					});
-					setAvatarUrl(data.data.avatar_url);
+					setAvatarUrl(customerData.avatar_url);
 					setFetching(false);
+					if (customerData.province_id) {
+						const provIdStr = String(customerData.province_id);
+						const locIdStr = customerData.locality_id ? String(customerData.locality_id) : "";
+						setSelectedProvinceId(provIdStr);
+						setSelectedLocalityId(locIdStr);
+						loadLocalities(customerData.province_id);
+					}
 				})
 				.catch(() => {
 					setFetching(false);
@@ -109,15 +149,43 @@ export default function CustomerForm() {
 		}
 	};
 
+	const loadLocalities = (provinceId) => {
+		if (!provinceId) {
+			setLocalities([]);
+			setSelectedLocalityId("");
+			return;
+		}
+		setLoadingLocalities(true);
+		axiosClient.get('/admin/localities', { params: { province_id: provinceId } })
+			.then(({ data }) => {
+				const localitiesData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+				setLocalities(localitiesData);
+				setLoadingLocalities(false);
+			})
+			.catch(() => setLoadingLocalities(false));
+	};
+
+	const handleProvinceChange = (provinceId) => {
+		setSelectedProvinceId(provinceId);
+		setSelectedLocalityId("");
+		form.setValue('province_id', provinceId);
+		form.setValue('locality_id', '');
+		loadLocalities(provinceId);
+	};
+
 	const onSubmit = (values) => {
 		setLoading(true);
 		const payload = { ...values };
 		if (id && !payload.password) {
 			delete payload.password;
 		}
-
-		// Convert boolean to integer for Laravel if using FormData or just rely on cast if JSON
-		// But since we might send file, we use FormData if there is a pending avatar
+		
+		if (selectedProvinceId) {
+			payload.province_id = selectedProvinceId;
+		}
+		if (selectedLocalityId) {
+			payload.locality_id = selectedLocalityId;
+		}
 
 		let request;
 		if (!id && pendingAvatar) {
@@ -296,6 +364,79 @@ export default function CustomerForm() {
 												</FormItem>
 											)}
 										/>
+
+										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+											<FormField
+												control={form.control}
+												name="province_id"
+												render={({ field }) => (
+													<FormItem>
+														<FormLabel>{"Provincia"}</FormLabel>
+														<Select 
+															onValueChange={(val) => {
+																field.onChange(val);
+																handleProvinceChange(val);
+															}} 
+															value={selectedProvinceId || field.value || ""}
+														>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder="Seleccionar provincia" />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{loadingProvinces ? (
+																	<SelectItem value="loading" disabled>Cargando...</SelectItem>
+																) : provinces.length === 0 ? (
+																	<SelectItem value="empty" disabled>No hay provincias</SelectItem>
+																) : (
+																	provinces.map((prov) => (
+																		<SelectItem key={prov.id} value={String(prov.id)}>
+																			{prov.name}
+																		</SelectItem>
+																	))
+																)}
+															</SelectContent>
+														</Select>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+											<FormField
+												control={form.control}
+												name="locality_id"
+												render={({ field }) => (
+													<FormItem>
+														<FormLabel>{"Localidad"}</FormLabel>
+														<Select 
+															onValueChange={field.onChange} 
+															value={selectedLocalityId || field.value || ""}
+															disabled={!selectedProvinceId || loadingLocalities}
+														>
+															<FormControl>
+																<SelectTrigger>
+																	<SelectValue placeholder="Seleccionar localidad" />
+																</SelectTrigger>
+															</FormControl>
+															<SelectContent>
+																{loadingLocalities ? (
+																	<SelectItem value="loading" disabled>Cargando...</SelectItem>
+																) : localities.length === 0 ? (
+																	<SelectItem value="empty" disabled>No hay localidades</SelectItem>
+																) : (
+																	localities.map((loc) => (
+																		<SelectItem key={loc.id} value={String(loc.id)}>
+																			{loc.name}
+																		</SelectItem>
+																	))
+																)}
+															</SelectContent>
+														</Select>
+														<FormMessage />
+													</FormItem>
+												)}
+											/>
+										</div>
 
 										<FormField
 											control={form.control}

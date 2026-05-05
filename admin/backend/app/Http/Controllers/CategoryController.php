@@ -65,7 +65,7 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -79,7 +79,6 @@ class CategoryController extends Controller
         $data = $validator->validated();
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
-            // Ensure uniqueness if slug generated from name already exists
             $originalSlug = $data['slug'];
             $count = 1;
             while (Category::where('slug', $data['slug'])->exists()) {

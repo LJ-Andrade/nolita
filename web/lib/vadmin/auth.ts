@@ -9,6 +9,8 @@ export type CustomerSession = {
   phone: string | null;
   address: string | null;
   postal_code: string | null;
+  province_id: number | null;
+  locality_id: number | null;
   avatar_url?: string | null;
 };
 
@@ -112,6 +114,8 @@ export async function updateProfile(formData: FormData) {
     phone: formData.get("phone") as string,
     address: formData.get("address") as string,
     postal_code: formData.get("postal_code") as string,
+    province_id: formData.get("province_id") as string,
+    locality_id: formData.get("locality_id") as string,
   };
 
   if (password || passwordConfirmation) {

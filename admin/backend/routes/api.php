@@ -23,6 +23,8 @@ use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\ImageSettingsController;
 use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Admin\ProvinceController;
+use App\Http\Controllers\Api\Admin\LocalityController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +50,10 @@ Route::get('/system-settings/{key}', [SystemSettingsController::class, 'show']);
 Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
 Route::get('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'show']);
 Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
+
+// Public geographic data
+Route::get('/provinces', [ProvinceController::class, 'index']);
+Route::get('/localities', [LocalityController::class, 'index']);
 Route::get('/delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -109,33 +115,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/product-categories/{product_category}', [ProductCategoryController::class, 'update'])->middleware('permission:manage products');
     Route::delete('/product-categories/{product_category}', [ProductCategoryController::class, 'destroy'])->middleware('permission:manage products');
 
-    Route::get('/product-tags', [ProductTagController::class, 'index'])->middleware('permission:view product tags');
-    Route::get('/product-tags/{product_tag}', [ProductTagController::class, 'show'])->middleware('permission:view product tags');
-    Route::post('/product-tags', [ProductTagController::class, 'store'])->middleware('permission:manage product tags');
-    Route::put('/product-tags/{product_tag}', [ProductTagController::class, 'update'])->middleware('permission:manage product tags');
-    Route::delete('/product-tags/{product_tag}', [ProductTagController::class, 'destroy'])->middleware('permission:manage product tags');
-    Route::post('/product-tags/bulk-delete', [ProductTagController::class, 'bulkDelete'])->middleware('permission:manage product tags');
+    Route::post('/product-tags', [ProductTagController::class, 'store'])->middleware('permission:users.view');
+    Route::put('/product-tags/{product_tag}', [ProductTagController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('/product-tags/{product_tag}', [ProductTagController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('/product-tags/bulk-delete', [ProductTagController::class, 'bulkDelete'])->middleware('permission:users.view');
 
-    Route::get('/product-colors', [ProductColorController::class, 'index'])->middleware('permission:view product colors');
-    Route::get('/product-colors/{product_color}', [ProductColorController::class, 'show'])->middleware('permission:view product colors');
-    Route::post('/product-colors', [ProductColorController::class, 'store'])->middleware('permission:manage product colors');
-    Route::put('/product-colors/{product_color}', [ProductColorController::class, 'update'])->middleware('permission:manage product colors');
-    Route::delete('/product-colors/{product_color}', [ProductColorController::class, 'destroy'])->middleware('permission:manage product colors');
-    Route::post('/product-colors/bulk-delete', [ProductColorController::class, 'bulkDelete'])->middleware('permission:manage product colors');
+    Route::get('/product-tags', [ProductTagController::class, 'index'])->middleware('permission:users.view');
+    Route::get('/product-tags/{product_tag}', [ProductTagController::class, 'show'])->middleware('permission:users.view');
 
-    Route::get('/product-sizes', [ProductSizeController::class, 'index'])->middleware('permission:view product sizes');
-    Route::get('/product-sizes/{product_size}', [ProductSizeController::class, 'show'])->middleware('permission:view product sizes');
-    Route::post('/product-sizes', [ProductSizeController::class, 'store'])->middleware('permission:manage product sizes');
-    Route::put('/product-sizes/{product_size}', [ProductSizeController::class, 'update'])->middleware('permission:manage product sizes');
-    Route::delete('/product-sizes/{product_size}', [ProductSizeController::class, 'destroy'])->middleware('permission:manage product sizes');
-    Route::post('/product-sizes/bulk-delete', [ProductSizeController::class, 'bulkDelete'])->middleware('permission:manage product sizes');
+    Route::get('/product-colors', [ProductColorController::class, 'index'])->middleware('permission:users.view');
+    Route::get('/product-colors/{product_color}', [ProductColorController::class, 'show'])->middleware('permission:users.view');
+    Route::post('/product-colors', [ProductColorController::class, 'store'])->middleware('permission:users.view');
+    Route::put('/product-colors/{product_color}', [ProductColorController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('/product-colors/{product_color}', [ProductColorController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('/product-colors/bulk-delete', [ProductColorController::class, 'bulkDelete'])->middleware('permission:users.view');
 
-    Route::get('/coupons', [CouponController::class, 'index'])->middleware('permission:view coupons');
-    Route::get('/coupons/{coupon}', [CouponController::class, 'show'])->middleware('permission:view coupons');
-    Route::post('/coupons', [CouponController::class, 'store'])->middleware('permission:manage coupons');
-    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->middleware('permission:manage coupons');
-    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->middleware('permission:manage coupons');
-    Route::post('/coupons/bulk-delete', [CouponController::class, 'bulkDelete'])->middleware('permission:manage coupons');
+    Route::get('/product-sizes', [ProductSizeController::class, 'index'])->middleware('permission:users.view');
+    Route::get('/product-sizes/{product_size}', [ProductSizeController::class, 'show'])->middleware('permission:users.view');
+    Route::post('/product-sizes', [ProductSizeController::class, 'store'])->middleware('permission:users.view');
+    Route::put('/product-sizes/{product_size}', [ProductSizeController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('/product-sizes/{product_size}', [ProductSizeController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('/product-sizes/bulk-delete', [ProductSizeController::class, 'bulkDelete'])->middleware('permission:users.view');
+
+    Route::get('/coupons', [CouponController::class, 'index'])->middleware('permission:users.view');
+    Route::get('/coupons/{coupon}', [CouponController::class, 'show'])->middleware('permission:users.view');
+    Route::post('/coupons', [CouponController::class, 'store'])->middleware('permission:users.view');
+    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('/coupons/bulk-delete', [CouponController::class, 'bulkDelete'])->middleware('permission:users.view');
 
     Route::get('/autopost/settings', [AutopostController::class, 'getSettings']);
     Route::put('/autopost/settings', [AutopostController::class, 'updateSettings']);
@@ -156,21 +163,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:users.view');
     Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:users.view');
 
+    // Provinces & Localities
+    Route::get('admin/provinces', [ProvinceController::class, 'index'])->middleware('permission:users.view');
+    Route::get('admin/provinces/{province}', [ProvinceController::class, 'show'])->middleware('permission:users.view');
+    Route::post('admin/provinces', [ProvinceController::class, 'store'])->middleware('permission:users.view');
+    Route::put('admin/provinces/{province}', [ProvinceController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('admin/provinces/{province}', [ProvinceController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('admin/provinces/bulk-delete', [ProvinceController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::get('admin/localities', [LocalityController::class, 'index'])->middleware('permission:users.view');
+    Route::post('admin/localities/bulk-delete', [LocalityController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::apiResource('admin/localities', LocalityController::class)->middleware('permission:users.view');
+
     // Orders
     Route::post('admin/orders/bulk-delete', [\App\Http\Controllers\Api\Admin\OrderController::class, 'bulkDelete'])->middleware('permission:manage orders');
     Route::apiResource('admin/orders', \App\Http\Controllers\Api\Admin\OrderController::class)->middleware('permission:view orders');
 
     // Payment Methods (CRUD - auth required for write operations)
-    Route::post('payment-methods', [PaymentMethodController::class, 'store'])->middleware('permission:manage payment methods');
-    Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->middleware('permission:manage payment methods');
-    Route::delete('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->middleware('permission:manage payment methods');
-    Route::post('payment-methods/bulk-delete', [PaymentMethodController::class, 'bulkDelete'])->middleware('permission:manage payment methods');
+    Route::post('payment-methods', [PaymentMethodController::class, 'store'])->middleware('permission:users.view');
+    Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('payment-methods/bulk-delete', [PaymentMethodController::class, 'bulkDelete'])->middleware('permission:users.view');
 
     // Delivery Methods (CRUD - auth required for write operations)
-    Route::post('delivery-methods', [DeliveryMethodController::class, 'store'])->middleware('permission:manage delivery methods');
-    Route::put('delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'update'])->middleware('permission:manage delivery methods');
-    Route::delete('delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'destroy'])->middleware('permission:manage delivery methods');
-    Route::post('delivery-methods/bulk-delete', [DeliveryMethodController::class, 'bulkDelete'])->middleware('permission:manage delivery methods');
+    Route::post('delivery-methods', [DeliveryMethodController::class, 'store'])->middleware('permission:users.view');
+    Route::put('delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'update'])->middleware('permission:users.view');
+    Route::delete('delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'destroy'])->middleware('permission:users.view');
+    Route::post('delivery-methods/bulk-delete', [DeliveryMethodController::class, 'bulkDelete'])->middleware('permission:users.view');
 
     // Contact Messages
     Route::apiResource('contact-messages', ContactController::class)->middleware('permission:users.view');

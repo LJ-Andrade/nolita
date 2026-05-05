@@ -52,7 +52,7 @@ export default async function HomePage() {
 
 	const featuredProducts = products.slice(0, 4);
 	const categories = collections.filter((c) => c.handle !== "");
-	const heroImage = getVadminImageUrl(content.home_hero_banner);
+	const heroImage = getVadminImageUrl(content.home_hero_banner || "/storage/web/hero_1.jpg");
 
 	return (
 		<>

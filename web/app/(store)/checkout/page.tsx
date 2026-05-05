@@ -1,6 +1,7 @@
 import { getCart } from "lib/vadmin/cart";
 import { getDeliveryMethods, getPaymentMethods } from "lib/vadmin/methods";
 import { getSession } from "lib/vadmin/auth";
+import { getProvinces, getLocalities } from "lib/vadmin";
 import { redirect } from "next/navigation";
 import CheckoutPageContent from "components/checkout/checkout-page-content";
 
@@ -16,10 +17,12 @@ export default async function CheckoutPage() {
     redirect("/");
   }
 
-  const [deliveryMethods, paymentMethods, session] = await Promise.all([
+  const [deliveryMethods, paymentMethods, session, provinces, localities] = await Promise.all([
     getDeliveryMethods(),
     getPaymentMethods(),
-    getSession()
+    getSession(),
+    getProvinces(),
+    getLocalities(),
   ]);
 
   return (
@@ -28,6 +31,8 @@ export default async function CheckoutPage() {
       deliveryMethods={deliveryMethods}
       paymentMethods={paymentMethods}
       session={session}
+      provinces={provinces}
+      localities={localities}
     />
   );
 }

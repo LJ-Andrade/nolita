@@ -50,7 +50,8 @@ export function useCrudForm({
         .get(`${endpoint}/${id}`)
         .then(({ data }) => {
           const entityData = data.data || data;
-          form.reset(entityData);
+          const { image, ...rest } = entityData;
+          form.reset(rest);
           setEntityName(entityData.name || entityData.title || '');
           setFetching(false);
         })
@@ -74,31 +75,35 @@ export function useCrudForm({
 
   // Submit handler
   const onSubmit = useCallback(async (values) => {
+    console.log('=== SUBMIT VALUES ===', values);
+    console.log('=== IMAGE TYPE ===', values.image?.constructor?.name);
     setLoading(true);
 
     try {
       let response;
 
-      if (id) {
-        // Update mode - use POST with _method for Laravel compatibility
+      const buildFormData = (vals) => {
         const formData = new FormData();
-        Object.entries(values).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
+        Object.entries(vals).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== '') {
+            // Only append image if it's a File object
+            if (key === 'image' && !(value instanceof File)) {
+              return;
+            }
             formData.append(key, value);
           }
         });
+        return formData;
+      };
+
+      if (id) {
+        const formData = buildFormData(values);
         formData.append('_method', 'PUT');
         
         response = await axiosClient.post(`${endpoint}/${id}`, formData);
         toast.success(updateSuccess);
       } else {
-        // Create mode
-        const formData = new FormData();
-        Object.entries(values).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
-            formData.append(key, value);
-          }
-        });
+        const formData = buildFormData(values);
         
         response = await axiosClient.post(endpoint, formData);
         toast.success(createSuccess);

@@ -111,6 +111,13 @@ export default function CartModal() {
                         new URLSearchParams(merchandiseSearchParams),
                       );
 
+                      const colorOption = item.merchandise.selectedOptions.find(o => o.name.toLowerCase() === "color");
+                      const colorImage = colorOption 
+                        ? item.merchandise.product.colorImages?.find(ci => ci.color.toLowerCase() === colorOption.value.toLowerCase())?.url
+                        : null;
+                      
+                      const imageUrl = colorImage || item.merchandise.product.featuredImage?.url || "";
+
                       return (
                         <li key={i} className="flex w-full flex-col pb-6 border-b border-bone/50 last:border-0 last:pb-0">
                           <div className="relative flex w-full flex-row">
@@ -127,7 +134,7 @@ export default function CartModal() {
                                   width={96}
                                   height={96}
                                   alt={item.merchandise.product.featuredImage?.altText || item.merchandise.product.title}
-                                  src={item.merchandise.product.featuredImage?.url || ""}
+                                  src={imageUrl}
                                 />
                               </div>
                               <div className="ml-4 flex flex-1 flex-col justify-between py-1">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import FooterMenu from "components/layout/footer-menu";
 import LogoSquare from "components/logo-square";
@@ -17,41 +18,26 @@ export default async function Footer() {
 
 	return (
 		<footer className="bg-graphite text-sm text-bone/80">
-			<div className="mx-auto flex w-full max-w-7xl flex-col gap-6 border-b border-stone-brown/20 px-6 py-12 text-sm md:flex-row md:gap-12 md:px-4 min-[1320px]:px-0">
-				<div>
-					<Link
-						className="flex items-center gap-2 text-bone md:pt-1"
-						href="/"
-					>
-						<LogoSquare size="sm" />
-						<span className="uppercase font-medium tracking-widest">{SITE_NAME}</span>
-					</Link>
-				</div>
-				<Suspense
-					fallback={
-						<div className="flex h-[188px] w-[200px] flex-col gap-2">
-							<div className={skeleton} />
-							<div className={skeleton} />
-							<div className={skeleton} />
-							<div className={skeleton} />
-							<div className={skeleton} />
-							<div className={skeleton} />
-						</div>
-					}
+			<div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center border-b border-stone-brown/20 px-6 py-12 text-sm">
+				<Link
+					className="flex items-center gap-3 text-bone"
+					href="/"
 				>
-					<FooterMenu menu={menu} />
-				</Suspense>
-				<div className="md:ml-auto">
-					<a
-						className="flex h-8 w-max flex-none items-center justify-center rounded-md border border-stone-brown/30 bg-stone-brown/10 text-xs text-bone transition-colors hover:bg-stone-brown/20"
-						aria-label="Deploy on Vercel"
-						href="https://vercel.com/templates/next.js/nextjs-commerce"
-					>
-						<span className="px-3">▲</span>
-						<hr className="h-full border-r border-stone-brown/30" />
-						<span className="px-3">Deploy</span>
-					</a>
-				</div>
+					<Image
+						src="/iso-black.svg"
+						alt={SITE_NAME || "Plan B"}
+						width={36}
+						height={32}
+						className="h-8 w-auto invert brightness-0 no-radius"
+					/>
+					<Image
+						src="/logo-black.svg"
+						alt={SITE_NAME || "Plan B"}
+						width={180}
+						height={24}
+						className="h-6 w-auto invert brightness-0 no-radius"
+					/>
+				</Link>
 			</div>
 			<div className="py-6 text-sm">
 				<div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-1 px-4 md:flex-row md:gap-0 md:px-4 min-[1320px]:px-0">

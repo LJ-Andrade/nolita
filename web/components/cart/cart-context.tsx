@@ -24,7 +24,11 @@ type CartAction =
     }
   | {
       type: "ADD_ITEM";
-      payload: { variant: ProductVariant; product: Product };
+      payload: { variant: ProductVariant; product: Product; qty?: number };
+    }
+  | {
+      type: "ADD_MULTIPLE_ITEMS";
+      payload: { variants: ProductVariant[]; product: Product };
     };
 
 type CartContextType = {
@@ -72,8 +76,9 @@ function createOrUpdateCartItem(
   existingItem: CartItem | undefined,
   variant: ProductVariant,
   product: Product,
+  qty: number = 1,
 ): CartItem {
-  const quantity = existingItem ? existingItem.quantity + 1 : 1;
+  const quantity = existingItem ? existingItem.quantity + qty : qty;
   const totalAmount = calculateItemCost(quantity, variant.price.amount);
 
   return {
@@ -166,7 +171,7 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
       };
     }
     case "ADD_ITEM": {
-      const { variant, product } = action.payload;
+      const { variant, product, qty } = action.payload;
       const existingItem = currentCart.lines.find(
         (item) => item.merchandise.id === variant.id,
       );
@@ -174,6 +179,7 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
         existingItem,
         variant,
         product,
+        qty,
       );
 
       const updatedLines = existingItem
@@ -181,6 +187,35 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
             item.merchandise.id === variant.id ? updatedItem : item,
           )
         : [...currentCart.lines, updatedItem];
+
+      return {
+        ...currentCart,
+        ...updateCartTotals(updatedLines),
+        lines: updatedLines,
+      };
+    }
+    case "ADD_MULTIPLE_ITEMS": {
+      const { variants, product } = action.payload;
+      let updatedLines = [...currentCart.lines];
+
+      for (const variant of variants) {
+        const existingItemIndex = updatedLines.findIndex(
+          (item) => item.merchandise.id === variant.id,
+        );
+        const existingItem =
+          existingItemIndex >= 0 ? updatedLines[existingItemIndex] : undefined;
+        const updatedItem = createOrUpdateCartItem(
+          existingItem,
+          variant,
+          product,
+        );
+
+        if (existingItemIndex >= 0) {
+          updatedLines[existingItemIndex] = updatedItem;
+        } else {
+          updatedLines.push(updatedItem);
+        }
+      }
 
       return {
         ...currentCart,
@@ -229,8 +264,12 @@ export function useCart() {
     });
   };
 
-  const addCartItem = (variant: ProductVariant, product: Product) => {
-    updateOptimisticCart({ type: "ADD_ITEM", payload: { variant, product } });
+  const addCartItem = (variant: ProductVariant, product: Product, qty: number = 1) => {
+    updateOptimisticCart({ type: "ADD_ITEM", payload: { variant, product, qty } });
+  };
+
+  const addMultipleCartItems = (variants: ProductVariant[], product: Product) => {
+    updateOptimisticCart({ type: "ADD_MULTIPLE_ITEMS", payload: { variants, product } });
   };
 
   return useMemo(
@@ -238,6 +277,7 @@ export function useCart() {
       cart: optimisticCart,
       updateCartItem,
       addCartItem,
+      addMultipleCartItems,
       isOpen,
       setIsOpen,
     }),

@@ -3,7 +3,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { removeItem } from "components/cart/actions";
 import type { CartItem } from "lib/vadmin/types";
-import { useActionState } from "react";
+import { useTransition } from "react";
 
 export function DeleteItemButton({
 	item,
@@ -12,27 +12,29 @@ export function DeleteItemButton({
 	item: CartItem;
 	optimisticUpdate: any;
 }) {
-	const [message, formAction] = useActionState(removeItem, null);
+	const [isPending, startTransition] = useTransition();
 	const merchandiseId = item.merchandise.id;
-	const removeItemAction = formAction.bind(null, merchandiseId);
+
+	const handleRemove = () => {
+		startTransition(async () => {
+			optimisticUpdate(merchandiseId, "delete");
+			const result = await removeItem(null, merchandiseId);
+			if (result) {
+				const { toast } = await import("sonner");
+				toast.error(result);
+			}
+		});
+	};
 
 	return (
-		<form
-			action={async () => {
-				optimisticUpdate(merchandiseId, "delete");
-				removeItemAction();
-			}}
+		<button
+			type="button"
+			onClick={handleRemove}
+			disabled={isPending}
+			aria-label="Remove cart item"
+			className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-graphite disabled:opacity-50"
 		>
-			<button
-				type="submit"
-				aria-label="Remove cart item"
-				className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-graphite"
-			>
-				<XMarkIcon className="mx-px h-4 w-4 text-parchment" />
-			</button>
-			<p aria-live="polite" className="sr-only" role="status">
-				{message}
-			</p>
-		</form>
+			<XMarkIcon className="mx-px h-4 w-4 text-parchment" />
+		</button>
 	);
 }

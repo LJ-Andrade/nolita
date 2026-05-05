@@ -14,7 +14,8 @@ import { redirect } from "next/navigation";
 
 export async function addItem(
   prevState: any,
-  selectedVariantId: string | undefined
+  selectedVariantId: string | undefined,
+  quantity: number = 1
 ) {
   if (!selectedVariantId) {
     return "Error adding item to cart";
@@ -27,10 +28,34 @@ export async function addItem(
 
 
   try {
-    await addToCart([{ merchandiseId: selectedVariantId, quantity: 1 }]);
+    await addToCart([{ merchandiseId: selectedVariantId, quantity }]);
     updateTag(TAGS.cart);
   } catch (e: any) {
+    if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
     return e.message || "Error al agregar el producto al carrito";
+  }
+}
+
+export async function addMultipleItems(
+  prevState: any,
+  variantIds: string[]
+) {
+  if (!variantIds || variantIds.length === 0) {
+    return "Error adding items to cart: No variants provided";
+  }
+
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) {
+    redirect("/login");
+  }
+
+  try {
+    const items = variantIds.map((id) => ({ merchandiseId: id, quantity: 1 }));
+    await addToCart(items);
+    updateTag(TAGS.cart);
+  } catch (e: any) {
+    if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
+    return e.message || "Error al agregar los productos al carrito";
   }
 }
 
@@ -52,7 +77,8 @@ export async function removeItem(prevState: any, merchandiseId: string) {
     } else {
       return "Item not found in cart";
     }
-  } catch (e) {
+  } catch (e: any) {
+    if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
     return "Error removing item from cart";
   }
 }
@@ -96,6 +122,7 @@ export async function updateItemQuantity(
 
     updateTag(TAGS.cart);
   } catch (e: any) {
+    if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
     return e.message || "Error al actualizar la cantidad";
   }
 }

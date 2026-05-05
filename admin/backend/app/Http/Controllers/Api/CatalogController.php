@@ -39,7 +39,7 @@ class CatalogController extends Controller
         $products = $query->orderBy('order')->get();
 
         // Transform for Next.js Commerce expectation
-        $transformed = $products->map(function($product) {
+        $transformed = $products->map(function (Product $product) {
             return $this->transformProduct($product);
         });
 
@@ -97,12 +97,13 @@ class CatalogController extends Controller
             ],
             'variants' => $product->variants->map(function($variant) {
                 return [
-                    'id' => (string)$variant->id,
-                    'title' => $this->getVariantTitle($variant),
-                    'availableForSale' => $variant->stock > 0 && $variant->active,
-                    'selectedOptions' => $this->getVariantOptions($variant),
-                    'price' => [
-                        'amount' => (string)($variant->price ?? $variant->product->sale_price),
+                    'id'                => (string)$variant->id,
+                    'title'             => $this->getVariantTitle($variant),
+                    'availableForSale'  => $variant->stock > 0 && $variant->active,
+                    'quantityAvailable' => (int)($variant->stock ?? 0),
+                    'selectedOptions'   => $this->getVariantOptions($variant),
+                    'price'             => [
+                        'amount'       => (string)($variant->price ?? $variant->product->sale_price),
                         'currencyCode' => 'ARS',
                     ],
                 ];

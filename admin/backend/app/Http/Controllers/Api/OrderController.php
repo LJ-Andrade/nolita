@@ -18,7 +18,7 @@ class OrderController extends Controller
     {
         $cart = Order::where('customer_id', $request->user()->id)
             ->where('status', 'pending')
-            ->with(['items.variant.product', 'items.variant.color', 'items.variant.size'])
+            ->with(['items.variant.product.colors', 'items.variant.product.media', 'items.variant.color', 'items.variant.size'])
             ->latest()
             ->first();
 
@@ -61,6 +61,7 @@ class OrderController extends Controller
             );
 
             // Find or create item
+            /** @var \App\Models\OrderItem|null $item */
             $item = $cart->items()->where('product_variant_id', $variant->id)->first();
 
             if ($item) {
@@ -88,7 +89,7 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return response()->json($this->transformCart($cart->load('items.variant.product')));
+            return response()->json($this->transformCart($cart->fresh(['items.variant.product.colors', 'items.variant.product.media', 'items.variant.color', 'items.variant.size'])));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error adding to cart: ' . $e->getMessage()], 500);
@@ -135,7 +136,7 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return response()->json($this->transformCart($cart->load('items.variant.product')));
+            return response()->json($this->transformCart($cart->fresh(['items.variant.product.colors', 'items.variant.product.media', 'items.variant.color', 'items.variant.size'])));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error updating cart item'], 500);
@@ -164,14 +165,25 @@ class OrderController extends Controller
             if ($cart->items()->count() === 0) {
                 $cart->delete();
                 DB::commit();
-                return response()->json(['message' => 'Cart deleted because it was empty'], 200);
+                
+                return response()->json([
+                    'id' => null,
+                    'checkoutUrl' => '',
+                    'cost' => [
+                        'subtotalAmount' => ['amount' => '0', 'currencyCode' => 'ARS'],
+                        'totalAmount' => ['amount' => '0', 'currencyCode' => 'ARS'],
+                        'totalTaxAmount' => ['amount' => '0', 'currencyCode' => 'ARS'],
+                    ],
+                    'lines' => [],
+                    'totalQuantity' => 0
+                ], 200);
             }
 
             $this->updateCartTotal($cart);
 
             DB::commit();
 
-            return response()->json($this->transformCart($cart->load('items.variant.product')));
+            return response()->json($this->transformCart($cart->fresh(['items.variant.product.colors', 'items.variant.product.media', 'items.variant.color', 'items.variant.size'])));
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error removing cart item'], 500);
@@ -278,6 +290,9 @@ class OrderController extends Controller
                 ],
             ],
             'lines' => $cart->items->map(function($item) {
+                if (!$item->variant || !$item->variant->product) {
+                    return null;
+                }
                 return [
                     'id' => (string)$item->id,
                     'quantity' => $item->quantity,
@@ -300,10 +315,18 @@ class OrderController extends Controller
                                 'url' => $item->variant->product->getFirstMediaUrl('cover'),
                                 'altText' => $item->variant->product->name,
                             ],
+                            'colorImages' => $item->variant->product->getMedia('color_images')->map(function ($media) use ($item) {
+                                $color = $item->variant->product->colors->firstWhere('id', $media->getCustomProperty('color_id'));
+                                if (!$color) return null;
+                                return [
+                                    'color' => $color->name,
+                                    'url' => $media->getFullUrl(),
+                                ];
+                            })->filter()->values()->toArray(),
                         ],
                     ],
                 ];
-            }),
+            })->filter()->values(),
             'totalQuantity' => $cart->items->sum('quantity'),
         ];
     }
@@ -311,6 +334,8 @@ class OrderController extends Controller
     private function getVariantOptions($variant)
     {
         $options = [];
+        if (!$variant) return $options;
+
         if ($variant->color) {
             $options[] = ['name' => 'Color', 'value' => $variant->color->name];
         }

@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import axiosClient from '@/lib/axios';
 import {
   Form,
   FormControl,
@@ -15,33 +17,107 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, X } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { useCrudForm } from '@/hooks/use-crud-form';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 export default function CategoryForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [entityName, setEntityName] = useState('');
+  const [pendingCover, setPendingCover] = useState(null);
 
   const formSchema = z.object({
-    name: z.string().min(1, "El nombre debe tener al menos 2 caracteres."),
+    name: z.string().min(1, "El nombre debe tener al menos 1 caracter."),
     slug: z.string().nullable(),
+    listed: z.boolean().default(false),
+    order: z.coerce.number().int().default(0),
   });
 
-  const { form, loading, fetching, entityName, onSubmit } = useCrudForm({
-    endpoint: 'product-categories',
-    id,
-    schema: formSchema,
+  const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       slug: '',
-    },
-    onSuccess: () => navigate('/productos-categorias'),
-    messages: {
-      createSuccess: "Categoría creada correctamente",
-      updateSuccess: "Categoría actualizada correctamente",
-      createError: "Error al crear la categoría",
-      updateError: "Error al actualizar la categoría",
+      listed: false,
+      order: 0,
     },
   });
+
+  useEffect(() => {
+    if (id) {
+      setFetching(true);
+      axiosClient
+        .get(`product-categories/${id}`)
+        .then(({ data }) => {
+          const entityData = data.data || data;
+          form.reset({
+            name: entityData.name || '',
+            slug: entityData.slug || '',
+            listed: entityData.listed || false,
+            order: entityData.order || 0,
+          });
+          setEntityName(entityData.name || '');
+          if (entityData.image) {
+            setPendingCover(entityData.image);
+          }
+          setFetching(false);
+        })
+        .catch(() => {
+          toast.error("Error al cargar la categoría");
+          setFetching(false);
+        });
+    }
+  }, [id, form]);
+
+  const onSubmit = async (values) => {
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('slug', values.slug || '');
+      formData.append('listed', values.listed ? '1' : '0');
+      formData.append('order', String(values.order || 0));
+      
+      console.log('pendingCover type:', pendingCover?.constructor?.name);
+      console.log('pendingCover value:', pendingCover);
+      
+      if (pendingCover instanceof File) {
+        console.log('Appending file to FormData');
+        formData.append('image', pendingCover);
+      }
+
+      let response;
+
+      if (id) {
+        formData.append('_method', 'PUT');
+        response = await axiosClient.post(`product-categories/${id}`, formData);
+        toast.success("Categoría actualizada correctamente");
+      } else {
+        response = await axiosClient.post('product-categories', formData);
+        toast.success("Categoría creada correctamente");
+      }
+
+      navigate('/productos-categorias');
+      return response;
+    } catch (error) {
+      const serverErrors = error.response?.data?.errors;
+      if (serverErrors) {
+        Object.entries(serverErrors).forEach(([key, messages]) => {
+          const message = Array.isArray(messages) ? messages[0] : messages;
+          form.setError(key, { message });
+        });
+      } else {
+        toast.error(id ? "Error al actualizar la categoría" : "Error al crear la categoría");
+      }
+      console.error('Submit error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (fetching) {
     return (
@@ -109,6 +185,62 @@ export default function CategoryForm() {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>{"Imagen"}</FormLabel>
+                      <FormControl>
+                        <ImageUpload
+                          value={pendingCover}
+                          onChange={(file) => {
+                            setPendingCover(file);
+                          }}
+                          disabled={loading}
+                          aspect={1}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{"Orden"}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          value={field.value || 0}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="listed"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>{"Mostrar en home"}</FormLabel>
+                      </div>
                     </FormItem>
                   )}
                 />

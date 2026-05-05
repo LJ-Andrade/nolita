@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { CustomerSession } from "lib/vadmin/auth";
+
+type Province = { id: number; name: string };
+type Locality = { id: number; name: string; province_id: number };
 
 type CheckoutFormData = Partial<CustomerSession> & {
   city?: string | null;
@@ -9,9 +13,29 @@ type CheckoutFormData = Partial<CustomerSession> & {
 
 export default function CheckoutForm({
   initialData = {},
+  provinces,
+  localities,
 }: {
   initialData?: CheckoutFormData | null;
+  provinces: Province[];
+  localities: Locality[];
 }) {
+  const [selectedProvince, setSelectedProvince] = useState(
+    initialData?.province_id ? String(initialData.province_id) : ""
+  );
+  const [selectedLocality, setSelectedLocality] = useState(
+    initialData?.locality_id ? String(initialData.locality_id) : ""
+  );
+
+  const provinceLocalities = selectedProvince
+    ? localities.filter(l => l.province_id === Number(selectedProvince))
+    : [];
+
+  const handleProvinceChange = (provinceId: string) => {
+    setSelectedProvince(provinceId);
+    setSelectedLocality("");
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="border-b border-bone pb-2 font-serif text-xl font-medium">
@@ -90,21 +114,53 @@ export default function CheckoutForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label
-            htmlFor="city"
+            htmlFor="province_id"
             className="text-xs font-semibold uppercase tracking-wider text-stone-brown"
           >
-            Ciudad
+            Provincia
           </label>
-          <input
-            id="city"
-            name="city"
-            type="text"
-            required
+          <select
+            id="province_id"
+            name="province_id"
+            value={selectedProvince}
+            onChange={(e) => handleProvinceChange(e.target.value)}
             className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-graphite"
-            defaultValue={initialData?.city || ""}
-          />
+          >
+            <option value="">Seleccionar provincia</option>
+            {provinces.map((prov) => (
+              <option key={prov.id} value={String(prov.id)}>
+                {prov.name}
+              </option>
+            ))}
+          </select>
         </div>
 
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="locality_id"
+            className="text-xs font-semibold uppercase tracking-wider text-stone-brown"
+          >
+            Localidad
+          </label>
+          <select
+            id="locality_id"
+            name="locality_id"
+            value={selectedLocality}
+            onChange={(e) => setSelectedLocality(e.target.value)}
+            disabled={!selectedProvince}
+            className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-graphite disabled:opacity-50"
+          >
+            <option value="">Seleccionar localidad</option>
+            {provinceLocalities.map((loc) => (
+              <option key={loc.id} value={String(loc.id)}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label
             htmlFor="postal_code"

@@ -119,3 +119,51 @@ A multi-step checkout process implemented in the frontend to collect shipping an
 2. **Authentication**: Users must be authenticated to access the checkout.
 3. **Methods**: Shipping and payment methods are fetched from VADMIN.
 4. **Completion**: The `completeOrder` action sends collected data to `customer/cart/checkout`.
+5. **Summary UI**: 
+   - Shows detailed item options (Size, Color).
+   - Dynamically loads the specific color image if the selected variant has a color match.
+   - Allows removing items directly from the summary.
+
+---
+
+## 9. Customer Addresses: Provinces and Localities
+
+### 9.1 Overview
+**Objective:** Add geographic data (province and locality) to Customer model, with two new related models: Province and Locality.
+
+### 9.2 Backend Changes
+
+#### Models
+- `Province`: id, name, code (ISO), timestamps
+- `Locality`: id, name, province_id (FK), timestamps
+
+#### Customer Update
+- Add `prov_id` (FK to provinces) nullable
+- Add `loc_id` (FK to localities) nullable
+- Relationships: Customer belongsTo Province, Customer belongsTo Locality
+
+#### Data Contract (API)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/provinces` | List all provinces |
+| GET | `/api/localities?province_id=X` | List localities by province |
+| GET | `/api/customers` | List customers (includes province/locality) |
+| POST | `/api/customers` | Create customer with prov_id/loc_id |
+| PUT | `/api/customers/{id}` | Update customer with prov_id/loc_id |
+
+### 9.3 Frontend Changes
+- Admin: CustomerForm adds province/locality selects (cascading)
+- Web: profile-form and checkout-form add province/locality fields
+- Types: CustomerSession updated with prov_id, loc_id
+
+---
+
+## 8. Catalog: Add Size Curve (Curva de Talle)
+
+### 7.1 Overview
+**Objective:** Allow users to add a complete "size curve" (one item of every available variant) directly from the product card in the catalog.
+
+### 7.2 Implementation
+- **UI:** A button "Agregar curva de talle" appears below the "Ver Producto" button on product card hover.
+- **Action:** Triggers a server action `addMultipleItems` sending an array of available variant IDs.
+- **State:** Updates optimistic cart state via `ADD_MULTIPLE_ITEMS` action in the cart context.

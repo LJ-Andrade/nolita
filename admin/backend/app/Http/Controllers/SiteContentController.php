@@ -89,12 +89,26 @@ class SiteContentController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('web', 'public');
-            $url = Storage::disk('public')->url($path);
-            
+            $file = $request->file('image');
+            $key  = $request->input('key');
+
+            // Hero banner is always saved with a fixed filename so the web
+            // can reference a predictable path (hero_1.<ext>).
+            if ($key === 'home_hero_banner') {
+                $extension = $file->getClientOriginalExtension();
+                $filename  = "hero_1.{$extension}";
+                $path      = $file->storeAs('web', $filename, 'public');
+            } else {
+                $path = $file->store('web', 'public');
+            }
+
+            /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
+            $publicDisk = Storage::disk('public');
+            $url = $publicDisk->url($path);
+
             return response()->json([
-                'url' => $url,
-                'path' => $path
+                'url'  => $url,
+                'path' => $path,
             ]);
         }
 

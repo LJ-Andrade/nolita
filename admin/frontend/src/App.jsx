@@ -49,6 +49,10 @@ import NotificationsPage from './views/NotificationsPage';
 import ActivityLogsList from './views/activity-logs/ActivityLogsList';
 import CustomersList from './views/customers/CustomersList';
 import CustomerForm from './views/customers/CustomerForm';
+import LocalitiesList from './views/localities/LocalitiesList';
+import LocalityForm from './views/localities/LocalityForm';
+import ProvincesList from './views/provinces/ProvincesList';
+import ProvinceForm from './views/provinces/ProvinceForm';
 import OrdersList from './views/orders/OrdersList';
 import OrderDetails from './views/orders/OrderDetails';
 import ContactMessagesList from './views/contact-messages/ContactMessagesList';
@@ -204,37 +208,37 @@ function App() {
 				} />
 
 				<Route path="/productos-categorias" element={
-					<ProtectedRoute permission="view product categories">
+					<ProtectedRoute permission="users.view">
 						<ProductCategoriesList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-categorias/crear" element={
-					<ProtectedRoute permission="manage product categories">
+					<ProtectedRoute permission="users.view">
 						<ProductCategoryForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-categorias/editar/:id" element={
-					<ProtectedRoute permission="manage product categories">
+					<ProtectedRoute permission="users.view">
 						<ProductCategoryForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-etiquetas" element={
-					<ProtectedRoute permission="view product tags">
+					<ProtectedRoute permission="users.view">
 						<ProductTagsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-etiquetas/crear" element={
-					<ProtectedRoute permission="manage product tags">
+					<ProtectedRoute permission="users.view">
 						<ProductTagForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-etiquetas/editar/:id" element={
-					<ProtectedRoute permission="manage product tags">
+					<ProtectedRoute permission="users.view">
 						<ProductTagForm />
 					</ProtectedRoute>
 				} />
@@ -318,6 +322,42 @@ function App() {
 					</ProtectedRoute>
 				} />
 
+				<Route path="/localidades" element={
+					<ProtectedRoute permission="users.view">
+						<LocalitiesList />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/localidades/crear" element={
+					<ProtectedRoute permission="users.view">
+						<LocalityForm />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/localidades/editar/:id" element={
+					<ProtectedRoute permission="users.view">
+						<LocalityForm />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/provincias" element={
+					<ProtectedRoute permission="users.view">
+						<ProvincesList />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/provincias/crear" element={
+					<ProtectedRoute permission="users.view">
+						<ProvinceForm />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/provincias/editar/:id" element={
+					<ProtectedRoute permission="users.view">
+						<ProvinceForm />
+					</ProtectedRoute>
+				} />
+
 				<Route path="/pedidos" element={
 					<ProtectedRoute permission="view orders">
 						<OrdersList />
@@ -349,91 +389,91 @@ function App() {
 				} />
 
 				<Route path="/productos-colores" element={
-					<ProtectedRoute permission="view product colors">
+					<ProtectedRoute permission="users.view">
 						<ProductColorsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-colores/crear" element={
-					<ProtectedRoute permission="manage product colors">
+					<ProtectedRoute permission="users.view">
 						<ProductColorForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-colores/editar/:id" element={
-					<ProtectedRoute permission="manage product colors">
+					<ProtectedRoute permission="users.view">
 						<ProductColorForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles" element={
-					<ProtectedRoute permission="view product sizes">
+					<ProtectedRoute permission="users.view">
 						<ProductSizesList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles/crear" element={
-					<ProtectedRoute permission="manage product sizes">
+					<ProtectedRoute permission="users.view">
 						<ProductSizeForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles/editar/:id" element={
-					<ProtectedRoute permission="manage product sizes">
+					<ProtectedRoute permission="users.view">
 						<ProductSizeForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/cupones" element={
-					<ProtectedRoute permission="view coupons">
+					<ProtectedRoute permission="users.view">
 						<CouponsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/cupones/crear" element={
-					<ProtectedRoute permission="manage coupons">
+					<ProtectedRoute permission="users.view">
 						<CouponForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/cupones/editar/:id" element={
-					<ProtectedRoute permission="manage coupons">
+					<ProtectedRoute permission="users.view">
 						<CouponForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-pago" element={
-					<ProtectedRoute permission="manage payment methods">
+					<ProtectedRoute permission="users.view">
 						<PaymentMethodsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-pago/crear" element={
-					<ProtectedRoute permission="manage payment methods">
+					<ProtectedRoute permission="users.view">
 						<PaymentMethodForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-pago/editar/:id" element={
-					<ProtectedRoute permission="manage payment methods">
+					<ProtectedRoute permission="users.view">
 						<PaymentMethodForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-envio" element={
-					<ProtectedRoute permission="manage delivery methods">
+					<ProtectedRoute permission="users.view">
 						<DeliveryMethodsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-envio/crear" element={
-					<ProtectedRoute permission="manage delivery methods">
+					<ProtectedRoute permission="users.view">
 						<DeliveryMethodForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/metodos-envio/editar/:id" element={
-					<ProtectedRoute permission="manage delivery methods">
+					<ProtectedRoute permission="users.view">
 						<DeliveryMethodForm />
 					</ProtectedRoute>
 				} />

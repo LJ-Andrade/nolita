@@ -166,12 +166,12 @@ export default function DashboardLayout({ children }) {
 												>
 													<div className="flex items-center gap-2 w-full">
 														{!notification.read_at && (
-															<span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+															<span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
 														)}
 														<span className="font-medium text-sm flex-1 truncate">{notification.title}</span>
 														<button
 															onClick={(e) => deleteNotification(e, notification.id)}
-															className="h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0"
+															className="h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center shrink-0"
 														>
 															<X className="h-3 w-3" />
 														</button>

@@ -243,7 +243,7 @@ export async function getPages(): Promise<Page[]> {
 
 export async function getSiteContent(section?: string): Promise<Record<string, string>> {
   "use cache";
-  cacheTag(TAGS.collections); // Using collections tag as a proxy or define a new one if needed
+  cacheTag(TAGS.collections);
   cacheLife("days");
 
   try {
@@ -256,4 +256,33 @@ export async function getSiteContent(section?: string): Promise<Record<string, s
     console.error("Error fetching site content:", e);
     return {};
   }
+}
+
+export type Province = {
+  id: number;
+  name: string;
+  code: string | null;
+  cost: number | null;
+};
+
+export type Locality = {
+  id: number;
+  name: string;
+  province_id: number;
+  cost: number | null;
+};
+
+export async function getProvinces(): Promise<Province[]> {
+  const res = await vadminFetch<Province[]>({
+    path: "provinces",
+  });
+  return res.body;
+}
+
+export async function getLocalities(provinceId?: number): Promise<Locality[]> {
+  const res = await vadminFetch<Locality[]>({
+    path: "localities",
+    params: provinceId ? { province_id: String(provinceId) } : undefined,
+  });
+  return res.body;
 }

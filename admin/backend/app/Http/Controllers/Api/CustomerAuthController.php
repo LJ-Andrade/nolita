@@ -26,6 +26,11 @@ class CustomerAuthController extends Controller
             'dni' => $request->dni,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'postal_code' => $request->postal_code,
+            'province_id' => $request->province_id,
+            'locality_id' => $request->locality_id,
         ]);
 
         $token = $customer->createToken('customer-auth-token')->plainTextToken;
@@ -77,7 +82,8 @@ class CustomerAuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $customer = $request->user()->load(['province', 'locality']);
+        return response()->json($customer);
     }
 
     public function update(Request $request)
@@ -92,6 +98,8 @@ class CustomerAuthController extends Controller
             'address' => ['nullable', 'string', 'max:1000'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'province_id' => ['nullable', 'exists:provinces,id'],
+            'locality_id' => ['nullable', 'exists:localities,id'],
         ]);
 
         if (empty($validated['password'])) {

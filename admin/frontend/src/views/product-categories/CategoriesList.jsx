@@ -1,9 +1,19 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import axiosClient from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import {
 	Plus,
 	Edit,
@@ -12,6 +22,10 @@ import {
 	Filter,
 	X,
 	ChevronDown,
+	Check,
+	ArrowUpDown,
+	ArrowUp,
+	ArrowDown,
 } from 'lucide-react';
 import {
 	Collapsible,
@@ -23,7 +37,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Can from '@/components/can';
 import { useCrudList } from '@/hooks/use-crud-list';
-import { CrudTable } from '@/components/crud-table';
 import { CrudPagination } from '@/components/crud-pagination';
 import { BulkActionsBar } from '@/components/bulk-actions-bar';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
@@ -34,6 +47,12 @@ export default function CategoriesList() {
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [categoryToDelete, setCategoryToDelete] = useState(null);
+
+	// Inline editing states
+	const [editingOrderId, setEditingOrderId] = useState(null);
+	const [editingOrderValue, setEditingOrderValue] = useState("");
+	const [savingOrderId, setSavingOrderId] = useState(null);
+	const [showSuccessId, setShowSuccessId] = useState(null);
 
 	const {
 		items: categories,
@@ -55,17 +74,22 @@ export default function CategoriesList() {
 		toggleSelect,
 		toggleSelectAll,
 		clearSelection,
+		fetchItems,
+		refresh,
 	} = useCrudList({
 		endpoint: 'product-categories',
 		filterKeys: ['search', 'filter_id', 'filter_name'],
 		defaultSort: { column: 'id', direction: 'desc' },
 	});
 
-	const columns = [
-		{ key: 'id', label: "ID", sortable: true, width: 'w-[60px]' },
-		{ key: 'name', label: "Nombre", sortable: true },
-		{ key: 'created_at', label: "Creado el", sortable: true, align: 'right', width: 'w-[130px]', format: 'date' },
-	];
+	const getSortIcon = (column) => {
+		if (sortBy !== column) return <ArrowUpDown className="ml-2 h-4 w-4" />;
+		return sortDir === 'asc' ? (
+			<ArrowUp className="ml-2 h-4 w-4" />
+		) : (
+			<ArrowDown className="ml-2 h-4 w-4" />
+		);
+	};
 
 	const handleDeleteClick = (category) => {
 		setCategoryToDelete(category);
@@ -95,6 +119,68 @@ export default function CategoriesList() {
 		if (success) {
 			setIsDeleting(false);
 		}
+	};
+
+	// Inline order editing
+	const startEditOrder = (id, currentOrder) => {
+		setEditingOrderId(id);
+		setEditingOrderValue(currentOrder !== null ? String(currentOrder) : "0");
+	};
+
+	const cancelEditOrder = () => {
+		setEditingOrderId(null);
+		setEditingOrderValue("");
+	};
+
+	const saveEditOrder = (id) => {
+		if (editingOrderValue === "") {
+			cancelEditOrder();
+			return;
+		}
+		const orderValue = parseInt(editingOrderValue);
+		if (isNaN(orderValue)) {
+			toast.error("Ingresá un número válido");
+			return;
+		}
+		setSavingOrderId(id);
+		axiosClient.put(`product-categories/${id}`, { order: orderValue })
+			.then(() => {
+				setEditingOrderId(null);
+				setShowSuccessId(id);
+				setTimeout(() => setShowSuccessId(null), 2000);
+				refresh();
+			})
+			.catch(() => {
+				toast.error("Error al guardar");
+			})
+			.finally(() => {
+				setSavingOrderId(null);
+			});
+	};
+
+	const handleOrderKeyDown = (e, id) => {
+		if (e.key === "Enter") {
+			saveEditOrder(id);
+		} else if (e.key === "Escape") {
+			cancelEditOrder();
+		}
+	};
+
+	// Toggle listed
+	const toggleListed = (category) => {
+		axiosClient.put(`product-categories/${category.id}`, {
+			listed: !category.listed,
+			name: category.name,
+			slug: category.slug,
+			order: category.order,
+		})
+			.then(() => {
+				refresh();
+				toast.success(`Categoría "${category.name}" ${category.listed ? 'no se mostrará en la web' : 'se mostrará en la web'}	`);
+			})
+			.catch(() => {
+				toast.error("Error al actualizar");
+			});
 	};
 
 	const renderActions = (category, isDropdown = false) => (
@@ -174,7 +260,7 @@ export default function CategoriesList() {
 									<Filter className="mr-2 h-4 w-4" />
 									{"Búsqueda Avanzada"}
 									<ChevronDown
-										className={`ml-2 h-4 w-4 transition-transform ${isFiltersOpen ? 'rotate-180' : ''
+										className={`ml - 2 h - 4 w - 4 transition - transform ${isFiltersOpen ? 'rotate-180' : ''
 											}`}
 									/>
 								</Button>
@@ -215,22 +301,137 @@ export default function CategoriesList() {
 						</CollapsibleContent>
 					</Collapsible>
 
-					<CrudTable
-						items={categories}
-						columns={columns}
-						loading={loading}
-						selectable={true}
-						selectedIds={selectedIds}
-						isAllSelected={isAllSelected}
-						onSelectt={toggleSelect}
-						onSelecttAll={toggleSelectAll}
-						sortBy={sortBy}
-						sortDir={sortDir}
-						onSortt={handleSort}
-						actions={renderActions}
-						emptyMessage={"No se encontraron datos."}
-						loadingMessage={"Cargando..."}
-					/>
+					<div className="rounded-md border">
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead className="w-10">
+										<Checkbox
+											checked={isAllSelected}
+											onCheckedChange={toggleSelectAll}
+										/>
+									</TableHead>
+									<TableHead className="w-[60px]">ID</TableHead>
+									<TableHead className="w-[80px]">Imagen</TableHead>
+									<TableHead
+										className="cursor-pointer select-none"
+										onClick={() => handleSort('name')}
+									>
+										<div className="flex items-center">
+											Nombre
+											{getSortIcon('name')}
+										</div>
+									</TableHead>
+									<TableHead className="w-[100px]">
+										<div className="flex items-center">
+											En Home
+										</div>
+									</TableHead>
+									<TableHead className="w-[100px]">
+										<div className="flex items-center">
+											Orden
+										</div>
+									</TableHead>
+									<TableHead
+										className="w-[130px] text-right cursor-pointer select-none"
+										onClick={() => handleSort('created_at')}
+									>
+										<div className="flex items-center justify-end">
+											Creado el
+											{getSortIcon('created_at')}
+										</div>
+									</TableHead>
+									<TableHead className="w-[100px] text-right">Acciones</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{loading ? (
+									<TableRow>
+										<TableCell colSpan={8} className="h-24 text-center">
+											Cargando...
+										</TableCell>
+									</TableRow>
+								) : categories.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={8} className="h-24 text-center">
+											No se encontraron datos.
+										</TableCell>
+									</TableRow>
+								) : (
+									categories.map((category) => (
+										<TableRow key={category.id}>
+											<TableCell>
+												<Checkbox
+													checked={selectedIds.includes(category.id)}
+													onCheckedChange={() => toggleSelect(category.id)}
+												/>
+											</TableCell>
+											<TableCell className="w-[60px]">{category.id}</TableCell>
+											<TableCell className="w-[80px]">
+												{category.image ? (
+													<img src={category.image} alt={category.name} className="w-12 h-12 object-cover rounded" />
+												) : null}
+											</TableCell>
+											<TableCell>{category.name}</TableCell>
+											<TableCell className="w-[100px]">
+												<Checkbox
+													checked={category.listed}
+													onCheckedChange={() => toggleListed(category)}
+												/>
+											</TableCell>
+											<TableCell className="w-[100px]">
+												{editingOrderId === category.id ? (
+													<div className="flex items-center gap-1">
+														<Input
+															type="number"
+															className="w-16 h-7 text-sm"
+															value={editingOrderValue}
+															onChange={(e) => setEditingOrderValue(e.target.value)}
+															onKeyDown={(e) => handleOrderKeyDown(e, category.id)}
+															autoFocus
+														/>
+														<Button
+															variant="ghost"
+															size="icon"
+															className="h-7 w-7 text-green-500 hover:text-green-600"
+															onClick={() => saveEditOrder(category.id)}
+															disabled={savingOrderId === category.id}
+														>
+															{savingOrderId === category.id ? (
+																<div className="h-4 w-4 border-2 border-t-green-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+															) : (
+																<Check className="h-4 w-4" />
+															)}
+														</Button>
+													</div>
+												) : showSuccessId === category.id ? (
+													<div className="flex items-center gap-1 text-green-500">
+														<span className="text-sm">{category.order}</span>
+														<Check className="h-4 w-4" />
+													</div>
+												) : (
+													<div
+														className="cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 inline-block"
+														onClick={() => startEditOrder(category.id, category.order)}
+													>
+														<span className="text-sm">{category.order}</span>
+													</div>
+												)}
+											</TableCell>
+											<TableCell className="text-right w-[130px]">
+												{new Date(category.created_at).toLocaleDateString()}
+											</TableCell>
+											<TableCell className="text-right w-[100px]">
+												<div className="flex items-center justify-end gap-1">
+													{renderActions(category)}
+												</div>
+											</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					</div>
 
 					<CrudPagination
 						meta={meta}

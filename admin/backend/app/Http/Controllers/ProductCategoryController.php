@@ -7,6 +7,7 @@ use App\Http\Resources\ProductCategoryResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCategoryController extends Controller
 {
@@ -41,7 +42,7 @@ class ProductCategoryController extends Controller
         $sortBy = $request->input('sort_by', 'id');
         $sortDir = $request->input('sort_dir', 'desc');
 
-        if (in_array($sortBy, ['id', 'name', 'created_at'])) {
+        if (in_array($sortBy, ['id', 'name', 'created_at', 'order'])) {
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
@@ -57,6 +58,9 @@ class ProductCategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:product_categories,slug',
+            'image' => 'nullable|image|max:2048',
+            'listed' => 'nullable|boolean',
+            'order' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -75,6 +79,12 @@ class ProductCategoryController extends Controller
 
         $category = ProductCategory::create($data);
 
+        if ($request->hasFile('image')) {
+            Storage::disk('public')->makeDirectory('categories');
+            $path = $request->file('image')->storeAs('categories', $category->id . '.jpg', 'public');
+            $category->update(['image' => $path]);
+        }
+
         return new ProductCategoryResource($category);
     }
 
@@ -88,6 +98,9 @@ class ProductCategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:product_categories,slug,' . $product_category->id,
+            'image' => 'nullable|image|max:2048',
+            'listed' => 'nullable|boolean',
+            'order' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -102,6 +115,12 @@ class ProductCategoryController extends Controller
             while (ProductCategory::where('slug', $data['slug'])->where('id', '!=', $product_category->id)->exists()) {
                 $data['slug'] = $originalSlug . '-' . $count++;
             }
+        }
+
+        if ($request->hasFile('image')) {
+            Storage::disk('public')->makeDirectory('categories');
+            $path = $request->file('image')->storeAs('categories', $product_category->id . '.jpg', 'public');
+            $data['image'] = $path;
         }
 
         $product_category->update($data);

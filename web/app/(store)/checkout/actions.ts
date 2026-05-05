@@ -1,6 +1,7 @@
 "use server";
 
 import { checkout } from "lib/vadmin/cart";
+import { revalidatePath } from "next/cache";
 
 export type CheckoutState = {
   status: "idle" | "success" | "error";
@@ -25,6 +26,7 @@ export async function completeOrder(
   const result = await checkout(data);
 
   if (result.success) {
+    revalidatePath("/", "layout");
     return {
       status: "success",
       message: result.message || "Checkout successful",

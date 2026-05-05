@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import LoadingDots from "components/loading-dots";
@@ -24,7 +24,18 @@ function SaveButton() {
   );
 }
 
-export default function ProfileForm({ customer }: { customer: CustomerSession }) {
+type Province = { id: number; name: string };
+type Locality = { id: number; name: string; province_id: number };
+
+export default function ProfileForm({
+  customer,
+  provinces,
+  localities,
+}: {
+  customer: CustomerSession;
+  provinces: Province[];
+  localities: Locality[];
+}) {
   const [state, formAction] = useActionState<ProfileFormState, FormData>(
     updateProfileAction,
     {
@@ -35,6 +46,17 @@ export default function ProfileForm({ customer }: { customer: CustomerSession })
   );
   const currentCustomer = state.customer || customer;
 
+  const [selectedProvince, setSelectedProvince] = useState<string>(
+    customer.province_id ? String(customer.province_id) : ""
+  );
+  const [selectedLocality, setSelectedLocality] = useState<string>(
+    customer.locality_id ? String(customer.locality_id) : ""
+  );
+
+  const provinceLocalities = selectedProvince
+    ? localities.filter(l => l.province_id === Number(selectedProvince))
+    : [];
+
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message);
@@ -44,6 +66,11 @@ export default function ProfileForm({ customer }: { customer: CustomerSession })
       toast.error(state.message);
     }
   }, [state.status, state.message]);
+
+  const handleProvinceChange = (provinceId: string) => {
+    setSelectedProvince(provinceId);
+    setSelectedLocality("");
+  };
 
   return (
     <form action={formAction} className="grid gap-10 lg:grid-cols-[1fr_320px]">
@@ -154,6 +181,53 @@ export default function ProfileForm({ customer }: { customer: CustomerSession })
                 defaultValue={currentCustomer.postal_code || ""}
                 className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm outline-none transition-colors focus:border-graphite focus:ring-1 focus:ring-graphite"
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="province_id"
+                className="text-xs font-semibold uppercase tracking-wider text-stone-brown"
+              >
+                Provincia
+              </label>
+              <select
+                id="province_id"
+                name="province_id"
+                value={selectedProvince}
+                onChange={(e) => handleProvinceChange(e.target.value)}
+                className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm outline-none transition-colors focus:border-graphite focus:ring-1 focus:ring-graphite"
+              >
+                <option value="">Seleccionar provincia</option>
+                {provinces.map((prov) => (
+                  <option key={prov.id} value={String(prov.id)}>
+                    {prov.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="locality_id"
+                className="text-xs font-semibold uppercase tracking-wider text-stone-brown"
+              >
+                Localidad
+              </label>
+              <select
+                id="locality_id"
+                name="locality_id"
+                value={selectedLocality}
+                onChange={(e) => setSelectedLocality(e.target.value)}
+                disabled={!selectedProvince}
+                className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm outline-none transition-colors focus:border-graphite focus:ring-1 focus:ring-graphite disabled:opacity-50"
+              >
+                <option value="">Seleccionar localidad</option>
+                {provinceLocalities.map((loc) => (
+                  <option key={loc.id} value={String(loc.id)}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </section>

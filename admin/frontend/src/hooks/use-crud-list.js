@@ -71,8 +71,8 @@ export function useCrudList({
   }, [page, debouncedFilters, sortBy, sortDir, clearSelection]);
 
   // Fetch items
-  const fetchItems = useCallback(() => {
-    setLoading(true);
+  const fetchItems = useCallback(({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     
     const params = {
       page,
@@ -89,11 +89,11 @@ export function useCrudList({
       .then(({ data }) => {
         setItems(Array.isArray(data) ? data : data.data || []);
         setMeta(data.meta || {});
-        setLoading(false);
+        if (!silent) setLoading(false);
       })
       .catch((error) => {
         console.error(`Error fetching ${endpoint}:`, error);
-        setLoading(false);
+        if (!silent) setLoading(false);
       });
   }, [endpoint, page, sortBy, sortDir, debouncedFilters]);
 
@@ -196,6 +196,7 @@ export function useCrudList({
     
     // Actions
     fetchItems,
+    refresh: () => fetchItems({ silent: true }),
     deleteItem,
     bulkDelete
   };

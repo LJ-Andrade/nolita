@@ -21,7 +21,7 @@ export default function MethodSelector({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
       <div className="space-y-4">
         <h2 className="text-xl font-medium font-serif border-b border-bone pb-2">Método de Envío</h2>
         <div className="grid grid-cols-1 gap-3">

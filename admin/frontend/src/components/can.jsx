@@ -1,19 +1,20 @@
 import React from 'react';
 
-export const hasPermission = (permission) => {
-  const userPermissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS') || '[]');
-  const userRoles = JSON.parse(localStorage.getItem('USER_ROLES') || '[]');
-  
-  const isSuperAdmin = userRoles.includes('Super Admin');
-  const hasPerm = userPermissions.includes(permission);
-
-  return isSuperAdmin || hasPerm;
-};
-
-export const isSuperAdmin = () => {
+const isSuperAdmin = () => {
   const userRoles = JSON.parse(localStorage.getItem('USER_ROLES') || '[]');
   return userRoles.includes('Super Admin');
 };
+
+export const hasPermission = (permission) => {
+  if (isSuperAdmin()) {
+    return true;
+  }
+  
+  const userPermissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS') || '[]');
+  return userPermissions.includes(permission);
+};
+
+export { isSuperAdmin };
 
 const Can = ({ permission, children }) => {
   if (hasPermission(permission)) {
