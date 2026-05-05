@@ -71,31 +71,6 @@ const items = [
 		icon: LayoutDashboard,
 	},
 	{
-		title: "Usuarios y Roles",
-		icon: Users,
-		permission: "users.view",
-		children: [
-			{
-				title: "Usuarios",
-				url: "/usuarios",
-				icon: UserCircle,
-				permission: "users.view",
-			},
-			{
-				title: "Roles",
-				url: "/roles",
-				icon: ShieldCheck,
-				permission: "roles.view",
-			},
-			{
-				title: "Permisos",
-				url: "/permisos",
-				icon: KeyRound,
-				permission: "roles.manage",
-			},
-		],
-	},
-	{
 		title: "Tienda",
 		icon: Box,
 		permission: "users.view",
@@ -186,6 +161,24 @@ const items = [
 		icon: Monitor,
 		permission: "users.view",
 		children: [
+			{
+				title: "Usuarios",
+				url: "/usuarios",
+				icon: UserCircle,
+				permission: "users.view",
+			},
+			{
+				title: "Roles",
+				url: "/roles",
+				icon: ShieldCheck,
+				permission: "roles.view",
+			},
+			{
+				title: "Permisos",
+				url: "/permisos",
+				icon: KeyRound,
+				permission: "roles.manage",
+			},
 			{
 				title: "Registros de Actividad",
 				url: "/registros-actividad",

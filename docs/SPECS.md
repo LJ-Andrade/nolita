@@ -103,9 +103,12 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
     - **PageHeader**: Mandatory for all views.
     - **Glassmorphism**: Use `glass-panel` for dropdowns and floating elements.
 4.  **Dropdowns**: Standardized with `py-3` for items and `bg-primary/10` for hover states.
+5.  **Sidebar Organization**: User management modules (Usuarios, Roles, Permisos) must be grouped under the **"Sistema"** parent menu.
 
 > [!TIP]
-> For more details, refer to [CRUD_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/CRUD_STANDARDS.md).
+> For more details, refer to:
+> - [CRUD_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/CRUD_STANDARDS.md)
+> - [AUTH_UI_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/AUTH_UI_STANDARDS.md)
 
 ---
 

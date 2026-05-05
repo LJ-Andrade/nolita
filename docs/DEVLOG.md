@@ -105,3 +105,10 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend/src/hooks/use-crud-form.js`: Add `pendingCover` state for image preview.
 - [x] `admin/frontend/src/views/product-categories/CategoryForm.jsx`: Add ImageUpload, order input, listed checkbox.
 - [x] `admin/frontend/src/views/product-categories/CategoriesList.jsx`: Add columns for image, order, listed.
+
+## Phase 11: CORS & Network Fixes (Completed)
+- [x] `admin/backend/config/cors.php`: Update `allowed_origins` and `allowed_origins_patterns` to allow local network IPs (172.x, 10.x).
+- [x] `admin/backend/.env`: Add `SANCTUM_STATEFUL_DOMAINS` with the frontend origin.
+- [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Fix z-index of stars and connections to be behind login card.
+- [x] `admin/frontend/src/views/Login.jsx`: Remove borders from Card and Inputs for a minimalist look.
+- [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Refactor with tunable constants (CONFIG), HEX color support, and configurable 2-color background gradient.

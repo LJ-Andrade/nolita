@@ -45,7 +45,7 @@ export default function Login() {
 			window.location.href = '/vadmin/';
 		} catch (err) {
 			console.error("Login technical error:", err);
-			
+
 			if (err.response && err.response.status === 422) {
 				// Validation error or incorrect credentials
 				setError(err.response.data.message || "Ocurrió un error durante el inicio de sesión.");
@@ -102,11 +102,11 @@ export default function Login() {
 			<div className="relative z-10 w-full max-w-md">
 				<h1 className="text-5xl font-bold text-center mb-8 tracking-tight">
 					<span className="bg-linear-to-r from-cyan-400 via-teal-400 to-blue-500 bg-clip-text text-transparent">
-						VADMIN3
+						<b>VADMIN</b>
 					</span>
 				</h1>
 
-				<Card className="bg-slate-900/92 backdrop-blur-xl border border-white/10 shadow-2xl" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+				<Card className="bg-slate-900/92 backdrop-blur-xl border-none shadow-2xl" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
 					<CardContent className="pt-8 pb-6">
 						<form onSubmit={handleSubmit} className="space-y-5">
 							{error && (
@@ -126,7 +126,7 @@ export default function Login() {
 									required
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
-									className="h-11 bg-slate-800/50 border-slate-700 focus:border-cyan-500/50 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all"
+									className="h-11 bg-slate-800/50 border-none focus:ring-2 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all"
 								/>
 							</div>
 
@@ -140,7 +140,7 @@ export default function Login() {
 									required
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
-									className="h-11 bg-slate-800/50 border-slate-700 focus:border-cyan-500/50 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all"
+									className="h-11 bg-slate-800/50 border-none focus:ring-2 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all"
 								/>
 							</div>
 

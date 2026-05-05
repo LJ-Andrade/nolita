@@ -59,6 +59,9 @@ import ContactMessagesList from './views/contact-messages/ContactMessagesList';
 import NotFound from './views/NotFound';
 import DashboardLayout from './components/dashboard-layout';
 import { hasPermission, isSuperAdmin } from './components/can';
+import ForgotPassword from './views/ForgotPassword';
+import ResetPassword from './views/ResetPassword';
+
 
 const ProtectedRoute = ({ children, permission, superAdminOnly }) => {
 	const token = localStorage.getItem('ACCESS_TOKEN');
@@ -101,6 +104,8 @@ function App() {
 		<Router basename="/vadmin">
 			<Routes>
 				<Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+				<Route path="/forgot-password" element={<ForgotPassword />} />
+				<Route path="/reset-password" element={<ResetPassword />} />
 
 				<Route path="/blog" element={<ArticlesPublicList />} />
 				<Route path="/articulos/:slug" element={<ArticlePublicView />} />

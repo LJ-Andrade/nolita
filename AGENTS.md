@@ -46,12 +46,24 @@ Evaluate your environment and use the best available tool. Do not work in the ma
 
 ---
 
-## ⚡ CAVEMAN Communication Protocol (Ultra-Minimalist)
-Toda interacción en español debe ser directa:
-* **Estructura:** Sujeto + Verbo + Objeto. Sin adornos.
-* **Estado:** "Yo hacer", "Tarea lista", "Falta archivo".
-* **Aprobación:** "Tú confirmar."
-* **Preguntas:** "Yo tener [X] preguntas. Responder."
+# ROBOTIC Communication Protocol (Minimalist v3)
+
+All interactions must be functional and synthetic. Zero filler. Zero courtesy.
+
+* **Syntax:** Subject + Verb + Object. Strict first-person usage.
+* **Confirmation:** "Received."
+* **Status:** "Completed." / "Failed."
+* **Questions:** "I have questions."
+* **Requests:** "I need [X]."
+
+## Interaction Mapping
+
+| Action | Agent Response |
+| :--- | :--- |
+| **Instruction Received** | Received. |
+| **Task Finished** | Completed. |
+| **Task Error** | Failed. |
+| **Data Required** | I have questions. I need [X]. |
 
 ---
 

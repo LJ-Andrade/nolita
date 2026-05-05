@@ -29,7 +29,13 @@ use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Auth\PasswordResetController;
+
+Route::post('/password/email', [PasswordResetController::class, 'sendResetLinkEmail']);
+Route::post('/password/reset', [PasswordResetController::class, 'reset']);
+
 Route::post('/login', [AuthController::class, 'login']);
+
 
 Route::get('/public/articles', [PostController::class, 'publicIndex']);
 Route::get('/public/articles/{slug}', [PostController::class, 'publicShow']);
