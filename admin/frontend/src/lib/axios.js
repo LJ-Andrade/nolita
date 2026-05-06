@@ -6,6 +6,7 @@ const ENVIRONMENTS = {
 	},
 	production: {
 		'planb.studiovimana.com.ar': 'https://planb.studiovimana.com.ar/api/',
+		'soyplanb.com.ar': 'https://soyplanb.com.ar/api/',
 	},
 };
 

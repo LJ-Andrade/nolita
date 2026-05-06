@@ -12,29 +12,19 @@ export default {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "planb.studiovimana.com.ar",
-        pathname: "/storage/**",
-      },
-      {
-        protocol: "https",
-        hostname: "planb.studiovimana.com.ar",
-        pathname: "/storage/**",
-      },
-      {
-        protocol: "http",
-        hostname: "planb.test",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
         hostname: "192.168.1.36",
         pathname: "/**",
       },
       {
-        protocol: "https",
-        hostname: "**.studiovimana.com.ar",
-        pathname: "/**",
+        protocol: "http",
+        hostname: "soyplanb.com.ar",
+        pathname: "/storage/**",
       },
+      {
+        protocol: "https",
+        hostname: "soyplanb.com.ar",
+        pathname: "/storage/**",
+      }
     ],
   },
 };
