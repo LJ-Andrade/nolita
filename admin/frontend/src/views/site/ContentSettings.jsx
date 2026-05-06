@@ -161,45 +161,44 @@ export default function ContentSettings() {
 
             <form id="content-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
                 {/* Top Text Section */}
-                <Card className="bg-[#0d0d14] border-[#1e1e2a] shadow-2xl">
+                <Card>
                     <CardHeader>
-                        <CardTitle className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2">
                             <Type className="h-5 w-5 text-primary" />
                             {"Cabecera Superior (Top Bar)"}
                         </CardTitle>
-                        <CardDescription className="text-gray-400">
+                        <CardDescription>
                             {"Texto informativo que aparece en la parte más alta de la web."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="home_top_text" className="text-gray-300">{"Texto a mostrar"}</Label>
+                            <Label htmlFor="home_top_text">{"Texto a mostrar"}</Label>
                             <Input
                                 id="home_top_text"
                                 type="text"
                                 value={settings.home_top_text?.value || ''}
                                 onChange={(e) => updateSetting('home_top_text', e.target.value)}
                                 placeholder="Ej: ¡Envío gratis en compras superiores a $50.000!"
-                                className="bg-[#16161f] border-[#2a2a3c] text-white focus:border-primary/50 transition-all"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Banner Section */}
-                <Card className="bg-[#0d0d14] border-[#1e1e2a] shadow-2xl">
+                <Card>
                     <CardHeader>
-                        <CardTitle className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2">
                             <ImageIcon className="h-5 w-5 text-primary" />
                             {"Banner Principal (Hero)"}
                         </CardTitle>
-                        <CardDescription className="text-gray-400">
+                        <CardDescription>
                             {"Imagen de impacto para la página de inicio."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-4">
-                            <Label className="text-gray-300">{"Imagen de fondo"}</Label>
+                            <Label>{"Imagen de fondo"}</Label>
                             <div className="flex justify-center">
                                 <ImageUpload 
                                     value={heroImage}
@@ -208,7 +207,7 @@ export default function ContentSettings() {
                                     className="w-full"
                                 />
                             </div>
-                            <p className="text-sm text-gray-500 text-center italic">
+                            <p className="text-sm text-muted-foreground text-center italic">
                                 {"Sugerencia: Usar imágenes de 1920x800px o similares para mejor visualización."}
                             </p>
                         </div>

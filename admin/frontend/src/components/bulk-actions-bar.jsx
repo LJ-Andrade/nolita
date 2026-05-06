@@ -28,7 +28,7 @@ export function BulkActionsBar({
     <>
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background border border-border shadow-lg rounded-lg px-4 py-3 animate-in slide-in-from-bottom-4">
         <span className="text-sm font-medium">
-          {`${count} selectcionado(s)`}
+          {`${selectedCount} seleccionado(s)`}
         </span>
         <div className="h-4 w-px bg-border" />
         <Button
@@ -38,7 +38,7 @@ export function BulkActionsBar({
           disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          {deleteLabel || "Eliminar selectcionados"}
+          {deleteLabel || "Eliminar seleccionados"}
         </Button>
         <Button
           variant="ghost"
@@ -55,7 +55,7 @@ export function BulkActionsBar({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={"Confirmar eliminación"}
-        description={confirmMessage || `¿Estás seguro de eliminar ${count} elementos?`}
+        description={confirmMessage || `¿Estás seguro de eliminar ${selectedCount} elementos?`}
         confirmText={"Confirmar"}
         cancelText={"Cancelar"}
         onConfirm={handleConfirmDelete}

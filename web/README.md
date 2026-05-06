@@ -40,6 +40,43 @@ COMPANY_NAME="Plan B"
 
 3. Ensure the VADMIN (Laravel) backend is running at the URL specified in `NEXT_PUBLIC_VADMIN_API_URL`.
 
+## Running Admin Frontend Tests
+
+CRUD shared component tests live in `admin/frontend`.
+
+Install dependencies from the admin frontend folder:
+
+```bash
+cd ../admin/frontend
+npm install
+```
+
+Run the full test suite once:
+
+```bash
+npm run test:run
+```
+
+Run tests in watch mode:
+
+```bash
+npm run test
+```
+
+Run one test file:
+
+```bash
+npm run test:run -- src/components/bulk-actions-bar.test.jsx
+```
+
+Current CRUD shared tests cover:
+
+- `src/components/bulk-actions-bar.test.jsx`
+- `src/components/crud-pagination.test.jsx`
+- `src/hooks/use-bulk-select.test.jsx`
+
+These tests validate shared selection, pagination, and bulk action behavior before checking full CRUD pages manually.
+
 ## Architecture
 
 - **Frontend**: Next.js 15 in the `/web` directory.

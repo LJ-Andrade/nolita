@@ -2,20 +2,21 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
-use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable implements HasMedia
 {
-    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, LogsActivity, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, LogsActivity, Notifiable;
 
     protected $guard_name = 'web';
 
@@ -47,23 +48,43 @@ class User extends Authenticatable implements HasMedia
             ->useLogName('user');
     }
 
-    public function notifications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function notifications(): HasMany
     {
-        return $this->hasMany(\App\Models\Notification::class);
+        return $this->hasMany(Notification::class);
     }
 
-    public function notificationPreferences(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function notificationPreferences(): HasMany
     {
         return $this->hasMany(UserNotificationPreference::class);
     }
 
-    public function isSubscribedTo(\App\Models\NotificationType $notificationType, string $channel = 'email'): bool
+    public function isSubscribedTo(NotificationType $notificationType, string $channel = 'email'): bool
     {
         $pref = $this->notificationPreferences()->where('notification_type_id', $notificationType->id)->first();
-        if (!$pref) {
+        if (! $pref) {
             return $channel === 'browser';
         }
-        return (bool) $pref->{$channel . '_enabled'};
+
+        return (bool) $pref->{$channel.'_enabled'};
+    }
+
+    public function canReceiveNotification(NotificationType $notificationType): bool
+    {
+        if ($notificationType->required_permission && ! $this->can($notificationType->required_permission)) {
+            return false;
+        }
+
+        $roles = $notificationType->relationLoaded('roles')
+            ? $notificationType->roles
+            : $notificationType->roles()->get();
+
+        $roleNames = $roles->pluck('name')->all();
+
+        if (empty($roleNames)) {
+            return true;
+        }
+
+        return $this->hasAnyRole($roleNames);
     }
 
     public function unreadNotificationsCount(): int

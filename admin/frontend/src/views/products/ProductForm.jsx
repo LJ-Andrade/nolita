@@ -391,6 +391,12 @@ export default function ProductForm() {
 		toast.info("Stock aplicado a todas las variantes");
 	};
 
+	const applyToAllStock = (value) => {
+		const variants = form.getValues('variants').map(v => ({ ...v, stock: parseInt(value) || 0 }));
+		form.setValue('variants', variants);
+		toast.info("Stock aplicado a todas las variantes");
+	};
+
 
 	const handleRemoveGalleryImage = async (mediaId) => {
 		try {
@@ -936,7 +942,6 @@ export default function ProductForm() {
 									<p className="text-sm font-medium mb-3 px-1">{"Imágetnes por Color"}</p>
 									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-1">
 										{form.watch('color_ids').map(colorId => {
-											// eslint-disable-next-line eqeqeq
 											const color = colors.find(c => c.id == colorId);
 											if (!color) return null;
 											return (

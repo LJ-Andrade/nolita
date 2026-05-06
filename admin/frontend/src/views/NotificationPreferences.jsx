@@ -39,11 +39,13 @@ export default function NotificationPreferences() {
   }
 
   const handleToggle = (typeId, channel) => {
+    const field = `${channel}_enabled`
+
     setPreferences((prev) => ({
       ...prev,
       [typeId]: {
         ...prev[typeId],
-        [channel]: !prev[typeId]?.[channel],
+        [field]: !prev[typeId]?.[field],
       },
     }))
 
@@ -53,7 +55,7 @@ export default function NotificationPreferences() {
           ...prev,
           [typeId]: {
             ...prev[typeId],
-            [channel]: data.enabled,
+            [field]: data.enabled,
           },
         }))
         toast.success(data.enabled ? "Suscripción activada" : "Suscripción desactivada")
@@ -63,7 +65,7 @@ export default function NotificationPreferences() {
           ...prev,
           [typeId]: {
             ...prev[typeId],
-            [channel]: !prev[typeId]?.[channel],
+            [field]: !prev[typeId]?.[field],
           },
         }))
         toast.error("Error al actualizar preferencias")
@@ -119,7 +121,7 @@ export default function NotificationPreferences() {
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <Switch
-                        checked={preferences[type.id]?.email_enabled ?? true}
+                        checked={preferences[type.id]?.email_enabled ?? false}
                         onCheckedChange={() => handleToggle(type.id, "email")}
                       />
                     </div>

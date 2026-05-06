@@ -113,14 +113,19 @@ export default function CouponForm() {
       navigate('/cupones');
       
       // Force reload by setting a timestamp
-      window.dispatchEvent(new CustomEventt("refresh-coupons"));
+      window.dispatchEvent(new CustomEvent("refresh-coupons"));
       
       return response;
     } catch (error) {
       console.error('=== BACKEND: Error response ===', error.response?.data);
       const serverErrors = error.response?.data?.errors;
       if (serverErrors) {
-        setServerErrors(serverErrors);
+        Object.entries(serverErrors).forEach(([field, messages]) => {
+          form.setError(field, {
+            type: 'server',
+            message: Array.isArray(messages) ? messages[0] : messages,
+          });
+        });
       } else {
         toast.error(id ? "Error al actualizar el cupón" : "Error al crear el cupón");
       }

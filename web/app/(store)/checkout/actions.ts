@@ -1,32 +1,57 @@
 "use server";
 
 import { checkout } from "lib/vadmin/cart";
-import { revalidatePath } from "next/cache";
 
 export type CheckoutState = {
   status: "idle" | "success" | "error";
   message: string;
 };
 
+function getRequiredString(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export async function completeOrder(
   _previousState: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
+  const localityName = getRequiredString(formData, "locality_name");
   const data = {
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    address: formData.get("address"),
-    city: formData.get("city"),
-    postal_code: formData.get("postal_code"),
-    delivery_method_id: formData.get("delivery_method_id"),
-    payment_method_id: formData.get("payment_method_id"),
+    name: getRequiredString(formData, "name"),
+    email: getRequiredString(formData, "email"),
+    phone: getRequiredString(formData, "phone"),
+    address: getRequiredString(formData, "address"),
+    city: getRequiredString(formData, "city") || localityName,
+    postal_code: getRequiredString(formData, "postal_code"),
+    province_id: getRequiredString(formData, "province_id"),
+    locality_id: getRequiredString(formData, "locality_id"),
+    delivery_method_id: getRequiredString(formData, "delivery_method_id"),
+    payment_method_id: getRequiredString(formData, "payment_method_id"),
   };
+
+  const requiredFields = [
+    data.name,
+    data.email,
+    data.phone,
+    data.address,
+    data.postal_code,
+    data.province_id,
+    data.locality_id,
+    data.delivery_method_id,
+    data.payment_method_id,
+  ];
+
+  if (requiredFields.some((value) => !value)) {
+    return {
+      status: "error",
+      message: "Completá todos los campos obligatorios.",
+    };
+  }
 
   const result = await checkout(data);
 
   if (result.success) {
-    revalidatePath("/", "layout");
     return {
       status: "success",
       message: result.message || "Checkout successful",

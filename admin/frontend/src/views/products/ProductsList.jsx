@@ -224,9 +224,7 @@ export default function ProductsList() {
 			errorMessage: "Error al eliminar elementos",
 		});
 
-		if (success) {
-			setIsDeleting(false);
-		}
+		if (success) clearSelection();
 	};
 
 	return (
@@ -370,7 +368,7 @@ export default function ProductsList() {
 								<Fragment key={product.id}>
 									<TableRow>
 										<TableCell>
-											<Checkbox checked={selectedIds.includes(product.id)} onCheckedChange={() => toggleSelecproduct.id} />
+											<Checkbox checked={selectedIds.includes(product.id)} onCheckedChange={() => toggleSelect(product.id)} />
 										</TableCell>
 										<TableCell className="w-[60px]">{product.id}</TableCell>
 										<TableCell>
@@ -434,7 +432,7 @@ export default function ProductsList() {
 													variant="ghost"
 													size="icon"
 													className="h-8 w-8 cursor-pointer"
-													onClick={() => toggleExpandProducproduct.id}
+													onClick={() => toggleExpandProduct(product.id)}
 													title={"Ver variantes"}
 												>
 													<ChevronRight className={`h-4 w-4 transition-transform ${expandedProductId === product.id ? 'rotate-90' : ''}`} />
@@ -477,7 +475,7 @@ export default function ProductsList() {
 															</TableHeader>
 															<TableBody>
 																{product.variants.map((variant) => {
-																	const changes = getVariantChangesForProducproduct.id;
+																	const changes = getVariantChangesForProduct(product.id);
 																	const hasChanges = changes && changes[variant.id];
 																	return (
 																		<TableRow key={variant.id} className={hasChanges ? 'bg-yellow-50 dark:bg-yellow-900/30' : ''}>
@@ -530,7 +528,7 @@ export default function ProductsList() {
 														</Table>
 													</div>
 													{(() => {
-														const changes = getVariantChangesForProducproduct.id;
+														const changes = getVariantChangesForProduct(product.id);
 														const hasChanges = changes && Object.keys(changes).length > 0;
 														return hasChanges ? (
 															<div className="flex justify-end mt-3">

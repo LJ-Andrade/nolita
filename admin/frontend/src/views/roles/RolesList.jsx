@@ -342,7 +342,7 @@ export default function RolesList() {
 									<TableCell>
 										<Checkbox
 											checked={isSelected(role.id)}
-											onCheckedChange={() => toggleSelecrole.id}
+											onCheckedChange={() => toggleSelect(role.id)}
 										/>
 									</TableCell>
 									<TableCell className="w-[60px]">{role.id}</TableCell>

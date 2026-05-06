@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
 import MethodSelector from "./method-selector";
@@ -10,16 +10,15 @@ import {
   completeOrder,
   type CheckoutState,
 } from "app/(store)/checkout/actions";
-import { useFormStatus } from "react-dom";
 import LoadingDots from "components/loading-dots";
 import PurchaseProcessingNotice from "components/checkout/purchase-processing-notice";
 import webTexts from "../../web-texts.json";
+import { useCart } from "components/cart/cart-context";
 
 const checkoutTexts = webTexts.checkoutProcessingNotice;
 const MIN_PROCESSING_MS = 1000;
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <button
       type="submit"
@@ -46,13 +45,12 @@ export default function CheckoutPageContent({
   provinces: { id: number; name: string }[];
   localities: { id: number; name: string; province_id: number }[];
 }) {
-  const [checkoutState, checkoutAction, isCheckoutPending] = useActionState<
-    CheckoutState,
-    FormData
-  >(completeOrder, {
+  const { clearCart, setIsOpen } = useCart();
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     status: "idle",
     message: "",
   });
+  const [isCheckoutPending, startCheckoutTransition] = useTransition();
   const [selectedDeliveryFee, setSelectedDeliveryFee] = useState(
     parseFloat(deliveryMethods[0]?.fee || "0")
   );
@@ -63,6 +61,20 @@ export default function CheckoutPageContent({
     if (method) {
       setSelectedDeliveryFee(parseFloat(method.fee));
     }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startCheckoutTransition(async () => {
+      const result = await completeOrder(checkoutState, formData);
+      if (result.status === "success") {
+        clearCart();
+        setIsOpen(false);
+      }
+      setCheckoutState(result);
+    });
   };
 
   const isCheckoutProcessing = checkoutState.status === "success";
@@ -106,7 +118,7 @@ export default function CheckoutPageContent({
         </section>
       ) : (
         <form
-          action={checkoutAction}
+          onSubmit={handleSubmit}
           className="grid grid-cols-1 gap-12 lg:grid-cols-12"
         >
 
@@ -121,7 +133,7 @@ export default function CheckoutPageContent({
 
           <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">
             <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} />
-            <SubmitButton />
+            <SubmitButton pending={isCheckoutPending} />
           </div>
         </form>
       )}

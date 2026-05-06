@@ -1,9 +1,19 @@
 import clsx from "clsx";
 
+export function formatPriceAmount(amount: string): string {
+  const numericAmount = Number.parseFloat(amount);
+  const safeAmount = Number.isFinite(numericAmount) ? numericAmount : 0;
+
+  return `$ ${new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(safeAmount)}`;
+}
+
 const Price = ({
   amount,
   className,
-  currencyCode = "USD",
+  currencyCode = "$",
   currencyCodeClassName,
 }: {
   amount: string;
@@ -12,13 +22,9 @@ const Price = ({
   currencyCodeClassName?: string;
 } & React.ComponentProps<"p">) => (
   <p suppressHydrationWarning={true} className={className}>
-    {`${new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currencyCode,
-      currencyDisplay: "narrowSymbol",
-    }).format(parseFloat(amount))}`}
+    {formatPriceAmount(amount)}
     <span
-      className={clsx("ml-1 inline", currencyCodeClassName)}
+      className={clsx("hidden", currencyCodeClassName)}
     >{`${currencyCode}`}</span>
   </p>
 );

@@ -272,17 +272,29 @@ export type Locality = {
   cost: number | null;
 };
 
+type PaginatedResponse<T> = {
+  data: T[];
+};
+
+function unwrapCollection<T>(response: T[] | PaginatedResponse<T>): T[] {
+  return Array.isArray(response) ? response : response.data;
+}
+
 export async function getProvinces(): Promise<Province[]> {
-  const res = await vadminFetch<Province[]>({
+  const res = await vadminFetch<Province[] | PaginatedResponse<Province>>({
     path: "provinces",
+    params: { perPage: "200" },
   });
-  return res.body;
+  return unwrapCollection(res.body);
 }
 
 export async function getLocalities(provinceId?: number): Promise<Locality[]> {
-  const res = await vadminFetch<Locality[]>({
+  const res = await vadminFetch<Locality[] | PaginatedResponse<Locality>>({
     path: "localities",
-    params: provinceId ? { province_id: String(provinceId) } : undefined,
+    params: {
+      perPage: "1000",
+      province_id: provinceId ? String(provinceId) : undefined,
+    },
   });
-  return res.body;
+  return unwrapCollection(res.body);
 }

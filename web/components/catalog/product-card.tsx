@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { useCart } from "components/cart/cart-context";
 import { addMultipleItems } from "components/cart/actions";
 import { toast } from "sonner";
+import { formatPriceAmount } from "components/price";
 
 type ProductCardProps = {
 	product: Product;
@@ -194,11 +195,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 					className="text-sm font-medium"
 					style={{ color: "var(--pb-text)" }}
 				>
-					{new Intl.NumberFormat("es-AR", {
-						style: "currency",
-						currency: price.currencyCode,
-						minimumFractionDigits: 0,
-					}).format(parseFloat(price.amount))}
+					{formatPriceAmount(price.amount)}
 				</p>
 			</div>
 		</article>

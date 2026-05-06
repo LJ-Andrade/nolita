@@ -68,7 +68,7 @@ export default function TagsList() {
   ];
 
   const handleDeleteClick = (tag) => {
-    setTagToDeletetag;
+    setTagToDelete(tag);
     setDeleteDialogOpen(true);
   };
 
@@ -104,7 +104,7 @@ export default function TagsList() {
           <DropdownMenuItem onClick={() => navigate(`/etiquetas/editar/${tag.id}`)}>
             <Edit className="mr-2 h-4 w-4" /> {"Editar"}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleDeleteClicktag} className="text-red-500">
+          <DropdownMenuItem onClick={() => handleDeleteClick(tag)} className="text-red-500">
             <Trash2 className="mr-2 h-4 w-4" /> {"Eliminar"}
           </DropdownMenuItem>
         </>
@@ -122,7 +122,7 @@ export default function TagsList() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-red-500"
-            onClick={() => handleDeleteClicktag}
+            onClick={() => handleDeleteClick(tag)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -213,7 +213,7 @@ export default function ContactMessagesList() {
               {messages.map((message) => (
                 <TableRow key={message.id}>
                   <TableCell>
-                    <Checkbox checked={isSelected(message.id)} onCheckedChange={() => toggleSelecmessage.id} />
+                    <Checkbox checked={isSelected(message.id)} onCheckedChange={() => toggleSelect(message.id)} />
                   </TableCell>
                   <TableCell className="font-medium text-muted-foreground">
                     {message.id}

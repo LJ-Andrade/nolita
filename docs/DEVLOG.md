@@ -112,3 +112,50 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Fix z-index of stars and connections to be behind login card.
 - [x] `admin/frontend/src/views/Login.jsx`: Remove borders from Card and Inputs for a minimalist look.
 - [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Refactor with tunable constants (CONFIG), HEX color support, and configurable 2-color background gradient.
+
+## Phase 12: CRUD Shared Component Tests (Completed)
+- [x] `admin/frontend/src/components/bulk-actions-bar.jsx`: Fix selected count references in shared bulk action UI.
+- [x] `admin/frontend/src/components/crud-pagination.jsx`: Fix numbered page click handler.
+- [x] `admin/frontend/package.json`: Add Vitest test scripts and React Testing Library dependencies.
+- [x] `admin/frontend/vite.config.js`: Add jsdom test environment configuration.
+- [x] `admin/frontend/src/test/setup.js`: Add test environment setup for DOM APIs.
+- [x] `admin/frontend/src/components/bulk-actions-bar.test.jsx`: Cover empty state, selected count, clear, and confirm delete behavior.
+- [x] `admin/frontend/src/components/crud-pagination.test.jsx`: Cover hidden single-page state and page navigation.
+- [x] `admin/frontend/src/hooks/use-bulk-select.test.jsx`: Cover single, all, and clear selection behavior.
+
+## Phase 13: Admin Frontend Lint Cleanup (Completed)
+- [x] `admin/frontend/eslint.config.js`: Configure Node globals for scripts/config files and keep lint focused on runtime errors.
+- [x] `admin/frontend/src/components/*` and `admin/frontend/src/views/*`: Fix malformed identifiers reported by `no-undef`.
+- [x] `admin/frontend/src/views/products/ProductForm.jsx`: Restore `applyToAllStock` variant bulk action.
+- [x] `admin/frontend/src/views/*List.jsx`: Fix broken checkbox handlers generated as malformed function names.
+- [x] `admin/frontend`: Validate `npm run lint`, `npm run test:run`, and `npm run build`.
+
+## Phase 14: Content Settings Visual Alignment (Completed)
+- [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Align content settings cards, labels, descriptions, and input styling with standard CRUD cards.
+- [x] `admin/frontend`: Validate `npm run lint` and `npm run build`.
+
+## Phase 15: Notification Preferences Fix (Completed)
+- [x] `admin/backend/app/Models/User.php`: Add notification type eligibility checks and default subscriptions to disabled.
+- [x] `admin/backend/app/Models/User.php`: Pass role names as arrays to Spatie role checks so eligible notification types are visible.
+- [x] `admin/backend/app/Models/User.php`: Keep in-app notification subscriptions enabled by default.
+- [x] `admin/backend/app/Models/NotificationType.php`: Add `required_permission` to assignable notification type fields.
+- [x] `admin/backend/app/Http/Controllers/Api/NotificationPreferenceController.php`: Return disabled defaults and create preferences with disabled channels before toggling.
+- [x] `admin/backend/app/Models/UserNotificationPreference.php`: Align helper toggle defaults with explicit opt-in behavior.
+- [x] `admin/backend/app/Services/NotificationService.php`: Pass role names as arrays when selecting notification subscribers.
+- [x] `admin/backend/app/Services/NotificationService.php`: Always create in-app admin notifications for every eligible user and keep email controlled by user preference.
+- [x] `admin/frontend/src/views/NotificationPreferences.jsx`: Align switch fallback state with backend disabled defaults.
+- [x] `admin/frontend/src/views/NotificationPreferences.jsx`: Update local switch state using API channel field names.
+- [x] `admin/backend/resources/views/emails/admin-notification.blade.php`: Remove internal notification type from user-facing emails.
+- [x] `docs/SPECS.md`: Document notification preference visibility and explicit opt-in behavior.
+- [x] `admin/backend/SYSTEM_SETUP.md`: Document queue worker setup for notification email delivery.
+- [x] `admin/backend/SYSTEM_SETUP.md`: Clarify production runs on Debian and Windows is development-only.
+- [x] `admin/backend/SYSTEM_SETUP.md`: Document notification type role visibility rules.
+- [x] `admin/backend/NOTIFICATIONS.md`: Move notification behavior and role visibility documentation out of setup docs.
+- [x] `admin/backend/SYSTEM_SETUP.md`: Keep notification setup documentation focused on startup, workers, and seed commands.
+- [x] Validate backend routes/tests and admin frontend lint/build/test suite.
+
+## Phase 16: Checkout Validation Fix (Completed)
+- [x] `web/app/(store)/checkout/actions.ts`: Validate required checkout fields and send province/locality IDs with city derived from locality.
+- [x] `web/components/checkout/checkout-form.tsx`: Require province and locality selects and include hidden city/locality name fields.
+- [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Validate province/locality, derive city server-side, and update customer only after successful order completion.
+- [x] `docs/SPECS.md`: Document checkout validation and customer persistence behavior.

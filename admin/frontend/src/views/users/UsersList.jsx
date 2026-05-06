@@ -364,7 +364,7 @@ export default function UsersList() {
 									<TableCell>
 										<Checkbox
 											checked={isSelected(user.id)}
-											onCheckedChange={() => toggleSelecuser.id}
+											onCheckedChange={() => toggleSelect(user.id)}
 										/>
 									</TableCell>
 									<TableCell className="w-[60px]">{user.id}</TableCell>

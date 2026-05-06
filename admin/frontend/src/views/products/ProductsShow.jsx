@@ -59,7 +59,7 @@ export default function ProductsShow() {
 		if (!price && price !== 0) return "-";
 		return new Intl.NumberFormat("es-AR", {
 			style: "currency",
-			currency: "ARS",
+			currency: "$",
 		}).format(price);
 	};
 
@@ -400,8 +400,8 @@ export default function ProductsShow() {
 						<Card>
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
-								<Palette className="h-5 w-5" />
-								Imágenes por Color
+									<Palette className="h-5 w-5" />
+									Imágenes por Color
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-3">

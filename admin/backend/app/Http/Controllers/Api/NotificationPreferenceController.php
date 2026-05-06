@@ -12,7 +12,9 @@ class NotificationPreferenceController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $notificationTypes = NotificationType::where('is_active', true)->get();
+        $notificationTypes = NotificationType::with('roles')
+            ->where('is_active', true)
+            ->get();
 
         $preferences = $user->notificationPreferences()->pluck('email_enabled', 'notification_type_id')->toArray();
         $preferencesBrowser = $user->notificationPreferences()->pluck('browser_enabled', 'notification_type_id')->toArray();
@@ -28,7 +30,7 @@ class NotificationPreferenceController extends Controller
                     'key' => $type->key,
                     'name' => $type->name,
                     'description' => $type->description,
-                    'email_enabled' => $preferences[$type->id] ?? true,
+                    'email_enabled' => $preferences[$type->id] ?? false,
                     'browser_enabled' => $preferencesBrowser[$type->id] ?? true,
                 ];
             }),
@@ -44,17 +46,20 @@ class NotificationPreferenceController extends Controller
         $notificationType = NotificationType::findOrFail($notificationTypeId);
 
         $user = $request->user();
-        if (!$user->canReceiveNotification($notificationType)) {
+        if (! $user->canReceiveNotification($notificationType)) {
             return response()->json(['error' => 'No tienes permiso para esta notificación'], 403);
         }
 
         $pref = UserNotificationPreference::firstOrCreate([
             'user_id' => $user->id,
             'notification_type_id' => $notificationTypeId,
+        ], [
+            'email_enabled' => false,
+            'browser_enabled' => true,
         ]);
 
-        $field = $request->channel . '_enabled';
-        $pref->$field = !$pref->$field;
+        $field = $request->channel.'_enabled';
+        $pref->$field = ! $pref->$field;
         $pref->save();
 
         return response()->json([
@@ -77,7 +82,7 @@ class NotificationPreferenceController extends Controller
 
         foreach ($request->preferences as $prefData) {
             $notificationType = NotificationType::find($prefData['notification_type_id']);
-            if (!$notificationType || !$user->canReceiveNotification($notificationType)) {
+            if (! $notificationType || ! $user->canReceiveNotification($notificationType)) {
                 continue;
             }
 

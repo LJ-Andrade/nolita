@@ -7,7 +7,6 @@
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #333;">{{ $notification['title'] }}</h2>
     
-    <p><strong>Tipo:</strong> {{ $notification['type'] }}</p>
     <p><strong>Usuario:</strong> {{ $notification['user_name'] }}</p>
     
     @if($notification['message'])

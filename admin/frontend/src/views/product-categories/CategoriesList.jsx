@@ -116,9 +116,7 @@ export default function CategoriesList() {
 			errorMessage: "Error al eliminar elementos",
 		});
 
-		if (success) {
-			setIsDeleting(false);
-		}
+		if (success) clearSelection();
 	};
 
 	// Inline order editing

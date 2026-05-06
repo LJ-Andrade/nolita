@@ -6,7 +6,7 @@ export default function ArticlePreview({ article, onClose }) {
   if (!article) return null
   const formatDate = (d) => {
     if (!d) return ''
-    return new Dated.toLocaleDateString(undefined, {
+    return new Date(d).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'

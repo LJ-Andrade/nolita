@@ -35,7 +35,7 @@ export function CrudPagination({
           key={i}
           variant={page === i ? 'default' : 'outline'}
           size="sm"
-          onClick={() => onPageChangei}
+          onClick={() => onPageChange(i)}
         >
           {i}
         </Button>

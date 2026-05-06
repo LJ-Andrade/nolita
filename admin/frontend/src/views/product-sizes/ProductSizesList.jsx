@@ -91,9 +91,7 @@ export default function ProductSizesList() {
 			errorMessage: "Error al eliminar elementos",
 		});
 
-		if (success) {
-			setIsDeleting(false);
-		}
+		if (success) clearSelection();
 	};
 
 	const renderActions = (size, isDropdown = false) => (

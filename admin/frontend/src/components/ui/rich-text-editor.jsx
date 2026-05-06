@@ -89,7 +89,7 @@ const ColorPicker = ({ onColorSelect, currentColor }) => {
                   key={color}
                   type="button"
                   onClick={() => {
-                    onColorSeleccolor
+                    onColorSelect(color)
                     setIsOpen(false)
                   }}
                   className="w-5 h-5 rounded-sm border border-gray-200 hover:scale-110 transition-transform"

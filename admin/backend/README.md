@@ -1,59 +1,210 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Notificaciones
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Queue Worker
 
-## About Laravel
+Las notificaciones por email usan cola. El sistema crea un job con `Mail::queue()`, pero el mail no sale hasta que un worker procese la cola.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Configuracion esperada:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```env
+QUEUE_CONNECTION=database
+MAIL_MAILER=smtp
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Desarrollo Local
 
-## Learning Laravel
+Desde `admin/backend`, levantar el entorno completo:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+composer run dev
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Ese script ejecuta:
 
-## Laravel Sponsors
+```bash
+php artisan serve
+php artisan queue:listen --tries=1 --timeout=0
+php artisan pail --timeout=0
+npm run dev
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Si solo hace falta procesar la cola:
 
-### Premium Partners
+```bash
+php artisan queue:work
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Para procesar un solo job pendiente y salir:
 
-## Contributing
+```bash
+php artisan queue:work --once --tries=1
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Produccion Linux Con Supervisor
 
-## Code of Conduct
+Instalar Supervisor:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+sudo apt-get install supervisor
+```
 
-## Security Vulnerabilities
+Crear configuracion:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+sudo nano /etc/supervisor/conf.d/planb-worker.conf
+```
 
-## License
+Contenido recomendado:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```ini
+[program:planb-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/planb/admin/backend/artisan queue:work database --sleep=3 --tries=3 --timeout=90
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/planb/admin/backend/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+Aplicar cambios:
+
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start planb-worker:*
+sudo supervisorctl status
+```
+
+Reiniciar workers despues de deploy:
+
+```bash
+php artisan queue:restart
+sudo supervisorctl restart planb-worker:*
+```
+
+## Produccion Linux Con Systemd
+
+Crear servicio:
+
+```bash
+sudo nano /etc/systemd/system/planb-worker.service
+```
+
+Contenido recomendado:
+
+```ini
+[Unit]
+Description=PlanB Laravel Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=10
+WorkingDirectory=/var/www/planb/admin/backend
+ExecStart=/usr/bin/php artisan queue:work database --sleep=3 --tries=3 --timeout=90
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Activar:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable planb-worker
+sudo systemctl start planb-worker
+sudo systemctl status planb-worker
+```
+
+Reiniciar despues de deploy:
+
+```bash
+php artisan queue:restart
+sudo systemctl restart planb-worker
+```
+
+## Desarrollo Local En Windows
+
+Windows se usa solo para desarrollo local. No configurar workers de produccion en Windows para este proyecto.
+
+Para procesar la cola durante desarrollo:
+
+```powershell
+php artisan queue:work database --sleep=3 --tries=3 --timeout=90
+```
+
+O levantar el entorno completo:
+
+```powershell
+composer run dev
+```
+
+Produccion corre en Debian. Usar Supervisor o systemd.
+
+## Verificacion
+
+Ver jobs pendientes:
+
+```bash
+php artisan tinker --execute="echo DB::table('jobs')->count();"
+```
+
+Ver jobs fallidos:
+
+```bash
+php artisan queue:failed
+```
+
+Reintentar jobs fallidos:
+
+```bash
+php artisan queue:retry all
+```
+
+Limpiar jobs fallidos:
+
+```bash
+php artisan queue:flush
+```
+
+Procesar un mail pendiente manualmente:
+
+```bash
+php artisan queue:work --once --tries=1
+```
+
+## Datos Iniciales
+
+Cargar tipos de notificacion:
+
+```bash
+php artisan db:seed --class=NotificationTypeSeeder
+```
+
+Para detalles funcionales del sistema de notificaciones, ver `NOTIFICATIONS.md`.
+
+## Troubleshooting
+
+Si el email no llega:
+
+1. Verificar que la preferencia este activada para el usuario.
+2. Verificar que el tipo exista y este activo en `notification_types`.
+3. Verificar que el usuario tenga un rol asociado al tipo en `notification_type_role`.
+4. Verificar jobs pendientes en `jobs`.
+5. Ejecutar `php artisan queue:work --once --tries=1`.
+6. Si falla, revisar `storage/logs/laravel.log` y `php artisan queue:failed`.
+7. Si el job queda en `DONE` pero no llega, revisar spam, remitente y configuracion SMTP.
+
+Si la notificacion interna no aparece:
+
+1. Verificar que el usuario tenga un rol asociado al tipo en `notification_type_role`.
+2. Verificar que el tipo exista y este activo en `notification_types`.
+3. Verificar que se haya creado una fila por usuario en `notifications`.
+4. Recordar que el switch de preferencias controla email, no la campanita interna.

@@ -23,6 +23,11 @@ export default defineConfig({
 			? { host: hmrHost, protocol: "wss", clientPort: 443 }
 			: true, // default: connect to localhost (local dev)
 	},
+	test: {
+		environment: 'jsdom',
+		globals: true,
+		setupFiles: './src/test/setup.js',
+	},
 	plugins: [
 		react(),
 		// Redirect /vadmin (no trailing slash) → /vadmin/ so both URLs work

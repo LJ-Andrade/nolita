@@ -157,8 +157,8 @@ function CommandComponent({
                 <CommandItem
                   key={opt.id}
                   value={opt.name}
-                  onSelectt={() => handleSelecopt.id}
-                  onClick={() => handleSelecopt.id}
+                  onSelect={() => handleSelect(opt.id)}
+                  onClick={() => handleSelect(opt.id)}
                   className="cursor-pointer"
                 >
                   <div className={cn(

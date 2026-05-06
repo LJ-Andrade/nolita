@@ -92,9 +92,7 @@ export default function TagsList() {
 			errorMessage: "Error al eliminar elementos",
 		});
 
-		if (success) {
-			setIsDeleting(false);
-		}
+		if (success) clearSelection();
 	};
 
 	const renderActions = (tag, isDropdown = false) => (

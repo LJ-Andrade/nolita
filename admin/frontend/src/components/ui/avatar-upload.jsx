@@ -15,7 +15,7 @@ const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image()
     image.addEventListener('load', () => resolve(image))
-    image.addEventListener('error', (error) => rejecerror)
+    image.addEventListener('error', reject)
     image.setAttribute('crossOrigin', 'anonymous') // needed to avoid cross-origin issues
     image.src = url
   })
@@ -103,8 +103,8 @@ export function AvatarUpload({ value, onChange, disabled }) {
       setIsDialogOpen(false)
       setImage(null)
       resetCropper()
-    } catch (e) {
-      console.errore
+    } catch (error) {
+      console.error(error)
     } finally {
       setIsUploading(false)
     }

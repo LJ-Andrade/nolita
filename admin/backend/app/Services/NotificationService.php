@@ -2,17 +2,20 @@
 
 namespace App\Services;
 
+use App\Mail\AdminNotification;
 use App\Models\Notification;
 use App\Models\NotificationType;
 use App\Models\User;
-use App\Mail\AdminNotification;
 use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
     public function sendToSubscribers(NotificationType $type, string $title, ?string $message = null, ?array $data = null): void
     {
-        $users = User::role($type->roles()->pluck('name'))->get();
+        $type->loadMissing('roles');
+
+        $users = User::with('roles')->get()
+            ->filter(fn (User $user): bool => $user->canReceiveNotification($type));
 
         foreach ($users as $user) {
             $this->notifyUser($user, $type, $title, $message, $data);
@@ -25,14 +28,12 @@ class NotificationService
             $this->sendEmailNotification($user, $type, $title, $message, $data);
         }
 
-        if ($user->isSubscribedTo($type, 'browser')) {
-            $this->createBrowserNotification($user, $type, $title, $message, $data);
-        }
+        $this->createBrowserNotification($user, $type, $title, $message, $data);
     }
 
     protected function sendEmailNotification(User $user, NotificationType $type, string $title, ?string $message, ?array $data): void
     {
-        if (!$user->email) {
+        if (! $user->email) {
             return;
         }
 

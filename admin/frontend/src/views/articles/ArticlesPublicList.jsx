@@ -27,10 +27,10 @@ export default function ArticlesPublicList() {
 	const [loading, setLoading] = useState(true);
 	const [meta, setMeta] = useState({});
 
-	const page = parseInt(t)(searchParams.get("page") || ")1");
-	const search = searchParams.get("search") || ")";
-	const categoryId = searchParams.get("category_id") || ")";
-	const tagId = searchParams.get("tag_id") || ")";
+	const page = parseInt(searchParams.get("page") || "1", 10);
+	const search = searchParams.get("search") || "";
+	const categoryId = searchParams.get("category_id") || "";
+	const tagId = searchParams.get("tag_id") || "";
 
 	useEffect(() => {
 		getCategories();

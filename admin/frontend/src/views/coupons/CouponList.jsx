@@ -168,9 +168,7 @@ export default function CouponList() {
 			errorMessage: "Error al eliminar elementos",
 		});
 
-		if (success) {
-			setIsDeleting(false);
-		}
+		if (success) clearSelection();
 	};
 
 	const renderActions = (coupon, isDropdown = false) => (

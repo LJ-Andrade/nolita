@@ -12,7 +12,6 @@ import React, {
   use,
   useContext,
   useMemo,
-  useOptimistic,
 } from "react";
 
 type UpdateType = "plus" | "minus" | "delete";
@@ -29,10 +28,17 @@ type CartAction =
   | {
       type: "ADD_MULTIPLE_ITEMS";
       payload: { variants: ProductVariant[]; product: Product };
+    }
+  | {
+      type: "CLEAR_CART";
     };
 
 type CartContextType = {
-  cartPromise: Promise<Cart | undefined>;
+  cart: Cart | undefined;
+  updateCartItem: (merchandiseId: string, updateType: UpdateType) => void;
+  addCartItem: (variant: ProductVariant, product: Product, qty?: number) => void;
+  addMultipleCartItems: (variants: ProductVariant[], product: Product) => void;
+  clearCart: () => void;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -142,6 +148,9 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
   const currentCart = state || createEmptyCart();
 
   switch (action.type) {
+    case "CLEAR_CART": {
+      return createEmptyCart();
+    }
     case "UPDATE_ITEM": {
       const { merchandiseId, updateType } = action.payload;
       const updatedLines = currentCart.lines
@@ -236,11 +245,60 @@ export function CartProvider({
   cartPromise: Promise<Cart | undefined>;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const initialCart = use(cartPromise);
+  const [cart, setCart] = React.useState<Cart | undefined>(initialCart);
+
+  const dispatchCartAction = (action: CartAction) => {
+    setCart((currentCart) => cartReducer(currentCart, action));
+  };
+
+  const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
+    dispatchCartAction({
+      type: "UPDATE_ITEM",
+      payload: { merchandiseId, updateType },
+    });
+  };
+
+  const addCartItem = (
+    variant: ProductVariant,
+    product: Product,
+    qty: number = 1,
+  ) => {
+    dispatchCartAction({
+      type: "ADD_ITEM",
+      payload: { variant, product, qty },
+    });
+  };
+
+  const addMultipleCartItems = (
+    variants: ProductVariant[],
+    product: Product,
+  ) => {
+    dispatchCartAction({
+      type: "ADD_MULTIPLE_ITEMS",
+      payload: { variants, product },
+    });
+  };
+
+  const clearCart = () => {
+    dispatchCartAction({ type: "CLEAR_CART" });
+  };
+
+  const value = useMemo(
+    () => ({
+      cart,
+      updateCartItem,
+      addCartItem,
+      addMultipleCartItems,
+      clearCart,
+      isOpen,
+      setIsOpen,
+    }),
+    [cart, isOpen, setIsOpen],
+  );
 
   return (
-    <CartContext.Provider value={{ cartPromise, isOpen, setIsOpen }}>
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={value}>{children}</CartContext.Provider>
   );
 }
 
@@ -250,37 +308,5 @@ export function useCart() {
     throw new Error("useCart must be used within a CartProvider");
   }
 
-  const { cartPromise, isOpen, setIsOpen } = context;
-  const initialCart = use(cartPromise);
-  const [optimisticCart, updateOptimisticCart] = useOptimistic(
-    initialCart,
-    cartReducer,
-  );
-
-  const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
-    updateOptimisticCart({
-      type: "UPDATE_ITEM",
-      payload: { merchandiseId, updateType },
-    });
-  };
-
-  const addCartItem = (variant: ProductVariant, product: Product, qty: number = 1) => {
-    updateOptimisticCart({ type: "ADD_ITEM", payload: { variant, product, qty } });
-  };
-
-  const addMultipleCartItems = (variants: ProductVariant[], product: Product) => {
-    updateOptimisticCart({ type: "ADD_MULTIPLE_ITEMS", payload: { variants, product } });
-  };
-
-  return useMemo(
-    () => ({
-      cart: optimisticCart,
-      updateCartItem,
-      addCartItem,
-      addMultipleCartItems,
-      isOpen,
-      setIsOpen,
-    }),
-    [optimisticCart, isOpen, setIsOpen],
-  );
+  return context;
 }

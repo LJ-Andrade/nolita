@@ -30,6 +30,8 @@ export default function CheckoutForm({
   const provinceLocalities = selectedProvince
     ? localities.filter(l => l.province_id === Number(selectedProvince))
     : [];
+  const selectedLocalityName =
+    provinceLocalities.find((loc) => String(loc.id) === selectedLocality)?.name ?? "";
 
   const handleProvinceChange = (provinceId: string) => {
     setSelectedProvince(provinceId);
@@ -122,6 +124,7 @@ export default function CheckoutForm({
           <select
             id="province_id"
             name="province_id"
+            required
             value={selectedProvince}
             onChange={(e) => handleProvinceChange(e.target.value)}
             className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-graphite"
@@ -145,6 +148,7 @@ export default function CheckoutForm({
           <select
             id="locality_id"
             name="locality_id"
+            required
             value={selectedLocality}
             onChange={(e) => setSelectedLocality(e.target.value)}
             disabled={!selectedProvince}
@@ -157,6 +161,8 @@ export default function CheckoutForm({
               </option>
             ))}
           </select>
+          <input type="hidden" name="city" value={selectedLocalityName} />
+          <input type="hidden" name="locality_name" value={selectedLocalityName} />
         </div>
       </div>
 

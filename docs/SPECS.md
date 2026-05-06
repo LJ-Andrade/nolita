@@ -127,6 +127,12 @@ A multi-step checkout process implemented in the frontend to collect shipping an
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.
 
+### 6.3 Validation and Customer Persistence
+- Checkout requires name, email, phone, address, postal code, province, locality, delivery method, and payment method.
+- The web checkout payload sends `province_id`, `locality_id`, and `city`; `city` is derived from the selected locality.
+- VADMIN accepts `province_id` and `locality_id`, verifies that the locality belongs to the selected province, and derives `city` from locality when needed.
+- Customer shipping/contact fields are updated only after the order is successfully completed.
+
 ---
 
 ## 9. Customer Addresses: Provinces and Localities
@@ -170,3 +176,22 @@ A multi-step checkout process implemented in the frontend to collect shipping an
 - **UI:** A button "Agregar curva de talle" appears below the "Ver Producto" button on product card hover.
 - **Action:** Triggers a server action `addMultipleItems` sending an array of available variant IDs.
 - **State:** Updates optimistic cart state via `ADD_MULTIPLE_ITEMS` action in the cart context.
+
+---
+
+## 10. Admin Notification Preferences
+
+### 10.1 Overview
+Users can configure which administrative notification types they want to receive.
+
+### 10.2 Requirements
+1. **Visibility:** Users only see notification types allowed by their role and optional required permission.
+2. **Explicit email opt-in:** Email notifications are disabled by default until the user enables them.
+3. **Admin notifications:** In-app admin notifications are created for every eligible user individually.
+4. **API Contract:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/notification-preferences` | List available notification types with current user preferences |
+| POST | `/api/notification-preferences/{notificationTypeId}/toggle` | Toggle one channel (`email` or `browser`) |
+| PUT | `/api/notification-preferences` | Bulk update notification channel preferences |

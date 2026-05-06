@@ -97,7 +97,7 @@ function MultiSelect({
             filteredOptions.map((opt) => (
               <div
                 key={opt.id}
-                onClick={() => handleSelecopt.id}
+                onClick={() => handleSelect(opt.id)}
                 className={cn(
                   "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
                   value?.includes(opt.id) && "bg-accent"

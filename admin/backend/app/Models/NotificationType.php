@@ -16,6 +16,7 @@ class NotificationType extends Model
         'key',
         'name',
         'description',
+        'required_permission',
         'is_active',
     ];
 
@@ -35,6 +36,6 @@ class NotificationType extends Model
 
     public function usersWithPermission()
     {
-        return User::role($this->roles()->pluck('name'));
+        return User::role($this->roles()->pluck('name')->all());
     }
 }

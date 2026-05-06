@@ -39,10 +39,13 @@ class UserNotificationPreference extends Model
         $pref = self::firstOrCreate([
             'user_id' => $userId,
             'notification_type_id' => $notificationTypeId,
+        ], [
+            'email_enabled' => false,
+            'browser_enabled' => true,
         ]);
 
-        $field = $channel . '_enabled';
-        $pref->$field = !$pref->$field;
+        $field = $channel.'_enabled';
+        $pref->$field = ! $pref->$field;
         $pref->save();
 
         return $pref->$field;
