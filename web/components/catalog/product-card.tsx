@@ -4,15 +4,20 @@ import { Product } from "lib/vadmin/types";
 import { COLOR_MAP } from "lib/constants";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useCart } from "components/cart/cart-context";
 import { addMultipleItems } from "components/cart/actions";
 import { toast } from "sonner";
 import { formatPriceAmount } from "components/price";
+import { HeartIcon } from "@heroicons/react/24/outline";
+import { toggleFavoriteAction } from "lib/vadmin/favorites-actions";
 
 type ProductCardProps = {
 	product: Product;
 	priority?: boolean;
+	isFavorited?: boolean;
+	isAuthenticated?: boolean;
 };
 
 function AddSizeCurveButton({ product }: { product: Product }) {
@@ -39,17 +44,27 @@ function AddSizeCurveButton({ product }: { product: Product }) {
 		<button
 			onClick={(e) => { e.preventDefault(); handleAdd(); }}
 			disabled={isPending}
-			className="mt-3 rounded-none border border-white px-4 py-1.5 text-[10px] font-medium uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-black disabled:opacity-50"
+			className="flex h-12 w-52 flex-col items-center justify-center border border-white bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-black shadow-lg transition-all hover:bg-neutral-100 disabled:opacity-50 rounded-[var(--pb-radius)] leading-tight"
 		>
-			{isPending ? "Agregando..." : "Agregar curva de talle"}
+			{isPending ? (
+				"Agregando..."
+			) : (
+				<>
+					<span>Agregar curva</span>
+					<span>de talle</span>
+				</>
+			)}
 		</button>
 	);
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({ product, priority = false, isFavorited = false, isAuthenticated = false }: ProductCardProps) {
+	const router = useRouter();
 	const defaultImageUrl =
 		product.featuredImage?.url ?? product.images?.[0]?.url ?? "";
 	const [currentImage, setCurrentImage] = useState(defaultImageUrl);
+	const [favorited, setFavorited] = useState(isFavorited);
+	const [isPending, startTransition] = useTransition();
 	const imageUrl = currentImage || defaultImageUrl;
 
 	const imageAlt =
@@ -69,6 +84,24 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
 	const getColorHex = (name: string): string =>
 		COLOR_MAP[name.toLowerCase()] ?? "#CCCCCC";
+
+	const handleFavoriteToggle = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (!isAuthenticated) {
+			router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+			return;
+		}
+		startTransition(async () => {
+			const newState = !favorited;
+			setFavorited(newState);
+			await toggleFavoriteAction(product.id, !newState);
+			toast.success(newState
+				? `${product.title} agregado a favoritos`
+				: `${product.title} eliminado de favoritos`
+			);
+		});
+	};
 
 	return (
 		<article className="pb-card group relative flex flex-col">
@@ -109,12 +142,24 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 					</span>
 				)}
 
+				{/* Favorite heart */}
+				<button
+					type="button"
+					onClick={handleFavoriteToggle}
+					className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all hover:bg-white hover:scale-110"
+					aria-label={favorited ? "Quitar de favoritos" : "Agregar a favoritos"}
+				>
+					<HeartIcon
+						className={`h-5 w-5 transition-colors ${favorited ? "fill-red-500 text-red-500" : "text-gray-500"}`}
+					/>
+				</button>
+
 				{/* Hover overlay — "Ver producto" */}
 				<div
-					className="absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+					className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
 					style={{ background: "rgba(0,0,0,0.1)" }}
 				>
-					<span className="rounded-none border border-white px-6 py-2 text-xs font-medium uppercase tracking-[0.15em] text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-black">
+					<span className="flex h-12 w-52 items-center justify-center border border-white bg-black/60 text-xs font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black rounded-[var(--pb-radius)]">
 						Ver producto
 					</span>
 					<AddSizeCurveButton product={product} />
@@ -123,16 +168,6 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
 			{/* ── Info ───────────────────────────────────────────────────── */}
 			<div className="flex flex-col gap-1.5 p-3 pt-3">
-				{/* Category tag */}
-				{product.tags?.[0] && (
-					<span
-						className="text-[10px] font-medium uppercase tracking-widest"
-						style={{ color: "var(--pb-text-muted)" }}
-					>
-						{product.tags[0]}
-					</span>
-				)}
-
 				{/* Color swatches — Moved above Title */}
 				{colors.length > 0 && (
 					<div className="mb-0.5 flex items-center gap-1.5">
@@ -156,8 +191,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 										}
 									}}
 									className={`h-4 w-4 cursor-pointer rounded-full border border-white ring-1 transition-transform hover:scale-125 ${currentImage === colorImage?.url && colorImage?.url
-											? "ring-black scale-125"
-											: "ring-gray-300"
+										? "ring-black scale-125"
+										: "ring-gray-300"
 										}`}
 									style={{ backgroundColor: hex }}
 								/>

@@ -63,6 +63,8 @@ export type Collection = {
   seo: SEO;
   updatedAt: string;
   path: string;
+  image?: string;
+  listed?: boolean;
 };
 
 export type CartItem = {
@@ -130,4 +132,10 @@ export type PaymentMethod = {
   description: string;
   status: 'active' | 'inactive';
   fee: boolean;
+};
+
+export type ShopConfiguration = {
+  id: number;
+  min_quantity: number;
+  min_amount: number;
 };

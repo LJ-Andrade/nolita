@@ -6,6 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class SiteContent extends Model
 {
+    public const BUSINESS_SECTION = 'business';
+
+    public const BUSINESS_KEYS = [
+        'business_phone',
+        'business_email',
+        'business_address',
+        'business_hours',
+        'business_whatsapp',
+        'business_facebook',
+        'business_instagram',
+        'business_linkedin',
+        'business_youtube',
+        'business_tiktok',
+    ];
+
     protected $fillable = [
         'section',
         'key',
@@ -37,5 +52,14 @@ class SiteContent extends Model
                 'description' => $description
             ]
         );
+    }
+
+    public static function getBusinessInfo(): array
+    {
+        return static::query()
+            ->where('section', self::BUSINESS_SECTION)
+            ->whereIn('key', self::BUSINESS_KEYS)
+            ->pluck('value', 'key')
+            ->toArray();
     }
 }

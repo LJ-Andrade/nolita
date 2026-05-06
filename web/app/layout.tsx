@@ -14,6 +14,9 @@ export const metadata = {
     follow: true,
     index: true,
   },
+  icons: {
+    icon: "/iso-black.svg",
+  },
 };
 
 export default function RootLayout({

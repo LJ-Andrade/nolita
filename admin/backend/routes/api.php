@@ -21,6 +21,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AutopostController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\ImageSettingsController;
+use App\Http\Controllers\ShopConfigurationController;
 use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Admin\ProvinceController;
@@ -48,6 +49,8 @@ Route::get('/public/product-tags', [ProductTagController::class, 'publicIndex'])
 Route::get('/public/business-info', [SystemSettingsController::class, 'publicInfo']);
 Route::get('/public/site-content', [\App\Http\Controllers\SiteContentController::class, 'publicIndex']);
 Route::post('/public/contact', [ContactController::class, 'store']);
+
+Route::get('/public/shop-configuration', [ShopConfigurationController::class, 'publicInfo']);
 
 Route::get('/system-settings', [SystemSettingsController::class, 'index']);
 Route::get('/system-settings/{key}', [SystemSettingsController::class, 'show']);
@@ -162,9 +165,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/image-settings/{section}', [ImageSettingsController::class, 'show']);
     Route::post('/image-settings', [ImageSettingsController::class, 'store']);
     Route::put('/image-settings/{imageSetting}', [ImageSettingsController::class, 'update']);
-    Route::delete('/image-settings/{imageSetting}', [ImageSettingsController::class, 'destroy']);
+        Route::delete('/image-settings/{imageSetting}', [ImageSettingsController::class, 'destroy']);
 
-    // Customers
+        Route::get('/shop-configuration', [ShopConfigurationController::class, 'show'])->middleware('permission:users.view');
+        Route::put('/shop-configuration', [ShopConfigurationController::class, 'update'])->middleware('permission:users.view');
+
+        // Customers
     Route::post('admin/customers/bulk-delete', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'bulkDelete'])->middleware('permission:users.view');
     Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:users.view');
     Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:users.view');
@@ -246,6 +252,11 @@ Route::prefix('customer')->group(function () {
         Route::put('cart/items/{itemId}', [App\Http\Controllers\Api\OrderController::class, 'updateItem']);
         Route::delete('cart/items/{itemId}', [App\Http\Controllers\Api\OrderController::class, 'removeItem']);
         Route::get('orders', [App\Http\Controllers\Api\OrderController::class, 'index']);
+
+        // Favorites
+        Route::get('favorites', [App\Http\Controllers\Api\CustomerFavoritesController::class, 'index']);
+        Route::post('favorites', [App\Http\Controllers\Api\CustomerFavoritesController::class, 'store']);
+        Route::delete('favorites/{product}', [App\Http\Controllers\Api\CustomerFavoritesController::class, 'destroy']);
     });
 });
 

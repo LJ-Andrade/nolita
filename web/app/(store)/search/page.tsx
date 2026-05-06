@@ -1,7 +1,8 @@
-import Grid from "components/grid";
-import ProductGridItems from "components/layout/product-grid-items";
+import { ProductGrid } from "components/catalog/product-grid";
 import { defaultSort, sorting } from "lib/constants";
 import { getProducts } from "lib/vadmin";
+import { getFavorites } from "lib/vadmin/favorites";
+import { getSession } from "lib/vadmin/auth";
 
 export const metadata = {
   title: "Search",
@@ -16,24 +17,35 @@ export default async function SearchPage(props: {
   const { sortKey, reverse } =
     sorting.find((item) => item.slug === sort) || defaultSort;
 
-  const products = await getProducts({ sortKey, reverse, query: searchValue });
-  const resultsText = products.length > 1 ? "results" : "result";
+  const [products, session] = await Promise.all([
+    getProducts({ sortKey, reverse, query: searchValue }),
+    getSession(),
+  ]);
+
+  const favorites = session ? await getFavorites() : [];
+  const favoriteIds = new Set(favorites.map((p) => p.id));
+  const isAuthenticated = !!session;
+  const resultsText = products.length > 1 ? "resultados" : "resultado";
 
   return (
-    <>
+    <div className="mx-auto max-w-screen-2xl px-4 py-8 lg:px-8">
       {searchValue ? (
-        <p className="mb-4">
+        <p className="mb-4 text-sm text-stone-brown">
           {products.length === 0
-            ? "There are no products that match "
-            : `Showing ${products.length} ${resultsText} for `}
+            ? "No hay productos que coincidan con "
+            : `${products.length} ${resultsText} para `}
           <span className="font-bold">&quot;{searchValue}&quot;</span>
         </p>
       ) : null}
       {products.length > 0 ? (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <ProductGridItems products={products} />
-        </Grid>
-      ) : null}
-    </>
+        <ProductGrid products={products} favoriteIds={favoriteIds} isAuthenticated={isAuthenticated} />
+      ) : (
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 py-20">
+          <p className="text-sm uppercase tracking-widest text-stone-brown">
+            No se encontraron productos
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

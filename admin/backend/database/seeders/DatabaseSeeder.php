@@ -51,12 +51,14 @@ class DatabaseSeeder extends Seeder
 		);
 		$geo->syncRoles(['Employee']);
 
-		$this->call([
-			CategorySeeder::class,
-			TagSeeder::class,
-			BusinessSettingsSeeder::class,
-			ProductSeeder::class,
-			PostSeeder::class,
-		]);
+        $this->call([
+            CategorySeeder::class,
+            TagSeeder::class,
+            BusinessSettingsSeeder::class,
+            SiteContentSeeder::class,
+            ShopConfigurationSeeder::class,
+            ProductSeeder::class,
+            PostSeeder::class,
+        ]);
 	}
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, Transition } from "@headlessui/react";
-import { ShoppingCartIcon, XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, XMarkIcon, ArrowRightIcon, ExclamationCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import LoadingDots from "components/loading-dots";
 import Price from "components/price";
@@ -9,13 +9,21 @@ import { DEFAULT_OPTION } from "lib/constants";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { redirectToCheckout } from "./actions";
 
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
+
+const VADMIN_API = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
+
+type ShopConfig = {
+  id: number;
+  min_quantity: number;
+  min_amount: number;
+};
 
 type MerchandiseSearchParams = {
   [key: string]: string;
@@ -25,6 +33,19 @@ export default function CartModal() {
   const { cart, updateCartItem, isOpen, setIsOpen } = useCart();
   const quantityRef = useRef(cart?.totalQuantity);
   const closeCart = () => setIsOpen(false);
+  const [shopConfig, setShopConfig] = useState<ShopConfig>({ id: 0, min_quantity: 0, min_amount: 0 });
+
+  useEffect(() => {
+    fetch(`${VADMIN_API}/public/shop-configuration`)
+      .then((res) => res.json())
+      .then((json) => setShopConfig(json.data))
+      .catch(() => {});
+  }, []);
+
+  const hasConditions = shopConfig.min_quantity > 0 || shopConfig.min_amount > 0;
+  const qtyMet = !shopConfig.min_quantity || (cart?.totalQuantity ?? 0) >= shopConfig.min_quantity;
+  const amountMet = !shopConfig.min_amount || Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
+  const canCheckout = qtyMet && amountMet;
 
   useEffect(() => {
     if (
@@ -186,6 +207,34 @@ export default function CartModal() {
                 </ul>
 
                 <div className="p-6 bg-bone/30 border-t border-bone/50">
+                  {hasConditions && (
+                    <div className="mb-5 space-y-2 text-xs">
+                      {shopConfig.min_quantity > 0 && (
+                        <div className={clsx(
+                          "flex items-center gap-2 rounded-[8px] px-3 py-2",
+                          qtyMet ? "text-emerald-700 bg-emerald-50/60" : "text-amber-700 bg-amber-50/60"
+                        )}>
+                          {qtyMet
+                            ? <CheckCircleIcon className="h-4 w-4 shrink-0" />
+                            : <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
+                          }
+                          <span>Mínimo <strong>{shopConfig.min_quantity}</strong> prenda{shopConfig.min_quantity !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      {shopConfig.min_amount > 0 && (
+                        <div className={clsx(
+                          "flex items-center gap-2 rounded-[8px] px-3 py-2",
+                          amountMet ? "text-emerald-700 bg-emerald-50/60" : "text-amber-700 bg-amber-50/60"
+                        )}>
+                          {amountMet
+                            ? <CheckCircleIcon className="h-4 w-4 shrink-0" />
+                            : <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
+                          }
+                          <span>Compra mínima de <strong>${Number(shopConfig.min_amount).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong></span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="space-y-2 text-sm text-stone-brown mb-6">
                     <div className="flex items-center justify-between">
                       <p>Subtotal</p>
@@ -209,7 +258,7 @@ export default function CartModal() {
                     </div>
                   </div>
                   <form action={redirectToCheckout}>
-                    <CheckoutButton />
+                    <CheckoutButton disabled={canCheckout === false} />
                   </form>
                 </div>
               </div>
@@ -221,14 +270,14 @@ export default function CartModal() {
   );
 }
 
-function CheckoutButton() {
+function CheckoutButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-graphite py-4 text-xs font-bold uppercase tracking-[0.2em] text-parchment transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       type="submit"
-      disabled={pending}
+      disabled={disabled || pending}
     >
       {pending ? (
         <LoadingDots className="bg-parchment" />

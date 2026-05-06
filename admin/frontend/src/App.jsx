@@ -37,6 +37,7 @@ import BlogSettings from './views/settings/BlogSettings';
 import ProductSettings from './views/settings/ProductSettings';
 import SystemConfigurations from './views/settings/SystemConfigurations';
 import SkinSettings from './views/settings/SkinSettings';
+import ShopConfigurationForm from './views/settings/ShopConfigurationForm';
 import ContentSettings from './views/site/ContentSettings';
 import RolesList from './views/roles/RolesList';
 
@@ -492,6 +493,12 @@ function App() {
 				<Route path="/info-negocio" element={
 					<ProtectedRoute>
 						<BusinessInfoSettings />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/configuracion-tienda" element={
+					<ProtectedRoute>
+						<ShopConfigurationForm />
 					</ProtectedRoute>
 				} />
 

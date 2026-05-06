@@ -9,18 +9,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { Phone, Mail, MapPin, Clock, MessageCircle, Facebook, Instagram, Linkedin, Youtube, Video, Save } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 
+const BUSINESS_SECTION = "business";
+
 const BUSINESS_FIELDS = [
-  { key: 'business_phone', label: 'Teléfono', icon: Phone, type: 'tel', placeholder: '+54 11 1234-5678' },
-  { key: 'business_email', label: 'Email', icon: Mail, type: 'email', placeholder: 'contacto@empresa.com' },
-  { key: 'business_address', label: 'Dirección', icon: MapPin, type: 'text', placeholder: 'Dirección comercial' },
-  { key: 'business_hours', label: 'Horarios', icon: Clock, type: 'textarea', placeholder: 'Lunes a Viernes: 9:00 - 18:00' },
-  { key: 'business_whatsapp', label: 'WhatsApp', icon: MessageCircle, type: 'tel', placeholder: '+54 9 11 1234 5678' },
-  { key: 'business_facebook', label: 'Facebook', icon: Facebook, type: 'url', placeholder: 'https://facebook.com/tuempresa' },
-  { key: 'business_instagram', label: 'Instagram', icon: Instagram, type: 'url', placeholder: 'https://instagram.com/tuempresa' },
-  { key: 'business_linkedin', label: 'LinkedIn', icon: Linkedin, type: 'url', placeholder: 'https://linkedin.com/company/tuempresa' },
-  { key: 'business_youtube', label: 'YouTube', icon: Youtube, type: 'url', placeholder: 'https://youtube.com/@tuempresa' },
-  { key: 'business_tiktok', label: 'TikTok', icon: Video, type: 'url', placeholder: 'https://tiktok.com/@tuempresa' },
+  { key: "business_phone", label: "Telefono", icon: Phone, type: "tel", contentType: "text", placeholder: "+54 11 1234-5678" },
+  { key: "business_email", label: "Email", icon: Mail, type: "email", contentType: "text", placeholder: "contacto@empresa.com" },
+  { key: "business_address", label: "Direccion", icon: MapPin, type: "text", contentType: "text", placeholder: "Direccion comercial" },
+  { key: "business_hours", label: "Horarios", icon: Clock, type: "textarea", contentType: "text", placeholder: "Lunes a Viernes: 9:00 - 18:00" },
+  { key: "business_whatsapp", label: "WhatsApp", icon: MessageCircle, type: "tel", contentType: "text", placeholder: "+54 9 11 1234 5678" },
+  { key: "business_facebook", label: "Facebook", icon: Facebook, type: "url", contentType: "url", placeholder: "https://facebook.com/tuempresa" },
+  { key: "business_instagram", label: "Instagram", icon: Instagram, type: "url", contentType: "url", placeholder: "https://instagram.com/tuempresa" },
+  { key: "business_linkedin", label: "LinkedIn", icon: Linkedin, type: "url", contentType: "url", placeholder: "https://linkedin.com/company/tuempresa" },
+  { key: "business_youtube", label: "YouTube", icon: Youtube, type: "url", contentType: "url", placeholder: "https://youtube.com/@tuempresa" },
+  { key: "business_tiktok", label: "TikTok", icon: Video, type: "url", contentType: "url", placeholder: "https://tiktok.com/@tuempresa" },
 ];
+
+function buildSettingsMap(items = []) {
+  const settingsMap = {};
+
+  BUSINESS_FIELDS.forEach((field) => {
+    const content = items.find((item) => item.key === field.key);
+    settingsMap[field.key] = {
+      key: field.key,
+      value: content?.value || "",
+      section: content?.section || BUSINESS_SECTION,
+      type: content?.type || field.contentType,
+      description: content?.description || "",
+    };
+  });
+
+  return settingsMap;
+}
 
 export default function BusinessInfoSettings() {
   const [settings, setSettings] = useState({});
@@ -28,62 +47,40 @@ export default function BusinessInfoSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    axiosClient.get("/system-settings")
+    axiosClient.get("/site-content", { params: { section: BUSINESS_SECTION } })
       .then(({ data }) => {
-        const settingsMap = {};
-        data.data.forEach(setting => {
-          settingsMap[setting.key] = setting;
-        });
-        setSettings(settingsMap);
+        setSettings(buildSettingsMap(data.data));
         setLoading(false);
       })
       .catch(() => {
+        setSettings(buildSettingsMap());
         setLoading(false);
       });
   }, []);
 
-  const handleSave = async (key) => {
-    const setting = settings[key];
-    if (!setting) return;
-
-    setSaving(true);
-    try {
-      await axiosClient.put(`/system-settings/${key}`, {
-        value: setting.value,
-        description: setting.description
-      });
-      toast.success("Guardado correctamente");
-    } catch (error) {
-      toast.error("Ocurrió un error");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleSaveAll = async () => {
     setSaving(true);
     try {
-      const promises = BUSINESS_FIELDS.map(field => {
-        const setting = settings[field.key];
-        if (!setting) return null;
-        return axiosClient.put(`/system-settings/${field.key}`, {
-          value: setting.value,
-          description: setting.description
-        });
-      });
-      await Promise.all(promises.filter(Boolean));
+      const contents = BUSINESS_FIELDS.map((field) => ({
+        key: field.key,
+        value: settings[field.key]?.value || "",
+        section: BUSINESS_SECTION,
+        type: field.contentType,
+      }));
+
+      await axiosClient.put("/site-content/bulk", { contents });
       toast.success("Guardado correctamente");
-    } catch (error) {
-      toast.error("Ocurrió un error");
+    } catch {
+      toast.error("Ocurrio un error");
     } finally {
       setSaving(false);
     }
   };
 
-  const updateSetting = (key, field, value) => {
-    setSettings(prev => ({
+  const updateSetting = (key, value) => {
+    setSettings((prev) => ({
       ...prev,
-      [key]: { ...prev[key], [field]: value }
+      [key]: { ...prev[key], value },
     }));
   };
 
@@ -94,10 +91,10 @@ export default function BusinessInfoSettings() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={"Información de Negocio"}
+        title={"Informacion de Negocio"}
         breadcrumbs={[
-          { label: 'CONFIGURACIÓN' },
-          { label: "Información de Negocio" },
+          { label: "CONFIGURACION" },
+          { label: "Informacion de Negocio" },
         ]}
       />
 
@@ -114,16 +111,16 @@ export default function BusinessInfoSettings() {
             {BUSINESS_FIELDS.map((field) => {
               const Icon = field.icon;
               return (
-                <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                  <Label htmlFor={field.key} className="flex items-center gap-2 mb-2">
+                <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                  <Label htmlFor={field.key} className="mb-2 flex items-center gap-2">
                     <Icon className="h-4 w-4" />
                     {field.label}
                   </Label>
-                  {field.type === 'textarea' ? (
+                  {field.type === "textarea" ? (
                     <Textarea
                       id={field.key}
-                      value={settings[field.key]?.value || ''}
-                      onChange={(e) => updateSetting(field.key, 'value', e.target.value)}
+                      value={settings[field.key]?.value || ""}
+                      onChange={(e) => updateSetting(field.key, e.target.value)}
                       placeholder={field.placeholder}
                       rows={3}
                     />
@@ -131,8 +128,8 @@ export default function BusinessInfoSettings() {
                     <Input
                       id={field.key}
                       type={field.type}
-                      value={settings[field.key]?.value || ''}
-                      onChange={(e) => updateSetting(field.key, 'value', e.target.value)}
+                      value={settings[field.key]?.value || ""}
+                      onChange={(e) => updateSetting(field.key, e.target.value)}
                       placeholder={field.placeholder}
                     />
                   )}

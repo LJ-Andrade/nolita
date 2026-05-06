@@ -10,7 +10,8 @@ import {
   Collection, 
   Menu, 
   Page, 
-  Product 
+  Product, 
+  ShopConfiguration,
 } from "./types";
 
 const endpoint = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
@@ -114,10 +115,12 @@ export function getVadminImageUrl(path: string | null | undefined): string {
 
 // CATALOG
 export async function getProducts({
+  category,
   query,
   reverse,
   sortKey,
 }: {
+  category?: string;
   query?: string;
   reverse?: boolean;
   sortKey?: string;
@@ -128,7 +131,7 @@ export async function getProducts({
 
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
-    params: { search: query, reverse, sortKey },
+    params: { category, search: query, reverse, sortKey },
   });
 
   return res.body;
@@ -149,13 +152,14 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   }
 }
 
-export async function getCollections(): Promise<Collection[]> {
+export async function getCollections(params?: { listed?: boolean }): Promise<Collection[]> {
   "use cache";
   cacheTag(TAGS.collections);
   cacheLife("days");
 
   const res = await vadminFetch<any[]>({
     path: "catalog/categories",
+    params: params as any,
   });
 
   // Transform VADMIN categories to Storefront Collections
@@ -169,7 +173,12 @@ export async function getCollections(): Promise<Collection[]> {
     },
     updatedAt: cat.updated_at,
     path: `/search/${cat.slug}`,
+    image: cat.image ? getVadminImageUrl(cat.image) : undefined,
   }));
+
+  if (params?.listed) {
+    return collections;
+  }
 
   // Add "All" collection
   return [
@@ -255,6 +264,22 @@ export async function getSiteContent(section?: string): Promise<Record<string, s
   } catch (e) {
     console.error("Error fetching site content:", e);
     return {};
+  }
+}
+
+export async function getShopConfiguration(): Promise<ShopConfiguration> {
+  "use cache";
+  cacheTag(TAGS.collections);
+  cacheLife("days");
+
+  try {
+    const res = await vadminFetch<{ data: ShopConfiguration }>({
+      path: "public/shop-configuration",
+    });
+    return res.body.data;
+  } catch (e) {
+    console.error("Error fetching shop configuration:", e);
+    return { id: 0, min_quantity: 0, min_amount: 0 };
   }
 }
 

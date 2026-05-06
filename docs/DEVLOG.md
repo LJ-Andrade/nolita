@@ -159,3 +159,29 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `web/components/checkout/checkout-form.tsx`: Require province and locality selects and include hidden city/locality name fields.
 - [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Validate province/locality, derive city server-side, and update customer only after successful order completion.
 - [x] `docs/SPECS.md`: Document checkout validation and customer persistence behavior.
+
+## Phase 17: Catalog Category Filtering Fix (Completed)
+- [x] `docs/SPECS.md`: Document catalog category filtering contract.
+- [x] `web/lib/vadmin/index.ts`: Pass category slug to VADMIN product catalog endpoint.
+- [x] `web/app/(store)/catalog/page.tsx`: Remove permissive category fallback that displayed all products.
+
+## Phase 18: User Menu Visual Refinement
+- [x] `web/components/layout/navbar/user-menu.tsx`: Remove border from UserMenu button and placeholder.
+- [x] `web/components/layout/navbar/user-menu.tsx`: Remove ring from UserMenu dropdown and enhance shadow (`shadow-2xl`).
+
+## Phase 19: Logo Refinement
+- [x] `web/components/layout/navbar/index.tsx`: Remove isologo (icon) from header.
+- [x] `web/components/layout/footer.tsx`: Remove isologo (icon) from footer.
+
+## Phase 20: Home UI Alignment
+- [x] `web/app/(store)/page.tsx`: Update "Nuevos ingresos" section background to match store background.
+
+## Phase 21: Business Content Storage
+- [x] `docs/SPECS.md`: Document public business contact/social fields as `site_contents`.
+- [x] `admin/backend/database/seeders/BusinessSettingsSeeder.php`: Remove public contact/social keys from system settings seed data.
+- [x] `admin/backend/database/seeders/SiteContentSeeder.php`: Seed public business contact/social keys in `site_contents`.
+- [x] `admin/backend/database/seeders/DatabaseSeeder.php`: Register `SiteContentSeeder`.
+- [x] `admin/backend/app/Models/SiteContent.php`: Add helpers for business content keys.
+- [x] `admin/backend/app/Http/Controllers/SystemSettingsController.php`: Serve public business info from `site_contents`.
+- [x] `admin/frontend/src/views/settings/BusinessInfoSettings.jsx`: Read and write business fields through `/site-content`.
+- [x] Validate backend and frontend.

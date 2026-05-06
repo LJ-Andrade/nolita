@@ -43,14 +43,6 @@ export async function Navbar() {
         <div className="flex justify-center">
           <Link href="/" prefetch={true} className="flex items-center gap-3">
             <Image
-              src="/iso-black.svg"
-              alt={SITE_NAME || "Plan B"}
-              width={36}
-              height={32}
-              className="h-8 w-auto no-radius"
-              priority
-            />
-            <Image
               src="/logo-black.svg"
               alt={SITE_NAME || "Plan B"}
               width={180}
@@ -74,13 +66,6 @@ export async function Navbar() {
           <MobileMenu menu={menu} customer={session} />
         </Suspense>
         <Link href="/" prefetch={true} className="flex items-center gap-2">
-          <Image
-            src="/iso-black.svg"
-            alt={SITE_NAME || "Plan B"}
-            width={32}
-            height={28}
-            className="h-7 w-auto no-radius"
-          />
           <Image
             src="/logo-black.svg"
             alt={SITE_NAME || "Plan B"}

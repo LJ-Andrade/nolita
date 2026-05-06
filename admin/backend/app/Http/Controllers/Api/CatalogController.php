@@ -64,10 +64,15 @@ class CatalogController extends Controller
 	/**
 	 * Get all categories.
 	 */
-	public function categories()
+	public function categories(Request $request)
 	{
-		$categories = ProductCategory::orderBy('name')
-			->get();
+		$query = ProductCategory::orderBy('order');
+
+		if ($request->has('listed')) {
+			$query->where('listed', $request->listed == 'true' || $request->listed == '1');
+		}
+
+		$categories = $query->get();
 
 		return response()->json($categories);
 	}

@@ -3,9 +3,11 @@ import type { Product } from "lib/vadmin/types";
 
 type ProductGridProps = {
   products: Product[];
+  favoriteIds?: Set<string>;
+  isAuthenticated?: boolean;
 };
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, favoriteIds, isAuthenticated = false }: ProductGridProps) {
   if (!products.length) {
     return (
       <div
@@ -41,6 +43,8 @@ export function ProductGrid({ products }: ProductGridProps) {
           key={product.id}
           product={product}
           priority={i < 6}
+          isFavorited={favoriteIds?.has(product.id) ?? false}
+          isAuthenticated={isAuthenticated}
         />
       ))}
     </div>

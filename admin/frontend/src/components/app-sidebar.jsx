@@ -123,6 +123,12 @@ const items = [
 				icon: Truck,
 				permission: "users.view",
 			},
+			{
+				title: "Configuración",
+				url: "/configuracion-tienda",
+				icon: Settings,
+				permission: "users.view",
+			},
 		],
 	},
 	{

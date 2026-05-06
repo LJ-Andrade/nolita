@@ -44,14 +44,14 @@ function CategoryCard({
 }
 
 export default async function HomePage() {
-	const [products, collections, content] = await Promise.all([
+	const [products, collections, listedCategories, content] = await Promise.all([
 		getProducts(),
 		getCollections(),
+		getCollections({ listed: true }),
 		getSiteContent('home'),
 	]);
 
 	const featuredProducts = products.slice(0, 4);
-	const categories = collections.filter((c) => c.handle !== "");
 	const heroImage = getVadminImageUrl(content.home_hero_banner || "/storage/web/hero_1.jpg");
 
 	return (
@@ -63,9 +63,9 @@ export default async function HomePage() {
 			>
 				{/* Hero background */}
 				{heroImage ? (
-					<div 
+					<div
 						className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-						style={{ 
+						style={{
 							backgroundImage: `url(${heroImage})`,
 						}}
 					>
@@ -109,7 +109,7 @@ export default async function HomePage() {
 					</p>
 					<Link
 						href="/catalog"
-						className="inline-block border px-10 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition-all duration-200 hover:opacity-70"
+						className="inline-block border px-10 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition-all duration-200 hover:opacity-70 rounded-[var(--pb-radius)]"
 						style={{
 							borderColor: "var(--pb-accent)",
 							color: "var(--pb-accent)",
@@ -120,12 +120,51 @@ export default async function HomePage() {
 				</div>
 			</section>
 
+			{/* ── Categories Mosaic ─────────────────────────────────────────── */}
+			{listedCategories.length > 0 && (
+				<section className="bg-[var(--pb-bg)]">
+					<div className="flex flex-wrap">
+						{listedCategories.map((category) => (
+							<Link
+								key={category.handle}
+								href={`/catalog?category=${category.handle}`}
+								className="group relative h-[80vw] grow basis-full overflow-hidden md:h-[60vh] md:basis-1/3"
+							>
+								{category.image ? (
+									<img
+										src={category.image}
+										alt={category.title}
+										className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105 no-radius"
+									/>
+								) : (
+									<div className="flex h-full w-full items-center justify-center bg-neutral-200">
+										<span className="text-xs uppercase tracking-widest text-neutral-400">Sin Imagen</span>
+									</div>
+								)}
+
+								{/* Overlay */}
+								<div className="absolute inset-0 bg-black/20 transition-opacity duration-300 group-hover:bg-black/30" />
+
+								{/* Content at bottom left */}
+								<div className="absolute bottom-0 left-0 w-full p-8 md:p-12">
+									<h3 className="mb-2 text-2xl font-medium uppercase tracking-[0.2em] text-white md:text-3xl">
+										{category.title}
+									</h3>
+									<span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-white/90 underline underline-offset-4 transition-transform duration-300 group-hover:translate-x-1">
+										ver más
+									</span>
+								</div>
+							</Link>
+						))}
+					</div>
+				</section>
+			)}
 
 			{/* ── Featured Products ─────────────────────────────────────────── */}
 			{featuredProducts.length > 0 && (
 				<section
 					className="py-16"
-					style={{ backgroundColor: "var(--pb-surface)" }}
+					style={{ backgroundColor: "var(--pb-bg)" }}
 				>
 					<div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
 						<div className="mb-10 flex items-end justify-between">

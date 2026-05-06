@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
 import MethodSelector from "./method-selector";
 import OrderSummary from "./order-summary";
-import { Cart, DeliveryMethod, PaymentMethod } from "lib/vadmin/types";
+import { Cart, DeliveryMethod, PaymentMethod, ShopConfiguration } from "lib/vadmin/types";
 import {
   completeOrder,
   type CheckoutState,
@@ -18,11 +18,11 @@ import { useCart } from "components/cart/cart-context";
 const checkoutTexts = webTexts.checkoutProcessingNotice;
 const MIN_PROCESSING_MS = 1000;
 
-function SubmitButton({ pending }: { pending: boolean }) {
+function SubmitButton({ pending, disabled }: { pending: boolean; disabled?: boolean }) {
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className="mt-8 flex w-full items-center justify-center rounded-[12px] bg-graphite py-4 text-xs font-bold uppercase tracking-[0.2em] text-parchment transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? <LoadingDots className="bg-parchment" /> : "Confirmar Pedido"}
@@ -37,6 +37,7 @@ export default function CheckoutPageContent({
   session,
   provinces,
   localities,
+  shopConfig,
 }: {
   cart: Cart;
   deliveryMethods: DeliveryMethod[];
@@ -44,6 +45,7 @@ export default function CheckoutPageContent({
   session: any;
   provinces: { id: number; name: string }[];
   localities: { id: number; name: string; province_id: number }[];
+  shopConfig: ShopConfiguration;
 }) {
   const { clearCart, setIsOpen } = useCart();
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
@@ -55,6 +57,10 @@ export default function CheckoutPageContent({
     parseFloat(deliveryMethods[0]?.fee || "0")
   );
   const [showCompletion, setShowCompletion] = useState(false);
+
+  const qtyMet = !shopConfig.min_quantity || cart.totalQuantity >= shopConfig.min_quantity;
+  const amountMet = !shopConfig.min_amount || parseFloat(cart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
+  const canCheckout = qtyMet && amountMet;
 
   const handleDeliveryChange = (methodId: string) => {
     const method = deliveryMethods.find((m) => m.id === methodId);
@@ -132,8 +138,8 @@ export default function CheckoutPageContent({
           </div>
 
           <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">
-            <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} />
-            <SubmitButton pending={isCheckoutPending} />
+            <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} shopConfig={shopConfig} qtyMet={qtyMet} amountMet={amountMet} />
+            <SubmitButton pending={isCheckoutPending} disabled={!canCheckout} />
           </div>
         </form>
       )}

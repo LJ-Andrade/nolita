@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\SystemSettingResource;
+use App\Models\SiteContent;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -16,27 +17,7 @@ class SystemSettingsController extends Controller
 
     public function publicInfo(): JsonResponse
     {
-        $keys = [
-            'business_phone',
-            'business_email', 
-            'business_address',
-            'business_hours',
-            'business_whatsapp',
-            'business_facebook',
-            'business_instagram',
-            'business_linkedin',
-            'business_youtube',
-            'business_tiktok',
-        ];
-        
-        $settings = SystemSetting::whereIn('key', $keys)->get();
-        
-        $data = [];
-        foreach ($settings as $setting) {
-            $data[$setting->key] = $setting->value;
-        }
-        
-        return response()->json(['data' => $data]);
+        return response()->json(['data' => SiteContent::getBusinessInfo()]);
     }
 
     public function show(string $key): JsonResponse

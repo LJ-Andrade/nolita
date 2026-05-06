@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Laravel\Sanctum\HasApiTokens;
@@ -42,6 +43,12 @@ class Customer extends Model implements HasMedia
     public function locality(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Locality::class);
+    }
+
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'customer_favorites')
+            ->withTimestamps();
     }
 
     /**

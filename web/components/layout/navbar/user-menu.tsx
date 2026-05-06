@@ -32,7 +32,7 @@ export default function UserMenu({ customer }: { customer: any }) {
     return (
       <Link
         href="/login"
-        className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 text-black transition-colors hover:bg-neutral-50 dark:border-neutral-700"
+        className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-black transition-colors hover:bg-neutral-50 shadow-sm"
       >
         <UserIcon />
       </Link>
@@ -42,7 +42,7 @@ export default function UserMenu({ customer }: { customer: any }) {
   // Prevent hydration mismatch by not rendering Menu until mounted
   if (!mounted) {
     return (
-      <div className="relative flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 bg-white">
+      <div className="relative flex h-10 w-10 items-center justify-center rounded-[12px] bg-white shadow-sm">
         <UserIcon />
       </div>
     );
@@ -52,7 +52,7 @@ export default function UserMenu({ customer }: { customer: any }) {
     <>
       <Menu as="div" className="relative">
         <div>
-          <MenuButton className="relative flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 overflow-hidden hover:bg-neutral-50 transition-colors">
+          <MenuButton className="relative flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 overflow-hidden hover:bg-neutral-50 transition-colors shadow-sm">
             <span className="sr-only">Open user menu</span>
             {customer.avatar_url ? (
               <img
@@ -74,7 +74,7 @@ export default function UserMenu({ customer }: { customer: any }) {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <MenuItems className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-[12px] bg-white py-1 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <MenuItems className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-[12px] bg-white py-1 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] focus:outline-none">
             <div className="px-4 py-2 border-b border-gray-50 mb-1">
               <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Cuenta</p>
               <p className="text-sm font-medium text-gray-900 truncate">{customer.name}</p>
@@ -86,6 +86,16 @@ export default function UserMenu({ customer }: { customer: any }) {
                   className={`${focus ? "bg-gray-50 text-black" : "text-gray-600"} block px-4 py-2 text-sm transition-colors`}
                 >
                   Mi Perfil
+                </Link>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <Link
+                  href="/favoritos"
+                  className={`${focus ? "bg-gray-50 text-black" : "text-gray-600"} block px-4 py-2 text-sm transition-colors`}
+                >
+                  Favoritos
                 </Link>
               )}
             </MenuItem>

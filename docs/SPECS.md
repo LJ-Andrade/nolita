@@ -9,8 +9,9 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ### Requirements
 1. **Authentication:** Uses customers from VADMIN. Registering creates a record in the `customers` table of VADMIN.
 2. **Products:** Products are created in VADMIN and queried via REST API by the Next.js e-commerce.
-3. **Orders:** Create new models and tables in VADMIN for storing Customer Orders and their complete details.
-4. **CORS:** Ensure CORS is configured properly in VADMIN to allow requests from the Web frontend.
+3. **Catalog Category Filtering:** The catalog must send the selected category slug to VADMIN through `GET /api/catalog/products?category={slug}` and must not show unrelated products when a category is active.
+4. **Orders:** Create new models and tables in VADMIN for storing Customer Orders and their complete details.
+5. **CORS:** Ensure CORS is configured properly in VADMIN to allow requests from the Web frontend.
 
 > [!IMPORTANT]
 > **OFFICIAL BACKEND: VADMIN**
@@ -103,7 +104,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
     - **PageHeader**: Mandatory for all views.
     - **Glassmorphism**: Use `glass-panel` for dropdowns and floating elements.
 4.  **Dropdowns**: Standardized with `py-3` for items and `bg-primary/10` for hover states.
-5.  **Sidebar Organization**: User management modules (Usuarios, Roles, Permisos) must be grouped under the **"Sistema"** parent menu.
+6. **User Menu**: Dropdown must have no border (`ring-0`) and a prominent shadow (`shadow-2xl`) for a floating look. The trigger button should also be borderless with a clean white background.
 
 > [!TIP]
 > For more details, refer to:
@@ -195,3 +196,30 @@ Users can configure which administrative notification types they want to receive
 | GET | `/api/notification-preferences` | List available notification types with current user preferences |
 | POST | `/api/notification-preferences/{notificationTypeId}/toggle` | Toggle one channel (`email` or `browser`) |
 | PUT | `/api/notification-preferences` | Bulk update notification channel preferences |
+
+---
+
+## 11. Public Business Content Storage
+
+### 11.1 Overview
+Public business contact fields must be managed as site content, not system settings.
+
+### 11.2 Storage Contract
+- `system_settings` remains reserved for operational configuration such as `site_url`, `mail_to_address`, `business_name`, language, and skin settings.
+- `site_contents` owns public contact and social fields:
+  - `business_phone`
+  - `business_email`
+  - `business_address`
+  - `business_hours`
+  - `business_whatsapp`
+  - `business_facebook`
+  - `business_instagram`
+  - `business_linkedin`
+  - `business_youtube`
+  - `business_tiktok`
+- These records use `section = business`.
+
+### 11.3 API Contract
+- Admin business info editor reads and writes through `/api/site-content`.
+- `/api/public/business-info` remains available for compatibility, but its data source is `site_contents`.
+- `/api/system-settings` must not create or seed public business contact/social keys.
