@@ -51,6 +51,61 @@ require_env() {
   printf '%s' "$value"
 }
 
+generate_token() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 32
+    return
+  fi
+
+  od -An -N32 -tx1 /dev/urandom | tr -d ' \n'
+}
+
+set_env_value() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+  local escaped_value
+
+  escaped_value="$(printf '%s' "$value" | sed 's/[\/&]/\\&/g')"
+
+  if grep -q -E "^${key}=" "$file"; then
+    sed -i "s/^${key}=.*/${key}=\"${escaped_value}\"/" "$file"
+  else
+    printf '\n%s="%s"\n' "$key" "$value" >> "$file"
+  fi
+}
+
+ensure_revalidation_config() {
+  local web_token
+  local backend_token
+  local backend_webhook_url
+
+  web_token="$(read_env_value "$WEB_ENV" "NEXTJS_REVALIDATE_TOKEN")"
+  backend_token="$(read_env_value "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN")"
+  backend_webhook_url="$(read_env_value "$BACKEND_ENV" "NEXTJS_REVALIDATE_WEBHOOK_URL")"
+
+  if [ -z "$web_token" ] && [ -z "$backend_token" ]; then
+    web_token="$(generate_token)"
+    backend_token="$web_token"
+    set_env_value "$WEB_ENV" "NEXTJS_REVALIDATE_TOKEN" "$web_token"
+    set_env_value "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN" "$backend_token"
+    echo "Generated NEXTJS_REVALIDATE_TOKEN in web and backend env files."
+  elif [ -z "$web_token" ]; then
+    web_token="$backend_token"
+    set_env_value "$WEB_ENV" "NEXTJS_REVALIDATE_TOKEN" "$web_token"
+    echo "Copied NEXTJS_REVALIDATE_TOKEN from backend env to web env."
+  elif [ -z "$backend_token" ]; then
+    backend_token="$web_token"
+    set_env_value "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN" "$backend_token"
+    echo "Copied NEXTJS_REVALIDATE_TOKEN from web env to backend env."
+  fi
+
+  if [ -z "$backend_webhook_url" ]; then
+    set_env_value "$BACKEND_ENV" "NEXTJS_REVALIDATE_WEBHOOK_URL" "$EXPECTED_WEBHOOK_URL"
+    echo "Added NEXTJS_REVALIDATE_WEBHOOK_URL to backend env."
+  fi
+}
+
 echo "Checking web production build..."
 
 require_file "$WEB_DIR/package.json"
@@ -60,6 +115,8 @@ require_command corepack
 require_command pm2
 
 corepack pnpm --version >/dev/null 2>&1 || fail "pnpm is not available through corepack"
+
+ensure_revalidation_config
 
 web_api_url="$(require_env "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")"
 web_token="$(require_env "$WEB_ENV" "NEXTJS_REVALIDATE_TOKEN")"
