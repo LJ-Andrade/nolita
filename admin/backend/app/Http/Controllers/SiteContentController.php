@@ -7,9 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Services\StorefrontRevalidationService;
 
 class SiteContentController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -44,6 +49,8 @@ class SiteContentController extends Controller
             $validated['description'] ?? null
         );
 
+        $this->revalidateSiteContent();
+
         return response()->json(['data' => $content]);
     }
 
@@ -70,6 +77,8 @@ class SiteContentController extends Controller
             );
             $updated[] = $content;
         }
+
+        $this->revalidateSiteContent();
 
         return response()->json(['data' => $updated]);
     }
@@ -106,6 +115,8 @@ class SiteContentController extends Controller
             $publicDisk = Storage::disk('public');
             $url = $publicDisk->url($path);
 
+            $this->revalidateSiteContent();
+
             return response()->json([
                 'url'  => $url,
                 'path' => $path,
@@ -133,5 +144,12 @@ class SiteContentController extends Controller
         }
         
         return response()->json(['data' => $data]);
+    }
+
+    private function revalidateSiteContent(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::SITE_CONTENT,
+        ]);
     }
 }

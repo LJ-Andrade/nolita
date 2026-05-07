@@ -8,9 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Services\StorefrontRevalidationService;
 
 class ProductCategoryController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function publicIndex(Request $request)
     {
         $query = ProductCategory::query();
@@ -85,6 +90,8 @@ class ProductCategoryController extends Controller
             $category->update(['image' => $path]);
         }
 
+        $this->revalidateCollections();
+
         return new ProductCategoryResource($category);
     }
 
@@ -125,12 +132,16 @@ class ProductCategoryController extends Controller
 
         $product_category->update($data);
 
+        $this->revalidateCollections();
+
         return new ProductCategoryResource($product_category);
     }
 
     public function destroy(ProductCategory $product_category)
     {
         $product_category->delete();
+
+        $this->revalidateCollections();
 
         return response()->noContent();
     }
@@ -144,6 +155,16 @@ class ProductCategoryController extends Controller
 
         ProductCategory::whereIn('id', $request->ids)->delete();
 
+        $this->revalidateCollections();
+
         return response()->json(['message' => 'Categorías de producto eliminadas correctamente']);
+    }
+
+    private function revalidateCollections(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::COLLECTIONS,
+            StorefrontRevalidationService::PRODUCTS,
+        ]);
     }
 }

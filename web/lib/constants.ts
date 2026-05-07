@@ -43,6 +43,9 @@ export const sorting: SortFilterItem[] = [
 export const TAGS = {
   collections: "collections",
   products: "products",
+  siteContent: "site-content",
+  shopConfiguration: "shop-configuration",
+  checkoutMethods: "checkout-methods",
   cart: "cart",
 };
 
@@ -62,4 +65,3 @@ export const COLOR_MAP: Record<string, string> = {
   rosa: "#D4A0A0",
   crema: "#F0E8D8",
 };
-

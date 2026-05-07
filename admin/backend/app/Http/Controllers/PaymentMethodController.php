@@ -6,9 +6,14 @@ use App\Models\PaymentMethod;
 use App\Http\Resources\PaymentMethodResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\StorefrontRevalidationService;
 
 class PaymentMethodController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = PaymentMethod::query();
@@ -53,6 +58,8 @@ class PaymentMethodController extends Controller
 
         $paymentMethod = PaymentMethod::create($data);
 
+        $this->revalidateCheckoutMethods();
+
         return new PaymentMethodResource($paymentMethod);
     }
 
@@ -79,12 +86,16 @@ class PaymentMethodController extends Controller
 
         $paymentMethod->update($data);
 
+        $this->revalidateCheckoutMethods();
+
         return new PaymentMethodResource($paymentMethod);
     }
 
     public function destroy(PaymentMethod $paymentMethod)
     {
         $paymentMethod->delete();
+
+        $this->revalidateCheckoutMethods();
 
         return response()->noContent();
     }
@@ -101,8 +112,17 @@ class PaymentMethodController extends Controller
         }
 
         $ids = $request->input('ids');
-        PaymentMethod::whereIn($ids)->delete();
+        PaymentMethod::whereIn('id', $ids)->delete();
+
+        $this->revalidateCheckoutMethods();
 
         return response()->noContent();
+    }
+
+    private function revalidateCheckoutMethods(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::CHECKOUT_METHODS,
+        ], ['/checkout']);
     }
 }

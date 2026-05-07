@@ -1,10 +1,13 @@
 import { TAGS } from "lib/constants";
 import {
+  revalidatePath,
+  revalidateTag,
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
 } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse, type NextRequest } from "next/server";
 import { 
   Cart, 
   Collection, 
@@ -15,6 +18,14 @@ import {
 } from "./types";
 
 const endpoint = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
+const storefrontTags = [
+  TAGS.products,
+  TAGS.collections,
+  TAGS.siteContent,
+  TAGS.shopConfiguration,
+  TAGS.checkoutMethods,
+] as const;
+const storefrontPaths = ["/", "/catalog", "/search"] as const;
 
 export async function vadminFetch<T>({
   cache,
@@ -24,6 +35,8 @@ export async function vadminFetch<T>({
   body,
   path,
   silentStatuses = [],
+  tags,
+  revalidate,
 }: {
   cache?: RequestCache;
   headers?: HeadersInit;
@@ -32,6 +45,8 @@ export async function vadminFetch<T>({
   body?: any;
   path: string;
   silentStatuses?: number[];
+  tags?: string[];
+  revalidate?: number;
 }): Promise<{ status: number; body: T } | never> {
   try {
     const url = new URL(`${endpoint}/${path}`);
@@ -49,13 +64,25 @@ export async function vadminFetch<T>({
 
     const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
     const finalCache = cache || (isMutation ? "no-store" : "force-cache");
+    const nextOptions =
+      finalCache === "no-store" || (!tags?.length && revalidate === undefined)
+        ? undefined
+        : {
+            ...(tags?.length ? { tags } : {}),
+            ...(revalidate !== undefined ? { revalidate } : {}),
+          };
 
-    const result = await fetch(url.toString(), {
+    const fetchOptions: RequestInit & {
+      next?: { tags?: string[]; revalidate?: number };
+    } = {
       method,
       headers: finalHeaders,
       body: body ? JSON.stringify(body) : undefined,
       cache: finalCache,
-    });
+      ...(nextOptions ? { next: nextOptions } : {}),
+    };
+
+    const result = await fetch(url.toString(), fetchOptions);
 
     const contentType = result.headers.get("content-type");
     let data;
@@ -132,6 +159,7 @@ export async function getProducts({
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
     params: { category, search: query, reverse, sortKey },
+    tags: [TAGS.products],
   });
 
   return res.body;
@@ -145,6 +173,7 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   try {
     const res = await vadminFetch<Product>({
       path: `catalog/products/${handle}`,
+      tags: [TAGS.products],
     });
     return res.body;
   } catch (e) {
@@ -160,6 +189,7 @@ export async function getCollections(params?: { listed?: boolean }): Promise<Col
   const res = await vadminFetch<any[]>({
     path: "catalog/categories",
     params: params as any,
+    tags: [TAGS.collections],
   });
 
   // Transform VADMIN categories to Storefront Collections
@@ -215,6 +245,7 @@ export async function getCollectionProducts({
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
     params: { category: collection, reverse, sortKey },
+    tags: [TAGS.products, TAGS.collections],
   });
 
   return res.body;
@@ -236,8 +267,60 @@ export async function getMenu(handle: string): Promise<Menu[]> {
   }));
 }
 
-export async function revalidate(req: any): Promise<any> {
-    return { status: 200, message: "Revalidation not implemented yet for VADMIN" };
+export async function revalidate(req: NextRequest): Promise<NextResponse> {
+  const expectedToken = process.env.NEXTJS_REVALIDATE_TOKEN;
+
+  if (!expectedToken) {
+    return NextResponse.json(
+      { revalidated: false, message: "Revalidation token is not configured" },
+      { status: 500 },
+    );
+  }
+
+  let payload: {
+    token?: string;
+    tags?: string[];
+    paths?: string[];
+  } = {};
+
+  if (req.headers.get("content-type")?.includes("application/json")) {
+    try {
+      payload = await req.json();
+    } catch {
+      payload = {};
+    }
+  }
+
+  const token =
+    req.headers.get("x-revalidate-token") ||
+    req.nextUrl.searchParams.get("token") ||
+    payload.token;
+
+  if (token !== expectedToken) {
+    return NextResponse.json(
+      { revalidated: false, message: "Invalid revalidation token" },
+      { status: 401 },
+    );
+  }
+
+  const requestedTags = payload.tags?.length ? payload.tags : [...storefrontTags];
+  const validTags = requestedTags.filter((tag) =>
+    storefrontTags.includes(tag as (typeof storefrontTags)[number]),
+  );
+  const requestedPaths = payload.paths?.length ? payload.paths : [...storefrontPaths];
+
+  validTags.forEach((tag) => revalidateTag(tag, { expire: 0 }));
+  requestedPaths.forEach((path) => {
+    if (path.startsWith("/")) {
+      revalidatePath(path);
+    }
+  });
+
+  return NextResponse.json({
+    revalidated: true,
+    tags: validTags,
+    paths: requestedPaths,
+  });
 }
 
 export async function getPage(handle: string): Promise<Page | undefined> {
@@ -259,6 +342,7 @@ export async function getSiteContent(section?: string): Promise<Record<string, s
     const res = await vadminFetch<{ data: Record<string, string> }>({
       path: "public/site-content",
       params: { section },
+      tags: [TAGS.siteContent],
     });
     return res.body.data;
   } catch (e) {
@@ -275,6 +359,7 @@ export async function getShopConfiguration(): Promise<ShopConfiguration> {
   try {
     const res = await vadminFetch<{ data: ShopConfiguration }>({
       path: "public/shop-configuration",
+      tags: [TAGS.shopConfiguration],
     });
     return res.body.data;
   } catch (e) {

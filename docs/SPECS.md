@@ -223,3 +223,34 @@ Public business contact fields must be managed as site content, not system setti
 - Admin business info editor reads and writes through `/api/site-content`.
 - `/api/public/business-info` remains available for compatibility, but its data source is `site_contents`.
 - `/api/system-settings` must not create or seed public business contact/social keys.
+
+---
+
+## 12. Storefront Cache Revalidation
+
+### 12.1 Overview
+Admin changes that affect the public storefront must invalidate the Next.js cache immediately, without requiring a manual rebuild.
+
+### 12.2 Web Contract
+- `POST /api/revalidate` accepts a shared token and a list of tags.
+- Valid tags:
+  - `products`
+  - `collections`
+  - `site-content`
+  - `shop-configuration`
+  - `checkout-methods`
+- The route revalidates matching cache tags and core storefront paths (`/`, `/catalog`, `/search`).
+- Invalid or missing tokens must return `401`.
+
+### 12.3 VADMIN Contract
+- VADMIN sends a revalidation webhook after successful admin writes for:
+  - products and product variants
+  - product sizes, colors, and tags
+  - product categories
+  - payment and delivery methods
+  - site content
+  - shop configuration
+- Webhook configuration comes from:
+  - `NEXTJS_REVALIDATE_WEBHOOK_URL`
+  - `NEXTJS_REVALIDATE_TOKEN`
+- Missing webhook configuration must not block admin writes.

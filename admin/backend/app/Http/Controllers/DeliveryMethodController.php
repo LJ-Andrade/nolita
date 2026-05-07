@@ -6,9 +6,14 @@ use App\Models\DeliveryMethod;
 use App\Http\Resources\DeliveryMethodResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\StorefrontRevalidationService;
 
 class DeliveryMethodController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = DeliveryMethod::query();
@@ -45,6 +50,8 @@ class DeliveryMethodController extends Controller
 
         $deliveryMethod = DeliveryMethod::create($data);
 
+        $this->revalidateCheckoutMethods();
+
         return new DeliveryMethodResource($deliveryMethod);
     }
 
@@ -69,12 +76,16 @@ class DeliveryMethodController extends Controller
 
         $deliveryMethod->update($data);
 
+        $this->revalidateCheckoutMethods();
+
         return new DeliveryMethodResource($deliveryMethod);
     }
 
     public function destroy(DeliveryMethod $deliveryMethod)
     {
         $deliveryMethod->delete();
+
+        $this->revalidateCheckoutMethods();
 
         return response()->noContent();
     }
@@ -91,8 +102,17 @@ class DeliveryMethodController extends Controller
         }
 
         $ids = $request->input('ids');
-        DeliveryMethod::whereIn($ids)->delete();
+        DeliveryMethod::whereIn('id', $ids)->delete();
+
+        $this->revalidateCheckoutMethods();
 
         return response()->noContent();
+    }
+
+    private function revalidateCheckoutMethods(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::CHECKOUT_METHODS,
+        ], ['/checkout']);
     }
 }

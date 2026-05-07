@@ -185,3 +185,29 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/backend/app/Http/Controllers/SystemSettingsController.php`: Serve public business info from `site_contents`.
 - [x] `admin/frontend/src/views/settings/BusinessInfoSettings.jsx`: Read and write business fields through `/site-content`.
 - [x] Validate backend and frontend.
+
+## Phase 22: Storefront Cache Revalidation
+- [x] `docs/SPECS.md`: Document webhook, tags, and admin-triggered revalidation contract.
+- [x] `web/lib/constants.ts`: Add storefront cache tags for site content and shop configuration.
+- [x] `web/lib/vadmin/index.ts`: Tag cached VADMIN fetches and implement revalidation.
+- [x] `web/app/api/revalidate/route.ts`: Return a NextResponse from the revalidation handler.
+- [x] `web/.env.example`: Document shared revalidation token.
+- [x] `admin/backend/app/Services/StorefrontRevalidationService.php`: Add resilient webhook client.
+- [x] `admin/backend/app/Http/Controllers/ProductController.php`: Trigger product cache revalidation after catalog writes.
+- [x] `admin/backend/app/Http/Controllers/ProductCategoryController.php`: Trigger collection cache revalidation after category writes.
+- [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Trigger site content cache revalidation after content writes.
+- [x] `admin/backend/app/Http/Controllers/ShopConfigurationController.php`: Trigger shop configuration cache revalidation after configuration writes.
+- [x] `admin/backend/.env.example`: Document Next.js revalidation variables.
+- [x] `docs/DEPLOY_INFO.md`: Document production revalidation environment variables and local Next.js webhook URL.
+- [x] Validate TypeScript build and PHP syntax.
+
+## Phase 23: Storefront Revalidation Coverage
+- [x] `web/lib/constants.ts`: Add checkout method cache tag.
+- [x] `web/lib/vadmin/index.ts`: Allow checkout method tag in revalidation endpoint.
+- [x] `admin/backend/app/Services/StorefrontRevalidationService.php`: Add checkout method tag constant.
+- [x] `admin/backend/app/Http/Controllers/ProductSizeController.php`: Trigger catalog revalidation after size writes.
+- [x] `admin/backend/app/Http/Controllers/ProductColorController.php`: Trigger catalog revalidation after color writes.
+- [x] `admin/backend/app/Http/Controllers/ProductTagController.php`: Trigger catalog revalidation after product tag writes.
+- [x] `admin/backend/app/Http/Controllers/PaymentMethodController.php`: Trigger checkout revalidation after payment method writes.
+- [x] `admin/backend/app/Http/Controllers/DeliveryMethodController.php`: Trigger checkout revalidation after delivery method writes.
+- [x] Validate TypeScript build and PHP syntax.

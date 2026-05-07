@@ -7,9 +7,14 @@ use App\Http\Resources\ProductSizeResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\StorefrontRevalidationService;
 
 class ProductSizeController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = ProductSize::query();
@@ -53,6 +58,8 @@ class ProductSizeController extends Controller
 
         $size = ProductSize::create($validator->validated());
 
+        $this->revalidateCatalog();
+
         return new ProductSizeResource($size);
     }
 
@@ -73,12 +80,17 @@ class ProductSizeController extends Controller
 
         $productSize->update($validator->validated());
 
+        $this->revalidateCatalog();
+
         return new ProductSizeResource($productSize);
     }
 
     public function destroy(ProductSize $productSize)
     {
         $productSize->delete();
+
+        $this->revalidateCatalog();
+
         return response()->json(['message' => 'Size deleted successfully']);
     }
 
@@ -102,9 +114,19 @@ class ProductSizeController extends Controller
             }
         });
 
+        $this->revalidateCatalog();
+
         return response()->json([
             'message' => $count . ' sizes deleted successfully',
             'deleted_count' => $count,
+        ]);
+    }
+
+    private function revalidateCatalog(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::PRODUCTS,
+            StorefrontRevalidationService::COLLECTIONS,
         ]);
     }
 }

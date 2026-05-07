@@ -88,6 +88,17 @@ corepack pnpm build
 
 ### Web Frontal (.env.production)
 - `NEXT_PUBLIC_VADMIN_API_URL=https://soyplanb.com.ar/api`
+- `NEXTJS_REVALIDATE_TOKEN=<shared-secret>`
+
+### Storefront Cache Revalidation
+Because Nginx proxies public `/api/*` requests to Laravel, VADMIN should call the Next.js revalidation route directly through the local PM2 port:
+
+```bash
+NEXTJS_REVALIDATE_WEBHOOK_URL=http://127.0.0.1:3002/api/revalidate
+NEXTJS_REVALIDATE_TOKEN=<same-shared-secret-as-web>
+```
+
+Set these variables in `admin/backend/.env`, then clear cached Laravel config after deploy.
 
 ## Storage & Permissions
 

@@ -7,9 +7,14 @@ use App\Models\ShopConfiguration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\StorefrontRevalidationService;
 
 class ShopConfigurationController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function show(): JsonResponse
     {
         $config = ShopConfiguration::getConfig();
@@ -37,6 +42,10 @@ class ShopConfigurationController extends Controller
 
         $config = ShopConfiguration::getConfig();
         $config->update($validator->validated());
+
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::SHOP_CONFIGURATION,
+        ]);
 
         return response()->json(['data' => new ShopConfigurationResource($config->fresh())]);
     }

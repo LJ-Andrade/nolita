@@ -8,9 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\StorefrontRevalidationService;
 
 class ProductTagController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function publicIndex(Request $request)
     {
         $query = ProductTag::query();
@@ -77,6 +82,8 @@ class ProductTagController extends Controller
 
         $tag = ProductTag::create($data);
 
+        $this->revalidateCatalog();
+
         return new ProductTagResource($tag);
     }
 
@@ -108,12 +115,16 @@ class ProductTagController extends Controller
 
         $product_tag->update($data);
 
+        $this->revalidateCatalog();
+
         return new ProductTagResource($product_tag);
     }
 
     public function destroy(ProductTag $product_tag)
     {
         $product_tag->delete();
+
+        $this->revalidateCatalog();
 
         return response()->noContent();
     }
@@ -141,9 +152,19 @@ class ProductTagController extends Controller
             }
         });
 
+        $this->revalidateCatalog();
+
         return response()->json([
             'message' => $count . ' tags deleted successfully',
             'deleted_count' => $count,
+        ]);
+    }
+
+    private function revalidateCatalog(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::PRODUCTS,
+            StorefrontRevalidationService::COLLECTIONS,
         ]);
     }
 }

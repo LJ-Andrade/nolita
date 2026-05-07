@@ -10,9 +10,14 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Services\StorefrontRevalidationService;
 
 class ProductController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function publicIndex(Request $request)
     {
         $query = Product::with(['author', 'category', 'tags'])->where('status', 'published');
@@ -231,6 +236,8 @@ class ProductController extends Controller
             }
         }
 
+        $this->revalidateCatalog();
+
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes']));
     }
 
@@ -243,6 +250,8 @@ class ProductController extends Controller
     {
         $product->qr_url = $product->generateQrUrl();
         $product->save();
+        $this->revalidateCatalog();
+
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'media', 'variants.color', 'variants.size']));
     }
 
@@ -254,6 +263,8 @@ class ProductController extends Controller
         
         $product->qr_url = $validated['qr_url'];
         $product->save();
+
+        $this->revalidateCatalog();
         
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'media', 'variants.color', 'variants.size']));
     }
@@ -464,6 +475,8 @@ class ProductController extends Controller
             }
         }
 
+        $this->revalidateCatalog();
+
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes']));
     }
 
@@ -495,6 +508,8 @@ class ProductController extends Controller
 
         $product->save();
 
+        $this->revalidateCatalog();
+
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'variants']));
     }
 
@@ -508,12 +523,16 @@ class ProductController extends Controller
 
         $media->delete();
 
+        $this->revalidateCatalog();
+
         return response()->json(['message' => 'Image deleted successfully']);
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
+
+        $this->revalidateCatalog();
 
         return response()->noContent();
     }
@@ -530,7 +549,9 @@ public function bulkDelete(Request $request)
         }
 
         $ids = $request->input('ids');
-        Product::whereIn($ids)->delete();
+        Product::whereIn('id', $ids)->delete();
+
+        $this->revalidateCatalog();
 
         return response()->noContent();
     }
@@ -567,6 +588,16 @@ public function bulkDelete(Request $request)
 
         $variant->update($data);
 
+        $this->revalidateCatalog();
+
         return new ProductVariantResource($variant->load(['color', 'size']));
+    }
+
+    private function revalidateCatalog(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::PRODUCTS,
+            StorefrontRevalidationService::COLLECTIONS,
+        ]);
     }
 }

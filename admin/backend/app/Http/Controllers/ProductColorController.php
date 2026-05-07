@@ -7,9 +7,14 @@ use App\Http\Resources\ProductColorResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\StorefrontRevalidationService;
 
 class ProductColorController extends Controller
 {
+    public function __construct(private StorefrontRevalidationService $storefrontRevalidation)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = ProductColor::query();
@@ -55,6 +60,8 @@ class ProductColorController extends Controller
 
         $color = ProductColor::create($validator->validated());
 
+        $this->revalidateCatalog();
+
         return new ProductColorResource($color);
     }
 
@@ -76,12 +83,17 @@ class ProductColorController extends Controller
 
         $productColor->update($validator->validated());
 
+        $this->revalidateCatalog();
+
         return new ProductColorResource($productColor);
     }
 
     public function destroy(ProductColor $productColor)
     {
         $productColor->delete();
+
+        $this->revalidateCatalog();
+
         return response()->json(['message' => 'Color deleted successfully']);
     }
 
@@ -105,9 +117,19 @@ class ProductColorController extends Controller
             }
         });
 
+        $this->revalidateCatalog();
+
         return response()->json([
             'message' => $count . ' colors deleted successfully',
             'deleted_count' => $count,
+        ]);
+    }
+
+    private function revalidateCatalog(): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::PRODUCTS,
+            StorefrontRevalidationService::COLLECTIONS,
         ]);
     }
 }
