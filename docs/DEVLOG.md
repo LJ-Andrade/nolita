@@ -211,3 +211,8 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/backend/app/Http/Controllers/PaymentMethodController.php`: Trigger checkout revalidation after payment method writes.
 - [x] `admin/backend/app/Http/Controllers/DeliveryMethodController.php`: Trigger checkout revalidation after delivery method writes.
 - [x] Validate TypeScript build and PHP syntax.
+
+## Phase 24: Production Build Scripts
+- [x] `build-web.sh`: Add production web build script with env, token, webhook, dependency, build, and PM2 checks.
+- [x] `build-admin.sh`: Add production admin panel build script.
+- [x] `README.md`: Document production build script usage.
