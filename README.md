@@ -29,6 +29,8 @@ Then it runs:
 ```bash
 cd web
 corepack pnpm install --frozen-lockfile
+# If the lockfile is outdated, the script falls back to:
+corepack pnpm install --no-frozen-lockfile
 corepack pnpm build
 pm2 restart planb-web
 ```

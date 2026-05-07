@@ -133,7 +133,10 @@ esac
 
 echo "Building web..."
 cd "$WEB_DIR"
-corepack pnpm install --frozen-lockfile
+if ! corepack pnpm install --frozen-lockfile; then
+  echo "pnpm lockfile is outdated. Updating install state with --no-frozen-lockfile..."
+  corepack pnpm install --no-frozen-lockfile
+fi
 corepack pnpm build
 
 echo "Restarting PM2 app: $PM2_APP_NAME"
