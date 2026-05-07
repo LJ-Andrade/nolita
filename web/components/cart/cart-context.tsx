@@ -65,6 +65,8 @@ function updateCartItem(
     singleItemAmount.toString(),
   );
 
+  const stockDelta = updateType === "plus" ? -1 : 1;
+
   return {
     ...item,
     quantity: newQuantity,
@@ -73,6 +75,13 @@ function updateCartItem(
       totalAmount: {
         ...item.cost.totalAmount,
         amount: newTotalAmount,
+      },
+    },
+    merchandise: {
+      ...item.merchandise,
+      product: {
+        ...item.merchandise.product,
+        stock: (item.merchandise.product.stock ?? 0) + stockDelta,
       },
     },
   };

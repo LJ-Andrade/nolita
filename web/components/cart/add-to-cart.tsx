@@ -127,7 +127,7 @@ function QuantitySelector({
 // ---------------------------------------------------------------------------
 export function AddToCart({ product }: { product: Product }) {
 	const { variants } = product;
-	const { addCartItem } = useCart();
+	const { cart, addCartItem, updateCartItem } = useCart();
 	const searchParams = useSearchParams();
 	const [quantity, setQuantity] = useState<number>(1);
 	const [isPending, startTransition] = useTransition();
@@ -170,11 +170,23 @@ export function AddToCart({ product }: { product: Product }) {
 
 		// Server action called directly — avoids useActionState bind arity issues
 		startTransition(async () => {
+			if (!selectedVariantId) return;
+
+			const existed = cart?.lines?.some(l => l.merchandise.id === selectedVariantId);
+
 			// Optimistic cart update
 			addCartItem(finalVariant, product, quantity);
 
 			const result = await addItem(null, selectedVariantId, quantity);
-			if (result) toast.error(result);
+			if (result) {
+				toast.error(result);
+				// Rollback optimistic update
+				if (existed) {
+					for (let i = 0; i < quantity; i++) updateCartItem(selectedVariantId, "minus");
+				} else {
+					updateCartItem(selectedVariantId, "delete");
+				}
+			}
 		});
 	};
 

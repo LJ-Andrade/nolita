@@ -359,7 +359,7 @@ class OrderController extends Controller
 					],
 				];
 			})->filter()->values(),
-			'totalQuantity' => $cart->items->sum('quantity'),
+			'totalQuantity' => $cart->items->filter(fn($item) => $item->variant && $item->variant->product)->sum('quantity'),
 		];
 	}
 

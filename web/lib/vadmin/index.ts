@@ -186,14 +186,17 @@ export async function getCollections(params?: { listed?: boolean }): Promise<Col
   cacheTag(TAGS.collections);
   cacheLife("days");
 
-  const res = await vadminFetch<any[]>({
+  const res = await vadminFetch<any[] | { data: any[] }>({
     path: "catalog/categories",
     params: params as any,
     tags: [TAGS.collections],
   });
 
+  // Support both plain array (legacy) and { data: [...] } (resource wrapper)
+  const raw = Array.isArray(res.body) ? res.body : res.body.data;
+
   // Transform VADMIN categories to Storefront Collections
-  const collections = res.body.map((cat) => ({
+  const collections = raw.map((cat) => ({
     handle: cat.slug,
     title: cat.name,
     description: cat.description || "",

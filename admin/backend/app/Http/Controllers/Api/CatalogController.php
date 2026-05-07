@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductCategoryResource;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductTag;
@@ -74,7 +75,7 @@ class CatalogController extends Controller
 
 		$categories = $query->get();
 
-		return response()->json($categories);
+		return ProductCategoryResource::collection($categories);
 	}
 
 	/**

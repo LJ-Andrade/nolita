@@ -103,8 +103,8 @@ class ProductCategoryController extends Controller
     public function update(Request $request, ProductCategory $product_category)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:product_categories,slug,' . $product_category->id,
+            'name' => 'sometimes|required|string|max:255',
+            'slug' => 'sometimes|nullable|string|max:255|unique:product_categories,slug,' . $product_category->id,
             'image' => 'nullable|image|max:2048',
             'listed' => 'nullable|boolean',
             'order' => 'nullable|integer',
@@ -115,7 +115,7 @@ class ProductCategoryController extends Controller
         }
 
         $data = $validator->validated();
-        if (empty($data['slug'])) {
+        if (empty($data['slug']) && !empty($data['name'])) {
             $data['slug'] = Str::slug($data['name']);
             $originalSlug = $data['slug'];
             $count = 1;

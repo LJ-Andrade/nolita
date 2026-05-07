@@ -17,11 +17,12 @@ export function DeleteItemButton({
 
 	const handleRemove = () => {
 		startTransition(async () => {
-			optimisticUpdate(merchandiseId, "delete");
 			const result = await removeItem(null, merchandiseId);
 			if (result) {
 				const { toast } = await import("sonner");
 				toast.error(result);
+			} else {
+				optimisticUpdate(merchandiseId, "delete");
 			}
 		});
 	};

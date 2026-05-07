@@ -38,17 +38,25 @@ export function EditItemQuantityButton({
     startTransition(async () => {
       // Optimistic update
       optimisticUpdate(payload.merchandiseId, type);
+
+      const rollback = () => {
+        const rollbackType = type === "plus" ? "minus" : "plus";
+        optimisticUpdate(payload.merchandiseId, rollbackType);
+      };
       
       try {
         const result = await updateItemQuantity(null, payload);
         if (result && (result.toLowerCase().includes("stock") || result.includes("Insufficient"))) {
+          rollback();
           toast.error("Stock insuficiente", {
             description: "No hay más unidades disponibles de este producto.",
           });
         } else if (result) {
+          rollback();
           toast.error(result);
         }
       } catch (e: any) {
+        rollback();
         toast.error("Error al actualizar la cantidad");
       }
     });
