@@ -5,7 +5,7 @@ import axiosClient from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Star, Edit, Package, Image as ImageIcon, Palette, Tag, Layers } from "lucide-react";
+import { ArrowLeft, Star, Edit, Package, Image as ImageIcon, Palette, Layers } from "lucide-react";
 import {
 	Table,
 	TableBody,
@@ -85,6 +85,7 @@ export default function ProductsShow() {
 		...(product.cover_url ? [product.cover_url] : []),
 		...(product.gallery?.map((img) => img.url) || []),
 	];
+	const hasVariants = (product.variants?.length || 0) > 0;
 
 	return (
 		<div className="space-y-6">
@@ -154,7 +155,7 @@ export default function ProductsShow() {
 
 							<Separator />
 
-							<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
 								<div>
 									<p className="text-sm text-muted-foreground">Precio de Costo</p>
 									<p className="font-semibold text-lg">{formatPrice(product.cost_price)}</p>
@@ -162,10 +163,6 @@ export default function ProductsShow() {
 								<div>
 									<p className="text-sm text-muted-foreground">Precio de Venta</p>
 									<p className="font-semibold text-lg text-primary">{formatPrice(product.sale_price)}</p>
-								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Precio Mayorista</p>
-									<p className="font-semibold">{formatPrice(product.wholesale_price)}</p>
 								</div>
 								<div>
 									<p className="text-sm text-muted-foreground">Descuento</p>
@@ -177,17 +174,21 @@ export default function ProductsShow() {
 
 							<Separator />
 
-							<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-								<div>
-									<p className="text-sm text-muted-foreground">Stock</p>
-									<p className="font-semibold text-lg">
-										{product.stock ?? 0}
-									</p>
-								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Stock Mínimo</p>
-									<p className="font-semibold">{product.min_stock ?? 0}</p>
-								</div>
+							<div className={`grid grid-cols-2 gap-4 ${hasVariants ? "md:grid-cols-2" : "md:grid-cols-4"}`}>
+								{!hasVariants && (
+									<div>
+										<p className="text-sm text-muted-foreground">Stock</p>
+										<p className="font-semibold text-lg">
+											{product.stock ?? 0}
+										</p>
+									</div>
+								)}
+								{!hasVariants && (
+									<div>
+										<p className="text-sm text-muted-foreground">Stock Mínimo</p>
+										<p className="font-semibold">{product.min_stock ?? 0}</p>
+									</div>
+								)}
 								<div>
 									<p className="text-sm text-muted-foreground">Categoría</p>
 									<p className="font-semibold">{product.category?.name || "-"}</p>
@@ -195,26 +196,6 @@ export default function ProductsShow() {
 								<div>
 									<p className="text-sm text-muted-foreground">Tela/Fabric</p>
 									<p className="font-semibold">{product.fabric || "-"}</p>
-								</div>
-							</div>
-
-							<Separator />
-
-							<div>
-								<div className="flex items-center gap-2 mb-3">
-									<Tag className="h-4 w-4 text-muted-foreground" />
-									<p className="text-sm text-muted-foreground">Etiquetas</p>
-								</div>
-								<div className="flex flex-wrap gap-2">
-									{product.tags && product.tags.length > 0 ? (
-										product.tags.map((tag) => (
-											<Badge key={tag.id} variant="outline">
-												{tag.name}
-											</Badge>
-										))
-									) : (
-										<span className="text-sm text-muted-foreground">Sin etiquetas</span>
-									)}
 								</div>
 							</div>
 

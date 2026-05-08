@@ -334,7 +334,7 @@ export default function ProductsList() {
 									</div>
 								</TableHead>
 								<TableHead>{"Categoría"}</TableHead>
-								<TableHead>{"Precios"}</TableHead>
+								<TableHead>{"Precio Minorista"}</TableHead>
 								<TableHead>{"Estado"}</TableHead>
 								<TableHead className="cursor-pointer select-none w-[120px]" onClick={() => handleSort("featured")}>
 									<div className="flex items-center">
@@ -383,10 +383,7 @@ export default function ProductsList() {
 										<TableCell className="font-medium">{product.name}</TableCell>
 										<TableCell>{product.category?.name}</TableCell>
 										<TableCell>
-											<div className="text-xs">
-												<div>{product.cost_price}</div>
-												<div className="font-medium">{product.sale_price}</div>
-											</div>
+											<div className="font-medium">{product.sale_price}</div>
 										</TableCell>
 										<TableCell>
 											<DropdownMenu>

@@ -18,8 +18,9 @@ export function EditItemQuantityButton({
 }) {
   const [isPending, startTransition] = useTransition();
 
-  // ONLY disable the PLUS button if stock is exhausted
-  const isPlusDisabled = type === "plus" && item.merchandise.product.stock !== undefined && item.merchandise.product.stock <= 0;
+  const availableStock = item.merchandise.product.stock;
+  const isPlusDisabled =
+    type === "plus" && availableStock !== undefined && availableStock <= 0;
 
   const handleAction = async () => {
     if (isPlusDisabled) {

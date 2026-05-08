@@ -4,25 +4,32 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { removeItem } from "components/cart/actions";
 import type { CartItem } from "lib/vadmin/types";
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function DeleteItemButton({
 	item,
 	optimisticUpdate,
+	onRemoveStart,
 }: {
 	item: CartItem;
 	optimisticUpdate: any;
+	onRemoveStart?: (merchandiseId: string) => void;
 }) {
 	const [isPending, startTransition] = useTransition();
 	const merchandiseId = item.merchandise.id;
+	const itemName = item.merchandise.product.title;
 
 	const handleRemove = () => {
 		startTransition(async () => {
 			const result = await removeItem(null, merchandiseId);
 			if (result) {
-				const { toast } = await import("sonner");
 				toast.error(result);
 			} else {
-				optimisticUpdate(merchandiseId, "delete");
+				onRemoveStart?.(merchandiseId);
+				toast.success(`${itemName} eliminado`);
+				window.setTimeout(() => {
+					optimisticUpdate(merchandiseId, "delete");
+				}, 260);
 			}
 		});
 	};

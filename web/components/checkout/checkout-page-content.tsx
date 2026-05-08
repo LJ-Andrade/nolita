@@ -47,7 +47,8 @@ export default function CheckoutPageContent({
   localities: { id: number; name: string; province_id: number }[];
   shopConfig: ShopConfiguration;
 }) {
-  const { clearCart, setIsOpen } = useCart();
+  const { cart: liveCart, clearCart, setIsOpen } = useCart();
+  const currentCart = liveCart ?? cart;
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     status: "idle",
     message: "",
@@ -58,9 +59,9 @@ export default function CheckoutPageContent({
   );
   const [showCompletion, setShowCompletion] = useState(false);
 
-  const qtyMet = !shopConfig.min_quantity || cart.totalQuantity >= shopConfig.min_quantity;
-  const amountMet = !shopConfig.min_amount || parseFloat(cart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
-  const canCheckout = qtyMet && amountMet;
+  const qtyMet = !shopConfig.min_quantity || currentCart.totalQuantity >= shopConfig.min_quantity;
+  const amountMet = !shopConfig.min_amount || parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
+  const canCheckout = currentCart.totalQuantity > 0 && qtyMet && amountMet;
 
   const handleDeliveryChange = (methodId: string) => {
     const method = deliveryMethods.find((m) => m.id === methodId);
@@ -138,7 +139,7 @@ export default function CheckoutPageContent({
           </div>
 
           <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">
-            <OrderSummary cart={cart} shippingFee={selectedDeliveryFee} shopConfig={shopConfig} qtyMet={qtyMet} amountMet={amountMet} />
+            <OrderSummary cart={currentCart} shippingFee={selectedDeliveryFee} shopConfig={shopConfig} qtyMet={qtyMet} amountMet={amountMet} />
             <SubmitButton pending={isCheckoutPending} disabled={!canCheckout} />
           </div>
         </form>

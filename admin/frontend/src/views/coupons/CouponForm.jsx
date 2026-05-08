@@ -1,7 +1,5 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import {
@@ -30,19 +28,37 @@ import { useCrudForm } from '@/hooks/use-crud-form';
 import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
 
+const formSchema = z.object({
+  code: z.string().min(1, 'Este campo es requerido').toUpperCase(),
+  discount_type: z.enum(['percentage', 'fixed']),
+  amount: z.number({ invalid_type_error: 'Este campo es requerido' }).min(0, 'El monto debe ser mayor o igual a 0'),
+  expires_at: z.date().optional().nullable(),
+  active: z.boolean().default(true),
+}).superRefine((values, ctx) => {
+  if (values.discount_type === 'percentage' && values.amount > 100) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['amount'],
+      message: 'El porcentaje no puede superar 100',
+    });
+  }
+});
+
+function parseDate(value) {
+  if (!value || value instanceof Date) return value ?? null;
+
+  const dateStr = value.split('T')[0];
+  const [year, month, day] = dateStr.split('-').map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
 export default function CouponForm() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const formSchema = z.object({
-    code: z.string().min(1, "Este campo es requerido" || 'El código es requerido').toUpperCase(),
-    discount_type: z.string().min(1, "Este campo es requerido" || 'El tipo de descuento es requerido'),
-    amount: z.number({ invalid_type_error: "Este campo es requerido" || 'El monto es requerido' }).min(0, "El monto debe ser mayor o igual a 0" || 'El monto debe ser mayor o igual a 0'),
-    expires_at: z.date().optional().nullable(),
-    active: z.boolean().default(true),
-  });
-
-  const { form, loading, fetching, entityName, setEntityName, onSubmit } = useCrudForm({
+  const [saving, setSaving] = React.useState(false);
+  const { form, fetching, entityName, setEntityName } = useCrudForm({
     endpoint: 'coupons',
     id,
     schema: formSchema,
@@ -53,36 +69,36 @@ export default function CouponForm() {
       expires_at: null,
       active: true,
     },
-    onSuccess: () => navigate('/product-coupons'),
+    onSuccess: () => navigate('/cupones'),
     messages: {
-      createSuccess: "Cupón creado correctamente" || 'Cupón creado correctamente',
-      updateSuccess: "Cupón actualizado correctamente" || 'Cupón actualizado correctamente',
-      createError: "Error al crear el cupón" || 'Error al crear el cupón',
-      updateError: "Error al actualizar el cupón" || 'Error al actualizar el cupón',
+      createSuccess: 'Cupón creado correctamente',
+      updateSuccess: 'Cupón actualizado correctamente',
+      createError: 'Error al crear el cupón',
+      updateError: 'Error al actualizar el cupón',
     },
   });
+  const discountType = form.watch('discount_type');
 
-  // Ensure amount is a number and set title code when data is loaded
   React.useEffect(() => {
-    if (id && !fetching && form.getValues('code')) {
-      const currentValues = form.getValues();
-      if (typeof currentValues.amount === 'string') {
-        form.setValue('amount', Number(currentValues.amount));
-      }
-      if (currentValues.expires_at && typeof currentValues.expires_at === 'string') {
-        // Parse YYYY-MM-DD manually to avoid timezone offset issues (restar un día)
-        const dateStr = currentValues.expires_at.split("T")[0];
-        const [year, month, day] = dateStr.split("-").map(Number);
-        form.setValue('expires_at', new Date(year, month - 1, day));
-      }
-      setEntityName(currentValues.code || '');
+    if (!id || fetching || !form.getValues('code')) return;
+
+    const currentValues = form.getValues();
+
+    if (typeof currentValues.amount === 'string') {
+      form.setValue('amount', Number(currentValues.amount));
     }
-  }, [id, fetching, form.getValues('code'), setEntityName]);
+
+    if (currentValues.expires_at && typeof currentValues.expires_at === 'string') {
+      form.setValue('expires_at', parseDate(currentValues.expires_at));
+    }
+
+    setEntityName(currentValues.code || '');
+  }, [id, fetching, form, setEntityName]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    console.log('=== FRONTEND: values antes de enviar ===', values);
-    
+    setSaving(true);
     const formData = new FormData();
+
     Object.entries(values).forEach(([key, value]) => {
       if (value instanceof Date) {
         formData.append(key, format(value, 'yyyy-MM-dd'));
@@ -93,32 +109,23 @@ export default function CouponForm() {
       }
     });
 
-    console.log('=== FRONTEND: FormData enviado ===');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
     if (id) {
       formData.append('_method', 'PUT');
     }
 
     try {
-      const response = id 
+      const response = id
         ? await axiosClient.post(`coupons/${id}`, formData)
         : await axiosClient.post('coupons', formData);
-      
-      console.log('=== BACKEND: Response ===', response.data);
-      
-      toast.success(id ? "Cupón actualizado correctamente" : "Cupón creado correctamente");
+
+      toast.success(id ? 'Cupón actualizado correctamente' : 'Cupón creado correctamente');
       navigate('/cupones');
-      
-      // Force reload by setting a timestamp
-      window.dispatchEvent(new CustomEvent("refresh-coupons"));
-      
+      window.dispatchEvent(new CustomEvent('refresh-coupons'));
+
       return response;
     } catch (error) {
-      console.error('=== BACKEND: Error response ===', error.response?.data);
       const serverErrors = error.response?.data?.errors;
+
       if (serverErrors) {
         Object.entries(serverErrors).forEach(([field, messages]) => {
           form.setError(field, {
@@ -127,9 +134,12 @@ export default function CouponForm() {
           });
         });
       } else {
-        toast.error(id ? "Error al actualizar el cupón" : "Error al crear el cupón");
+        toast.error(id ? 'Error al actualizar el cupón' : 'Error al crear el cupón');
       }
+
       throw error;
+    } finally {
+      setSaving(false);
     }
   });
 
@@ -144,15 +154,11 @@ export default function CouponForm() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={
-          id
-            ? `${"Editando cupón"} "${entityName}"`
-            : "Crear Cupón" || 'Crear Cupón'
-        }
+        title={id ? `Editando cupón "${entityName}"` : 'Crear Cupón'}
         breadcrumbs={[
           { label: 'PRODUCTOS' },
-          { label: "Cupones" || 'Cupones', href: '/coupons' },
-          { label: id ? "Editar" : "Crear" },
+          { label: 'Cupones', href: '/cupones' },
+          { label: id ? 'Editar' : 'Crear' },
         ]}
       />
 
@@ -162,9 +168,7 @@ export default function CouponForm() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {id
-                    ? `${"Editando cupón"} "${entityName}"`
-                    : "Crear Cupón" || 'Crear Cupón'}
+                  {id ? `Editando cupón "${entityName}"` : 'Crear Cupón'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -173,70 +177,89 @@ export default function CouponForm() {
                   name="code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{"Código"}</FormLabel>
+                      <FormLabel>Código</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder={"Ej: DESCUENTO20"} 
-                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="discount_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{"Tipo de descuento"}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={"Seleccionar tipo"} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="percentage">{"Porcentaje"}</SelectItem>
-                          <SelectItem value="fixed">{"Fijo"}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{"Monto"}</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number"
-                          placeholder={"Ej: 20"}
+                        <Input
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          placeholder="Ej: DESCUENTO20"
+                          onChange={(event) => field.onChange(event.target.value.toUpperCase())}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="discount_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de descuento</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar tipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="percentage">Porcentaje</SelectItem>
+                            <SelectItem value="fixed">Valor fijo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{discountType === 'percentage' ? 'Porcentaje' : 'Monto'}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            {discountType === 'fixed' && (
+                              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                $
+                              </span>
+                            )}
+                            <Input
+                              {...field}
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              max={discountType === 'percentage' ? '100' : undefined}
+                              step="0.01"
+                              placeholder={discountType === 'percentage' ? 'Ej: 20' : 'Ej: 1500'}
+                              className={discountType === 'fixed' ? 'pl-7' : 'pr-9'}
+                              onChange={(event) => field.onChange(event.target.value === '' ? 0 : Number(event.target.value))}
+                            />
+                            {discountType === 'percentage' && (
+                              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                %
+                              </span>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
                   name="expires_at"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{"Fecha de expiración"}</FormLabel>
+                      <FormLabel>Fecha de expiración</FormLabel>
                       <FormControl>
                         <DatePicker
                           value={field.value}
-                          onSelectt={field.onChange}
+                          onSelect={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -251,7 +274,7 @@ export default function CouponForm() {
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                          {"Activo"}
+                          Activo
                         </FormLabel>
                       </div>
                       <FormControl>
@@ -267,12 +290,12 @@ export default function CouponForm() {
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" onClick={() => navigate('/cupones')}>
                     <X className="mr-2 h-4 w-4" />
-                    {"Cancelar"}
+                    Cancelar
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Save className="mr-2 h-4 w-4" />
-                    {id ? "Guardar" : "Crear"}
+                    {id ? 'Guardar' : 'Crear'}
                   </Button>
                 </div>
               </CardContent>

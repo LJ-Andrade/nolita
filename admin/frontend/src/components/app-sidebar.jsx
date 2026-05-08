@@ -8,7 +8,6 @@ import {
 	ShieldCheck,
 	UserCircle,
 	History,
-	Tags,
 	Layers,
 	Sparkles,
 	KeyRound,
@@ -85,12 +84,6 @@ const items = [
 				title: "Categorías",
 				url: "/productos-categorias",
 				icon: Layers,
-				permission: "users.view",
-			},
-			{
-				title: "Etiquetas",
-				url: "/productos-etiquetas",
-				icon: Tags,
 				permission: "users.view",
 			},
 			{

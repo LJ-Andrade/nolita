@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -117,6 +117,8 @@ export default function ProductForm() {
 			featured: false,
 		},
 	});
+	const variants = form.watch('variants') || [];
+	const hasVariants = variants.length > 0;
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -300,7 +302,7 @@ export default function ProductForm() {
 
 			setPendingColorImages(newPendingColorImages);
 			setColorImageUrls(newColorImageUrls);
-			toast.success("Imágetnes de color cargadas");
+			toast.success("Imágenes de color cargadas");
 		} catch (error) {
 			console.error(error);
 			toast.error("Error al cargar imágenes de color");
@@ -594,7 +596,7 @@ export default function ProductForm() {
 								/>
 							</div>
 
-							{/* Row 3: Prices - 4 columns */}
+							{/* Row 3: Visible prices - 3 columns */}
 							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 								<FormField
 									control={form.control}
@@ -626,20 +628,6 @@ export default function ProductForm() {
 
 								<FormField
 									control={form.control}
-									name="wholesale_price"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Precio Mayorista"}</FormLabel>
-											<FormControl>
-												<Input type="number" step="0.01" {...field} placeholder="0.00" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
 									name="discount"
 									render={({ field }) => (
 										<FormItem>
@@ -651,44 +639,12 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
-							</div>
-
-							{/* Row 3b: Stock | Min | Category | Tags */}
-							<div className="grid grid-cols-2 md:grid-cols-8 gap-4">
-								<FormField
-									control={form.control}
-									name="stock"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Stock"}</FormLabel>
-											<FormControl>
-												<Input type="number" {...field} placeholder="0" className="w-full" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="min_stock"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Stock Mínimo"}</FormLabel>
-											<FormControl>
-												<Input type="number" {...field} placeholder="0" className="w-full" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
 								<FormField
 									control={form.control}
 									name="category_id"
 									render={({ field }) => (
-										<FormItem className="md:col-span-3">
-											<FormLabel>{"Categoría"}</FormLabel>
+										<FormItem>
+									<FormLabel>{"Categoría"}</FormLabel>
 											<FormControl>
 												<select
 													className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
@@ -707,20 +663,61 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
+							</div>
+
+							{/* Row 3b: Stock | Min | Category */}
+							<div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+								{!hasVariants && (
+									<FormField
+										control={form.control}
+										name="stock"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>{"Stock"}</FormLabel>
+												<FormControl>
+													<Input type="number" {...field} placeholder="0" className="w-full" />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								)}
+
+								{!hasVariants && (
+									<FormField
+										control={form.control}
+										name="min_stock"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>{"Stock Mínimo"}</FormLabel>
+												<FormControl>
+													<Input type="number" {...field} placeholder="0" className="w-full" />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								)}
 
 								<FormField
 									control={form.control}
-									name="tag_ids"
+									name="category_id"
 									render={({ field }) => (
-										<FormItem className="md:col-span-3">
-											<FormLabel>{"Etiquetas"}</FormLabel>
+										<FormItem className="hidden">
+											<FormLabel>{"Categoría"}</FormLabel>
 											<FormControl>
-												<MultiSelect
-													value={field.value || []}
-													onValueChange={field.onChange}
-													options={tags}
-													placeholder={"Seleccionar etiquetas..."}
-												/>
+												<select
+													className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+													{...field}
+													value={field.value || ''}
+												>
+													<option value="">{"Todas las Categorías"}</option>
+													{categories.map((cat) => (
+														<option key={cat.id} value={cat.id}>
+															{cat.name}
+														</option>
+													))}
+												</select>
 											</FormControl>
 											<FormMessage />
 										</FormItem>
@@ -791,7 +788,7 @@ export default function ProductForm() {
 								</div>
 							</div>
 
-							{form.watch('variants')?.length > 0 && (
+							{hasVariants && (
 								<div className="w-fit flex flex-col gap-3 p-4 border rounded-md bg-background shadow-sm">
 									<span className="text-xs font-bold uppercase tracking-wider text-primary/70">
 										{"Acciones para todas las variantes"}
@@ -844,7 +841,7 @@ export default function ProductForm() {
 							)}
 
 							<div className="border rounded-md overflow-hidden bg-card">
-								{form.watch('variants')?.length > 0 ? (
+								{hasVariants ? (
 									<Table>
 										<TableHeader>
 											<TableRow>
@@ -856,7 +853,7 @@ export default function ProductForm() {
 											</TableRow>
 										</TableHeader>
 										<TableBody>
-											{form.watch('variants').map((variant, index) => {
+											{variants.map((variant, index) => {
 												const color = colors.find(c => c.id == variant.product_color_id);
 												const size = sizes.find(s => s.id == variant.product_size_id);
 												return (
@@ -939,7 +936,7 @@ export default function ProductForm() {
 
 							{form.watch('color_ids')?.length > 0 && (
 								<div className="border-t mt-4 pt-4">
-									<p className="text-sm font-medium mb-3 px-1">{"Imágetnes por Color"}</p>
+									<p className="text-sm font-medium mb-3 px-1">{"Imágenes por Color"}</p>
 									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-1">
 										{form.watch('color_ids').map(colorId => {
 											const color = colors.find(c => c.id == colorId);
@@ -1105,3 +1102,4 @@ export default function ProductForm() {
 		</div >
 	);
 }
+

@@ -54,6 +54,13 @@ function updateCartItem(
   updateType: UpdateType,
 ): CartItem | null {
   if (updateType === "delete") return null;
+  if (
+    updateType === "plus" &&
+    item.merchandise.product.stock !== undefined &&
+    item.merchandise.product.stock <= 0
+  ) {
+    return item;
+  }
 
   const newQuantity =
     updateType === "plus" ? item.quantity + 1 : item.quantity - 1;
@@ -95,6 +102,10 @@ function createOrUpdateCartItem(
 ): CartItem {
   const quantity = existingItem ? existingItem.quantity + qty : qty;
   const totalAmount = calculateItemCost(quantity, variant.price.amount);
+  const currentStock =
+    existingItem?.merchandise.product.stock ?? variant.quantityAvailable;
+  const remainingStock =
+    currentStock === undefined ? undefined : Math.max(currentStock - qty, 0);
 
   return {
     id: existingItem?.id,
@@ -113,7 +124,9 @@ function createOrUpdateCartItem(
         id: product.id,
         handle: product.handle,
         title: product.title,
+        stock: remainingStock,
         featuredImage: product.featuredImage,
+        colorImages: product.colorImages,
       },
     },
   };

@@ -231,6 +231,7 @@ Route::prefix('catalog')->group(function () {
     Route::get('products', [App\Http\Controllers\Api\CatalogController::class, 'products']);
     Route::get('products/{slug}', [App\Http\Controllers\Api\CatalogController::class, 'product']);
     Route::get('categories', [App\Http\Controllers\Api\CatalogController::class, 'categories']);
+    Route::post('coupons/validate', [CouponController::class, 'validateForCheckout']);
     Route::get('delivery-methods', [DeliveryMethodController::class, 'index']);
     Route::get('payment-methods', [PaymentMethodController::class, 'index']);
 });

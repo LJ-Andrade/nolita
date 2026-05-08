@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { checkout } from "lib/vadmin/cart";
 
@@ -28,6 +28,7 @@ export async function completeOrder(
     locality_id: getRequiredString(formData, "locality_id"),
     delivery_method_id: getRequiredString(formData, "delivery_method_id"),
     payment_method_id: getRequiredString(formData, "payment_method_id"),
+    coupon_code: getRequiredString(formData, "coupon_code") || undefined,
   };
 
   const requiredFields = [
@@ -63,3 +64,4 @@ export async function completeOrder(
     message: result.message || "No pudimos finalizar el pedido.",
   };
 }
+

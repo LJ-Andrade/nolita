@@ -9,6 +9,7 @@ import { DEFAULT_OPTION } from "lib/constants";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { redirectToCheckout } from "./actions";
@@ -31,9 +32,12 @@ type MerchandiseSearchParams = {
 
 export default function CartModal() {
   const { cart, updateCartItem, isOpen, setIsOpen } = useCart();
+  const pathname = usePathname();
   const quantityRef = useRef(cart?.totalQuantity);
   const closeCart = () => setIsOpen(false);
   const [shopConfig, setShopConfig] = useState<ShopConfig>({ id: 0, min_quantity: 0, min_amount: 0 });
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const isCheckoutPage = pathname?.startsWith("/checkout");
 
   useEffect(() => {
     fetch(`${VADMIN_API}/public/shop-configuration`)
@@ -53,12 +57,12 @@ export default function CartModal() {
       cart?.totalQuantity !== quantityRef.current &&
       cart?.totalQuantity > 0
     ) {
-      if (!isOpen) {
+      if (!isOpen && !isCheckoutPage) {
         setIsOpen(true);
       }
       quantityRef.current = cart?.totalQuantity;
     }
-  }, [isOpen, cart?.totalQuantity]);
+  }, [isOpen, isCheckoutPage, cart?.totalQuantity]);
 
   return (
     <Transition show={isOpen}>
@@ -118,7 +122,9 @@ export default function CartModal() {
                         b.merchandise.product.title,
                       ),
                     )
-                    .map((item, i) => {
+                    .map((item) => {
+                      const merchandiseId = item.merchandise.id;
+                      const isRemoving = removingItems.has(merchandiseId);
                       const merchandiseSearchParams = {} as MerchandiseSearchParams;
 
                       item.merchandise.selectedOptions.forEach(({ name, value }) => {
@@ -140,12 +146,21 @@ export default function CartModal() {
                       const imageUrl = colorImage || item.merchandise.product.featuredImage?.url || "";
 
                       return (
-                        <li key={i} className="flex w-full flex-col pb-6 border-b border-bone/50 last:border-0 last:pb-0">
+                        <li
+                          key={item.id ?? merchandiseId}
+                          className={clsx(
+                            "flex w-full flex-col pb-6 border-b border-bone/50 transition-all duration-300 ease-in-out last:border-0 last:pb-0 motion-reduce:transition-none",
+                            isRemoving && "translate-x-full scale-95 opacity-0"
+                          )}
+                        >
                           <div className="relative flex w-full flex-row">
                             <div className="absolute z-40 -left-2 -top-2">
                               <DeleteItemButton
                                 item={item}
                                 optimisticUpdate={updateCartItem}
+                                onRemoveStart={(id) =>
+                                  setRemovingItems((current) => new Set(current).add(id))
+                                }
                               />
                             </div>
                             <div className="flex flex-1 flex-row">

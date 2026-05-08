@@ -17,6 +17,8 @@ class Order extends Model
         'total_amount',
         'currency',
         'payment_method',
+        'coupon_code',
+        'coupon_discount_amount',
         'shipping_address',
         'billing_address',
         'notes'
@@ -24,6 +26,7 @@ class Order extends Model
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'coupon_discount_amount' => 'decimal:2',
         'shipping_address' => 'array',
         'billing_address' => 'array',
     ];

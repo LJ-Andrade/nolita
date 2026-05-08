@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Locality;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Coupon;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -212,6 +213,7 @@ class OrderController extends Controller
 			],
 			'delivery_method_id' => ['required'],
 			'payment_method_id' => ['required'],
+			'coupon_code' => ['nullable', 'string', 'max:255'],
 		]);
 
 		$locality = Locality::findOrFail($validated['locality_id']);
@@ -229,10 +231,29 @@ class OrderController extends Controller
 			return response()->json(['message' => 'Cannot checkout an empty cart'], 400);
 		}
 
-		DB::transaction(function () use ($cart, $request, $validated, $locality, $city) {
+		$subtotal = (float) $cart->items()->sum('subtotal');
+		$couponCode = trim((string) ($validated['coupon_code'] ?? ''));
+		$couponDiscountAmount = 0;
+		$appliedCouponCode = null;
+
+		if ($couponCode !== '') {
+			$coupon = Coupon::whereRaw('LOWER(code) = ?', [strtolower($couponCode)])->first();
+
+			if (!$coupon || !$coupon->isValidForCheckout()) {
+				return response()->json(['message' => 'Cupon invalido o vencido'], 422);
+			}
+
+			$couponDiscountAmount = $coupon->discountForSubtotal($subtotal);
+			$appliedCouponCode = $coupon->code;
+		}
+
+		DB::transaction(function () use ($cart, $request, $validated, $locality, $city, $subtotal, $couponDiscountAmount, $appliedCouponCode) {
 			$cart->update([
 				'status' => 'completed',
+				'total_amount' => max($subtotal - $couponDiscountAmount, 0),
 				'payment_method' => (string) $validated['payment_method_id'],
+				'coupon_code' => $appliedCouponCode,
+				'coupon_discount_amount' => $couponDiscountAmount,
 				'shipping_address' => [
 					'name' => $validated['name'],
 					'email' => $validated['email'],

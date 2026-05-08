@@ -150,4 +150,34 @@ class CouponController extends Controller
             'deleted_count' => $count,
         ]);
     }
+
+    public function validateForCheckout(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:255'],
+            'subtotal' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $coupon = Coupon::whereRaw('LOWER(code) = ?', [strtolower(trim($validated['code']))])->first();
+
+        if (!$coupon || !$coupon->isValidForCheckout()) {
+            return response()->json([
+                'message' => 'Cupón inválido o vencido',
+            ], 404);
+        }
+
+        $subtotal = (float) $validated['subtotal'];
+        $discountAmount = $coupon->discountForSubtotal($subtotal);
+
+        return response()->json([
+            'data' => [
+                'code' => $coupon->code,
+                'discount_type' => $coupon->discount_type,
+                'amount' => (float) $coupon->amount,
+                'discount_amount' => $discountAmount,
+                'subtotal' => $subtotal,
+                'total' => round($subtotal - $discountAmount, 2),
+            ],
+        ]);
+    }
 }
