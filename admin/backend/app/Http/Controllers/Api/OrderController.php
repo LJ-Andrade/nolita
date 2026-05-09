@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Locality;
+use App\Models\DeliveryMethod;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Coupon;
+use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -211,16 +213,23 @@ class OrderController extends Controller
 				'integer',
 				Rule::exists('localities', 'id')->where('province_id', $request->input('province_id')),
 			],
-			'delivery_method_id' => ['required'],
-			'payment_method_id' => ['required'],
+			'delivery_method_id' => ['required', 'integer', 'exists:delivery_methods,id'],
+			'payment_method_id' => [
+				'required',
+				'integer',
+				Rule::exists('payment_methods', 'id')->where('status', 'active'),
+			],
 			'coupon_code' => ['nullable', 'string', 'max:255'],
 		]);
 
 		$locality = Locality::findOrFail($validated['locality_id']);
+		$deliveryMethod = DeliveryMethod::findOrFail($validated['delivery_method_id']);
+		$paymentMethod = PaymentMethod::where('status', 'active')->findOrFail($validated['payment_method_id']);
 		$city = $validated['city'] ?: $locality->name;
 
 		$cart = Order::where('customer_id', $request->user()->id)
 			->where('status', 'pending')
+			->with('items')
 			->first();
 
 		if (!$cart) {
@@ -231,7 +240,11 @@ class OrderController extends Controller
 			return response()->json(['message' => 'Cannot checkout an empty cart'], 400);
 		}
 
-		$subtotal = (float) $cart->items()->sum('subtotal');
+		$deliveryFee = (float) $deliveryMethod->fee;
+		$paymentFee = (float) $paymentMethod->fee;
+		$subtotal = $cart->items->reduce(function (float $total, OrderItem $item): float {
+			return $total + ((float) $item->unit_price * (int) $item->quantity);
+		}, 0.0);
 		$couponCode = trim((string) ($validated['coupon_code'] ?? ''));
 		$couponDiscountAmount = 0;
 		$appliedCouponCode = null;
@@ -247,10 +260,29 @@ class OrderController extends Controller
 			$appliedCouponCode = $coupon->code;
 		}
 
-		DB::transaction(function () use ($cart, $request, $validated, $locality, $city, $subtotal, $couponDiscountAmount, $appliedCouponCode) {
+		DB::transaction(function () use (
+			$cart,
+			$request,
+			$validated,
+			$locality,
+			$deliveryMethod,
+			$paymentMethod,
+			$city,
+			$subtotal,
+			$deliveryFee,
+			$paymentFee,
+			$couponDiscountAmount,
+			$appliedCouponCode
+		) {
+			foreach ($cart->items as $item) {
+				$item->update([
+					'subtotal' => (float) $item->unit_price * (int) $item->quantity,
+				]);
+			}
+
 			$cart->update([
 				'status' => 'completed',
-				'total_amount' => max($subtotal - $couponDiscountAmount, 0),
+				'total_amount' => max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee,
 				'payment_method' => (string) $validated['payment_method_id'],
 				'coupon_code' => $appliedCouponCode,
 				'coupon_discount_amount' => $couponDiscountAmount,
@@ -266,6 +298,8 @@ class OrderController extends Controller
 					'locality_id' => $validated['locality_id'],
 					'locality' => $locality->name,
 					'delivery_method_id' => (string) $validated['delivery_method_id'],
+					'delivery_method_name' => $deliveryMethod->name,
+					'delivery_fee' => $deliveryFee,
 				],
 				'billing_address' => [
 					'name' => $validated['name'],
@@ -278,6 +312,9 @@ class OrderController extends Controller
 					'province' => $locality->province?->name,
 					'locality_id' => $validated['locality_id'],
 					'locality' => $locality->name,
+					'payment_method_id' => (string) $validated['payment_method_id'],
+					'payment_method_name' => $paymentMethod->name,
+					'payment_fee' => $paymentFee,
 				],
 			]);
 

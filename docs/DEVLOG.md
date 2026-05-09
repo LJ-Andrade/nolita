@@ -3,7 +3,6 @@
 This document tracks execution steps. One task per logical unit.
 
 ## Phase 2: Definition (Completed)
-- [x] Review initial requirements / `augusta-specs.txt`.
 - [x] Create initial `SPECS.md` proposing the Data Contracts.
 - [x] User approve Option B (Product Variants) and Professional eCommerce features.
 
@@ -216,3 +215,23 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `build-web.sh`: Add production web build script with env, token, webhook, dependency, build, and PM2 checks.
 - [x] `build-admin.sh`: Add production admin panel build script.
 - [x] `README.md`: Document production build script usage.
+
+## Phase 25: Admin Data Exports
+- [x] `docs/SPECS.md`: Document backend-owned export package strategy and orders export contract.
+- [x] `admin/backend/composer.json`: Add Laravel Excel and Laravel DomPDF dependencies.
+- [x] `admin/backend/app/Support/Exports/OrderExportQuery.php`: Centralize reusable order export filters.
+- [x] `admin/backend/app/Exports/OrdersExport.php`: Create XLSX/CSV order export.
+- [x] `admin/backend/resources/views/exports/orders.blade.php`: Create PDF order export template.
+- [x] `admin/backend/app/Http/Controllers/Api/Admin/OrderExportController.php`: Create export endpoint.
+- [x] `admin/backend/routes/api.php`: Register authenticated order export route.
+- [x] `admin/frontend/src/views/orders/OrdersList.jsx`: Add authenticated export menu using current filters.
+- [x] Validate backend syntax and admin frontend build.
+- [x] `admin/backend/app/Support/Exports/OrderDocumentData.php`: Normalize single-order export data.
+- [x] `admin/backend/app/Exports/OrderDocumentExport.php`: Create XLSX single-order export with header and item detail.
+- [x] `admin/backend/resources/views/exports/order.blade.php`: Create no-image PDF/XLSX order document template.
+- [x] `admin/backend/app/Http/Controllers/Api/Admin/OrderDocumentExportController.php`: Create single-order export endpoint.
+- [x] `admin/frontend/src/views/orders/OrderDetails.jsx`: Add separate PDF and XLSX backend export buttons.
+- [x] Validate single-order export syntax, routes, and admin frontend build.
+- [x] `admin/backend/app/Support/Localization/Translator.php`: Add shared Spanish labels and value translations.
+- [x] `admin/backend/resources/views/exports/order.blade.php`: Apply Spanish labels to order PDF/XLS document.
+- [x] `admin/backend/app/Support/Exports/OrderDocumentData.php`: Add translated status and payment labels to document data.

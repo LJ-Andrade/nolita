@@ -7,12 +7,12 @@ import CheckoutPageContent from "components/checkout/checkout-page-content";
 
 export const metadata = {
   title: "Checkout",
-  description: "Finaliza tu pedido en Augusta.",
+  description: "Finaliza tu pedido en PlanB.",
 };
 
 export default async function CheckoutPage() {
   const cart = await getCart();
-  
+
   if (!cart || cart.lines.length === 0) {
     redirect("/");
   }

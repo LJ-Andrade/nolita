@@ -12,7 +12,8 @@ import {
 	RefreshCw,
 	ChevronLeft,
 	ChevronRight,
-	ChevronDown
+	ChevronDown,
+	FileDown
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export default function OrdersList() {
 	const [meta, setMeta] = useState({});
 	const [page, setPage] = useState(1);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [exportingFormat, setExportingFormat] = useState(null);
 
 	const {
 		selectedIds,
@@ -129,6 +131,33 @@ export default function OrdersList() {
 		}
 	};
 
+	const handleExport = async (format) => {
+		setExportingFormat(format);
+		try {
+			const response = await axiosClient.get('admin/orders/export', {
+				params: {
+					format,
+					search: debouncedSearch,
+				},
+				responseType: 'blob',
+			});
+
+			const blobUrl = URL.createObjectURL(response.data);
+			const link = document.createElement('a');
+			link.href = blobUrl;
+			link.download = `orders.${format}`;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			URL.revokeObjectURL(blobUrl);
+			toast.success(`Exportación ${format.toUpperCase()} generada`);
+		} catch (error) {
+			toast.error('Error al exportar pedidos');
+		} finally {
+			setExportingFormat(null);
+		}
+	};
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [orderToDelete, setOrderToDelete] = useState(null);
 
@@ -170,6 +199,27 @@ export default function OrdersList() {
 					{ label: 'PEDIDOS' },
 					{ label: "Listado" },
 				]}
+				actions={(
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="outline" disabled={Boolean(exportingFormat)}>
+								<FileDown className="mr-2 h-4 w-4" />
+								{exportingFormat ? 'Exportando...' : 'Exportar'}
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => handleExport('xlsx')}>
+								XLSX
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => handleExport('csv')}>
+								CSV
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => handleExport('pdf')}>
+								PDF
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				)}
 			/>
 
 			<Card>

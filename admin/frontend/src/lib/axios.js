@@ -1,8 +1,8 @@
 import axios from 'axios';
 const ENVIRONMENTS = {
 	development: {
-		localhost: 'http://planb.test/api/',
-		'planb.test': 'http://planb.test/api/',
+		localhost: 'https://planb.test/api/',
+		'planb.test': 'https://planb.test/api/',
 	},
 	production: {
 		'planb.studiovimana.com.ar': 'https://planb.studiovimana.com.ar/api/',
@@ -12,13 +12,13 @@ const ENVIRONMENTS = {
 
 const getBaseURL = () => {
 	const hostname = window.location.hostname;
-	
+
 	for (const [env, hosts] of Object.entries(ENVIRONMENTS)) {
 		if (hosts[hostname]) {
 			return hosts[hostname];
 		}
 	}
-	
+
 	console.warn(`Unknown hostname "${hostname}", falling back to localhost`);
 	return ENVIRONMENTS.development.localhost;
 };

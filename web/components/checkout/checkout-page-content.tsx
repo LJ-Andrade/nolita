@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
-import MethodSelector from "./method-selector";
 import OrderSummary from "./order-summary";
 import { Cart, DeliveryMethod, PaymentMethod, ShopConfiguration } from "lib/vadmin/types";
 import {
@@ -57,6 +56,9 @@ export default function CheckoutPageContent({
   const [selectedDeliveryFee, setSelectedDeliveryFee] = useState(
     parseFloat(deliveryMethods[0]?.fee || "0")
   );
+  const [selectedPaymentFee, setSelectedPaymentFee] = useState(
+    parseFloat(paymentMethods[0]?.fee || "0")
+  );
   const [showCompletion, setShowCompletion] = useState(false);
 
   const qtyMet = !shopConfig.min_quantity || currentCart.totalQuantity >= shopConfig.min_quantity;
@@ -67,6 +69,13 @@ export default function CheckoutPageContent({
     const method = deliveryMethods.find((m) => m.id === methodId);
     if (method) {
       setSelectedDeliveryFee(parseFloat(method.fee));
+    }
+  };
+
+  const handlePaymentChange = (methodId: string) => {
+    const method = paymentMethods.find((m) => m.id === methodId);
+    if (method) {
+      setSelectedPaymentFee(parseFloat(method.fee));
     }
   };
 
@@ -129,17 +138,27 @@ export default function CheckoutPageContent({
           className="grid grid-cols-1 gap-12 lg:grid-cols-12"
         >
 
-          <div className="space-y-12 lg:col-span-8">
-            <MethodSelector
+          <div className="space-y-6 lg:col-span-8">
+            <CheckoutForm
+              initialData={session}
+              provinces={provinces}
+              localities={localities}
               deliveryMethods={deliveryMethods}
               paymentMethods={paymentMethods}
               onDeliveryChange={handleDeliveryChange}
+              onPaymentChange={handlePaymentChange}
             />
-            <CheckoutForm initialData={session} provinces={provinces} localities={localities} />
           </div>
 
           <div className="h-fit lg:sticky lg:top-24 lg:col-span-4">
-            <OrderSummary cart={currentCart} shippingFee={selectedDeliveryFee} shopConfig={shopConfig} qtyMet={qtyMet} amountMet={amountMet} />
+            <OrderSummary
+              cart={currentCart}
+              shippingFee={selectedDeliveryFee}
+              paymentFee={selectedPaymentFee}
+              shopConfig={shopConfig}
+              qtyMet={qtyMet}
+              amountMet={amountMet}
+            />
             <SubmitButton pending={isCheckoutPending} disabled={!canCheckout} />
           </div>
         </form>

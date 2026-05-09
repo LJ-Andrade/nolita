@@ -57,10 +57,10 @@ export default function ProductsShow() {
 
 	const formatPrice = (price) => {
 		if (!price && price !== 0) return "-";
-		return new Intl.NumberFormat("es-AR", {
-			style: "currency",
-			currency: "$",
-		}).format(price);
+		return `$ ${new Intl.NumberFormat("es-AR", {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		}).format(price)}`;
 	};
 
 	const getColorHex = (colorName) => {

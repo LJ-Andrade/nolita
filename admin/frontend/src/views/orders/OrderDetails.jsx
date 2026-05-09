@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axiosClient from '@/lib/axios';
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,18 +10,109 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  ArrowLeft, 
-  Package, 
-  MapPin, 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import {
+  FileDown,
+  Package,
+  MapPin,
   CreditCard,
   User,
   Clock,
   CheckCircle,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  ReceiptText,
+  Truck,
+  MessageSquareText,
+  Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PageHeader } from "@/components/page-header";
+import { SectionActionsBar } from "@/components/section-actions-bar";
+import OrderActionsCard from "./OrderActionsCard";
+
+const emptyValue = "-";
+
+function formatMoney(value) {
+  const amount = Number.parseFloat(value);
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+
+  return `$ ${new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(safeAmount)}`;
+}
+
+function formatDateTime(value) {
+  if (!value) return emptyValue;
+
+  return new Date(value).toLocaleString("es-AR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+function getStatusBadge(status) {
+  switch (status) {
+    case 'completed':
+      return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3" /> Completada</Badge>;
+    case 'processing':
+      return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><RefreshCw className="mr-1 h-3 w-3" /> Procesando</Badge>;
+    case 'cancelled':
+      return <Badge variant="destructive" className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="mr-1 h-3 w-3" /> Cancelada</Badge>;
+    default:
+      return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Pendiente</Badge>;
+  }
+}
+
+function getPaymentLabel(paymentMethod) {
+  if (!paymentMethod) return emptyValue;
+
+  const labels = {
+    cash: "Efectivo",
+    transfer: "Transferencia",
+    credit_card: "Tarjeta de crédito",
+    debit_card: "Tarjeta de débito",
+    mercadopago: "Mercado Pago",
+  };
+
+  return labels[paymentMethod] || paymentMethod;
+}
+
+function getCurrencyLabel(currency) {
+  if (!currency || currency === "ARS" || currency === "$") return "$";
+
+  return currency;
+}
+
+function getAddressLines(address) {
+  if (!address) return [];
+
+  return [
+    address.name,
+    address.email,
+    address.phone,
+    address.address,
+    [address.locality || address.city, address.province, address.postal_code].filter(Boolean).join(", "),
+  ].filter(Boolean);
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium">{value || emptyValue}</span>
+    </div>
+  );
+}
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -29,6 +120,8 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [exportingFormat, setExportingFormat] = useState(null);
 
   useEffect(() => {
     fetchOrder();
@@ -38,6 +131,7 @@ export default function OrderDetails() {
     try {
       const response = await axiosClient.get(`admin/orders/${id}`);
       setOrder(response.data);
+      setSelectedStatus(response.data.status || "pending");
     } catch (error) {
       toast.error('Error al cargar la orden');
       navigate('/pedidos');
@@ -52,6 +146,7 @@ export default function OrderDetails() {
       await axiosClient.put(`admin/orders/${id}`, { status: newStatus });
       toast.success('Estado actualizado correctamente');
       setOrder({ ...order, status: newStatus });
+      setSelectedStatus(newStatus);
     } catch (error) {
       toast.error('Error al actualizar el estado');
     } finally {
@@ -59,93 +154,200 @@ export default function OrderDetails() {
     }
   };
 
-  if (loading) return <div>Cargando...</div>;
-  if (!order) return <div>Orden no encontrada</div>;
+  const exportOrder = async (format) => {
+    setExportingFormat(format);
+    try {
+      const response = await axiosClient.get(`admin/orders/${id}/export`, {
+        params: { format },
+        responseType: "blob",
+      });
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'completed': return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3"/> Completada</Badge>;
-      case 'processing': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><RefreshCw className="mr-1 h-3 w-3"/> Procesando</Badge>;
-      case 'cancelled': return <Badge variant="destructive" className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="mr-1 h-3 w-3"/> Cancelada</Badge>;
-      default: return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3"/> Pendiente</Badge>;
+      const blobUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `order-${id}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+
+      toast.success(`Orden exportada en ${format.toUpperCase()}`);
+    } catch (error) {
+      toast.error("Error al exportar la orden");
+    } finally {
+      setExportingFormat(null);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!order) return <div>Orden no encontrada</div>;
+
+  const items = order.items || [];
+  const subtotal = items.reduce((total, item) => total + Number.parseFloat(item.subtotal || 0), 0);
+  const discount = Number.parseFloat(order.coupon_discount_amount || 0);
+  const deliveryFee = Number.parseFloat(order.shipping_address?.delivery_fee || 0);
+  const paymentFee = Number.parseFloat(order.billing_address?.payment_fee || 0);
+  const shippingLines = getAddressLines(order.shipping_address);
+  const billingLines = getAddressLines(order.billing_address);
+  const deliveryMethod = order.shipping_address?.delivery_method_name || order.shipping_address?.delivery_method_id;
+  const paymentMethod = order.billing_address?.payment_method_name || order.payment_method;
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link to="/pedidos">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            Orden #{order.id}
-            {getStatusBadge(order.status)}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Realizada el {new Date(order.created_at).toLocaleString()}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {order.status !== 'completed' && order.status !== 'cancelled' && (
-             <Button variant="outline" onClick={() => updateStatus('completed')} disabled={updating}>
-               Marcar Completa
-             </Button>
-          )}
-          {order.status !== 'cancelled' && (
-             <Button variant="destructive" onClick={() => updateStatus('cancelled')} disabled={updating}>
-               Cancelar
-             </Button>
-          )}
-        </div>
+    <div className="space-y-6">
+      <div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'PEDIDOS', href: '/pedidos' },
+            { label: `Orden #${order.id}` },
+          ]}
+          actions={getStatusBadge(order.status)}
+        />
+        <p className="text-sm text-muted-foreground -mt-3">
+          Creada {formatDateTime(order.created_at)} · Actualizada {formatDateTime(order.updated_at)}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
+      <SectionActionsBar>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => exportOrder("xls")}
+          disabled={Boolean(exportingFormat)}
+        >
+          <FileDown className="h-4 w-4" />
+          {exportingFormat === "xls" ? "Exportando..." : "Exportar a XLS"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => exportOrder("pdf")}
+          disabled={Boolean(exportingFormat)}
+        >
+          <ReceiptText className="h-4 w-4" />
+          {exportingFormat === "pdf" ? "Exportando..." : "Exportar en PDF"}
+        </Button>
+      </SectionActionsBar>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" /> Productos
+                <Package className="h-5 w-5" /> Artículos
+              </CardTitle>
+              <CardDescription>
+                {items.length} artículo{items.length === 1 ? "" : "s"} agregado{items.length === 1 ? "" : "s"} al pedido
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Variante</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-right">Cantidad</TableHead>
+                      <TableHead className="text-right">Unitario</TableHead>
+                      <TableHead className="text-right">Subtotal</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          Sin artículos registrados.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {items.map((item) => {
+                      const variantParts = [
+                        item.variant?.color?.name,
+                        item.variant?.size?.name,
+                      ].filter(Boolean);
+
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <div className="font-medium">{item.product_name || emptyValue}</div>
+                            <div className="text-xs text-muted-foreground">Producto #{item.product_id || emptyValue}</div>
+                          </TableCell>
+                          <TableCell>{variantParts.length ? variantParts.join(" / ") : emptyValue}</TableCell>
+                          <TableCell className="font-mono text-xs">{item.variant?.sku || emptyValue}</TableCell>
+                          <TableCell className="text-right">{item.quantity || 0}</TableCell>
+                          <TableCell className="text-right">{formatMoney(item.unit_price)}</TableCell>
+                          <TableCell className="text-right font-semibold">{formatMoney(item.subtotal)}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ReceiptText className="h-5 w-5" /> Resumen
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {order.items?.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{item.product_name}</span>
-                      <span className="text-sm text-muted-foreground">Cant: {item.quantity} x ${parseFloat(item.unit_price || 0).toFixed(2)}</span>
-                    </div>
-                    <span className="font-semibold">${parseFloat(item.subtotal || 0).toFixed(2)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center pt-4 border-t border-dashed">
+              <div className="space-y-1">
+                <DetailRow label="Subtotal" value={formatMoney(subtotal)} />
+                <DetailRow label="Cupón" value={order.coupon_code || emptyValue} />
+                <DetailRow label="Descuento" value={discount > 0 ? `- ${formatMoney(discount)}` : formatMoney(0)} />
+                <DetailRow label="Envío" value={formatMoney(deliveryFee)} />
+                <DetailRow label="Recargo método de pago" value={formatMoney(paymentFee)} />
+                <Separator className="my-2" />
+                <div className="flex items-center justify-between gap-4 pt-2">
                   <span className="font-bold text-lg">Total</span>
-                  <span className="font-bold text-lg">${parseFloat(order.total_amount || 0).toFixed(2)} {order.currency}</span>
+                  <span className="font-bold text-xl">{formatMoney(order.total_amount)}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {order.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquareText className="h-5 w-5" /> Notas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
+          <OrderActionsCard
+            order={order}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            onUpdateStatus={updateStatus}
+            updating={updating}
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" /> Cliente
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {order.customer ? (
-                <div className="space-y-1">
-                  <p className="font-medium">{order.customer.name}</p>
-                  <p className="text-sm text-muted-foreground">{order.customer.email}</p>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">Usuario Invitado</p>
-              )}
+            <CardContent className="space-y-1">
+              <p className="font-medium">{order.customer?.name || order.shipping_address?.name || 'Usuario invitado'}</p>
+              <p className="text-sm text-muted-foreground">{order.customer?.email || order.shipping_address?.email || emptyValue}</p>
+              <p className="text-sm text-muted-foreground">{order.customer?.phone || order.shipping_address?.phone || emptyValue}</p>
             </CardContent>
           </Card>
 
@@ -155,29 +357,62 @@ export default function OrderDetails() {
                 <CreditCard className="h-5 w-5" /> Pago
               </CardTitle>
             </CardHeader>
-            <CardContent>
-               <p className="font-medium capitalize">{order.payment_method || 'N/A'}</p>
+            <CardContent className="space-y-1">
+              <DetailRow label="Método" value={getPaymentLabel(paymentMethod)} />
+              <DetailRow label="Moneda" value={getCurrencyLabel(order.currency)} />
+              <DetailRow label="Recargo" value={formatMoney(paymentFee)} />
+              {order.coupon_code && (
+                <DetailRow label="Cupón aplicado" value={<span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" /> {order.coupon_code}</span>} />
+              )}
             </CardContent>
           </Card>
 
           <Card>
-             <CardHeader>
-               <CardTitle className="flex items-center gap-2">
-                 <MapPin className="h-5 w-5" /> Envío
-               </CardTitle>
-             </CardHeader>
-             <CardContent>
-               {order.shipping_address ? (
-                 <div className="space-y-1 text-sm">
-                   <p>{order.shipping_address.name}</p>
-                   <p>{order.shipping_address.address}</p>
-                   <p>{order.shipping_address.city} {order.shipping_address.postal_code}</p>
-                   <p>{order.shipping_address.phone}</p>
-                 </div>
-               ) : (
-                 <p className="text-muted-foreground text-sm">Sin dirección especificada</p>
-               )}
-             </CardContent>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" /> Entrega
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <DetailRow label="Método" value={deliveryMethod || emptyValue} />
+              <DetailRow label="Localidad" value={order.shipping_address?.locality || order.shipping_address?.city || emptyValue} />
+              <DetailRow label="Provincia" value={order.shipping_address?.province || emptyValue} />
+              <DetailRow label="Código postal" value={order.shipping_address?.postal_code || emptyValue} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" /> Dirección de envío
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {shippingLines.length ? (
+                <div className="space-y-1 text-sm">
+                  {shippingLines.map((line, index) => <p key={`shipping-${index}-${line}`}>{line}</p>)}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Sin dirección especificada</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" /> Facturación
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {billingLines.length ? (
+                <div className="space-y-1 text-sm">
+                  {billingLines.map((line, index) => <p key={`billing-${index}-${line}`}>{line}</p>)}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">Sin datos de facturación</p>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>

@@ -37,6 +37,7 @@ export async function vadminFetch<T>({
   silentStatuses = [],
   tags,
   revalidate,
+  redirectOnServerError = true,
 }: {
   cache?: RequestCache;
   headers?: HeadersInit;
@@ -47,6 +48,7 @@ export async function vadminFetch<T>({
   silentStatuses?: number[];
   tags?: string[];
   revalidate?: number;
+  redirectOnServerError?: boolean;
 }): Promise<{ status: number; body: T } | never> {
   try {
     const url = new URL(`${endpoint}/${path}`);
@@ -121,7 +123,7 @@ export async function vadminFetch<T>({
     const isDbError = e.message?.toLowerCase().includes("base de datos") || e.message?.toLowerCase().includes("database connection");
     const isServerError = e.status === 500 || e.status === 503;
 
-    if (isNetworkError || isDbError || isServerError) {
+    if (redirectOnServerError && (isNetworkError || isDbError || isServerError)) {
       console.warn(`[vadminFetch] Redirecting to maintenance. Network: ${isNetworkError}, DB: ${isDbError}, Server: ${isServerError}`);
       redirect("/maintenance");
     }

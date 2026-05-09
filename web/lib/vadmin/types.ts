@@ -131,7 +131,7 @@ export type PaymentMethod = {
   name: string;
   description: string;
   status: 'active' | 'inactive';
-  fee: boolean;
+  fee: string;
 };
 
 export type ShopConfiguration = {

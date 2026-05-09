@@ -33,12 +33,14 @@ function calculateCouponDiscount(coupon: AppliedCoupon | null, subtotal: number)
 export default function OrderSummary({
   cart,
   shippingFee = 0,
+  paymentFee = 0,
   shopConfig,
   qtyMet,
   amountMet,
 }: {
   cart: Cart;
   shippingFee?: number;
+  paymentFee?: number;
   shopConfig: ShopConfiguration;
   qtyMet: boolean;
   amountMet: boolean;
@@ -51,7 +53,7 @@ export default function OrderSummary({
   const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
   const subtotal = parseFloat(cart.cost.subtotalAmount.amount);
   const couponDiscount = calculateCouponDiscount(appliedCoupon, subtotal);
-  const total = Math.max(subtotal - couponDiscount, 0) + shippingFee;
+  const total = Math.max(subtotal - couponDiscount, 0) + shippingFee + paymentFee;
   const hasConditions = shopConfig.min_quantity > 0 || shopConfig.min_amount > 0;
   const normalizedCouponCode = couponCode.trim();
 
@@ -268,6 +270,12 @@ export default function OrderSummary({
             <span className="text-green-600 font-medium">Gratis</span>
           )}
         </div>
+        {paymentFee > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-brown">Recargo método de pago</span>
+            <Price amount={paymentFee.toString()} currencyCode={cart.cost.subtotalAmount.currencyCode} />
+          </div>
+        )}
         <div className="flex justify-between border-t border-bone pt-4 text-lg font-bold">
           <span>Total</span>
           <Price amount={total.toString()} currencyCode={cart.cost.subtotalAmount.currencyCode} />

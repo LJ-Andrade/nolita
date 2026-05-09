@@ -109,6 +109,7 @@ export async function checkout(data?: any): Promise<{ success: boolean; message:
     await vadminFetch({
       path: "customer/cart/checkout",
       method: "POST",
+      redirectOnServerError: false,
       headers: {
         Authorization: `Bearer ${token}`,
       },

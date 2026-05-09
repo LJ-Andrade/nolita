@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Admin\ProvinceController;
 use App\Http\Controllers\Api\Admin\LocalityController;
+use App\Http\Controllers\Api\Admin\OrderDocumentExportController;
+use App\Http\Controllers\Api\Admin\OrderExportController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -188,6 +190,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
     Route::post('admin/orders/bulk-delete', [\App\Http\Controllers\Api\Admin\OrderController::class, 'bulkDelete'])->middleware('permission:manage orders');
+    Route::get('admin/orders/export', OrderExportController::class)->middleware('permission:view orders');
+    Route::get('admin/orders/{order}/export', OrderDocumentExportController::class)->middleware('permission:view orders');
     Route::apiResource('admin/orders', \App\Http\Controllers\Api\Admin\OrderController::class)->middleware('permission:view orders');
 
     // Payment Methods (CRUD - auth required for write operations)
@@ -264,6 +268,8 @@ Route::prefix('customer')->group(function () {
 // --- Admin Orders ---
 Route::middleware(['auth:sanctum', 'can:view orders'])->prefix('admin')->group(function () {
     Route::get('orders', [App\Http\Controllers\Api\Admin\OrderController::class, 'index']);
+    Route::get('orders/export', OrderExportController::class);
+    Route::get('orders/{order}/export', OrderDocumentExportController::class);
     Route::get('orders/{id}', [App\Http\Controllers\Api\Admin\OrderController::class, 'show']);
     Route::put('orders/{id}', [App\Http\Controllers\Api\Admin\OrderController::class, 'update']);
     Route::delete('orders', [App\Http\Controllers\Api\Admin\OrderController::class, 'bulkDelete']);

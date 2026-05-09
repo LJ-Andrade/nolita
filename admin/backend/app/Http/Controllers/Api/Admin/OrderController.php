@@ -4,21 +4,14 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Support\Exports\OrderExportQuery;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with('customer')->latest();
-
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->whereHas('customer', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            })->orWhere('id', 'like', "%{$search}%");
-        }
+        $query = OrderExportQuery::fromRequest($request);
 
         $perPage = $request->input('perPage', 10);
         return response()->json($query->paginate($perPage));
@@ -26,7 +19,11 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        return response()->json($order->load(['customer', 'items']));
+        return response()->json($order->load([
+            'customer',
+            'items.variant.color',
+            'items.variant.size',
+        ]));
     }
 
     public function update(Request $request, Order $order)
