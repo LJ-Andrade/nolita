@@ -27,7 +27,7 @@ export default function MaintenancePage() {
       </div>
       <footer className="absolute bottom-8">
          <p className="text-[10px] uppercase tracking-[0.3em] text-[#9E9E9E] font-medium">
-          Plan B Store &copy; {new Date().getFullYear()}
+          Plan B Store &copy; {process.env.COPYRIGHT_YEAR || "2026"}
         </p>
       </footer>
     </div>

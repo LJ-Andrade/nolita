@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { vadminFetch } from "./index";
 import { Cart } from "./types";
 import { TAGS } from "lib/constants";
-import { unstable_cacheTag as cacheTag } from "next/cache";
+import { cacheTag } from "next/cache";
 
 /**
  * Get current cart.

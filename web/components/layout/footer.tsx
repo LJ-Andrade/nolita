@@ -3,12 +3,11 @@ import Image from "next/image";
 
 import { getSiteContent } from "lib/vadmin";
 
-const { COMPANY_NAME, SITE_NAME } = process.env;
+const { COMPANY_NAME, SITE_NAME, COPYRIGHT_YEAR } = process.env;
 
 export default async function Footer() {
-	const currentYear = new Date().getFullYear();
-	const copyrightDate = `${currentYear}`;
 	const businessInfo = await getSiteContent('business');
+	const copyrightDate = COPYRIGHT_YEAR || "2026";
 	const copyrightName = COMPANY_NAME || SITE_NAME || "Plan B";
 
 	const socialLinks = [

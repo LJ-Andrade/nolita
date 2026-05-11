@@ -1,10 +1,9 @@
 export default {
+  cacheComponents: true,
   experimental: {
-    ppr: true,
     inlineCss: true,
-    useCache: true,
   },
-  allowedDevOrigins: ["192.168.1.36"],
+  allowedDevOrigins: ["192.168.1.36", "192.168.56.1"],
 
   images: {
     formats: ["image/avif", "image/webp"],
@@ -13,6 +12,11 @@ export default {
       {
         protocol: "http",
         hostname: "192.168.1.36",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.56.1",
         pathname: "/**",
       },
       {

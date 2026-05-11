@@ -1,9 +1,9 @@
 import { TAGS } from "lib/constants";
 import {
+  cacheLife,
+  cacheTag,
   revalidatePath,
   revalidateTag,
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
 } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

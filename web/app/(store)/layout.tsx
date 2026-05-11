@@ -3,7 +3,7 @@ import { AnnouncementBar } from "components/layout/announcement-bar";
 import { Navbar } from "components/layout/navbar";
 import Footer from "components/layout/footer";
 import { getCart } from "lib/vadmin/cart";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { Toaster } from "sonner";
 
 export default async function StoreLayout({
@@ -14,14 +14,16 @@ export default async function StoreLayout({
   const cart = getCart();
 
   return (
-    <CartProvider cartPromise={cart}>
-      <AnnouncementBar />
-      <Navbar />
-      <main>
-        {children}
-        <Footer />
-        <Toaster closeButton />
-      </main>
-    </CartProvider>
+    <Suspense fallback={null}>
+      <CartProvider cartPromise={cart}>
+        <AnnouncementBar />
+        <Navbar />
+        <main>
+          {children}
+          <Footer />
+          <Toaster closeButton />
+        </main>
+      </CartProvider>
+    </Suspense>
   );
 }
