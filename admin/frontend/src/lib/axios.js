@@ -3,6 +3,7 @@ const ENVIRONMENTS = {
 	development: {
 		localhost: 'https://planb.test/api/',
 		'planb.test': 'https://planb.test/api/',
+		'192.168.56.1': 'https://planb.test/api/',
 	},
 	production: {
 		'planb.studiovimana.com.ar': 'https://planb.studiovimana.com.ar/api/',

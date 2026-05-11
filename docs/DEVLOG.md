@@ -235,3 +235,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/backend/app/Support/Localization/Translator.php`: Add shared Spanish labels and value translations.
 - [x] `admin/backend/resources/views/exports/order.blade.php`: Apply Spanish labels to order PDF/XLS document.
 - [x] `admin/backend/app/Support/Exports/OrderDocumentData.php`: Add translated status and payment labels to document data.
+
+## Phase 26: Admin Login Local Network CORS Fix
+- [x] `admin/frontend/src/lib/axios.js`: Register `192.168.56.1` as a known local admin host.
+- [x] `admin/backend/config/cors.php`: Allow `http://192.168.56.1:5173` as a local Vite origin.

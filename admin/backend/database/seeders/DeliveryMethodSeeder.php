@@ -12,7 +12,7 @@ class DeliveryMethodSeeder extends Seeder
         $methods = [
             [
                 'name' => 'Correo Argentino',
-                'description' => 'Por correo',
+                'description' => 'El costo del envío será informado próximamente',
                 'fee' => 0,
             ],
         ];

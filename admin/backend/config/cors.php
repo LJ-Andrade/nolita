@@ -26,7 +26,7 @@ return [
 
 	'allowed_origins' => env('APP_ENV') === 'production' 
         ? $prodOrigins 
-        : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://192.168.1.36:5173', 'http://172.30.10.40:5173'], 
+        : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://192.168.1.36:5173', 'http://192.168.56.1:5173', 'http://172.30.10.40:5173'],
 
     'allowed_origins_patterns' => env('APP_ENV') === 'local' 
         ? ['#^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$#'] 
