@@ -8,6 +8,7 @@ use App\Models\ProductTag;
 use App\Models\ProductSize;
 use App\Models\ProductColor;
 use App\Models\User;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
@@ -66,7 +67,7 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $faker = fake();
+        $faker = FakerFactory::create(config('app.faker_locale', 'en_US'));
         $productType = $faker->randomElement(self::$productTypes);
         $adjective = $faker->randomElement(self::$adjectives);
         $name = "{$adjective} {$productType}";
@@ -95,7 +96,7 @@ class ProductFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (Product $product) {
-            $faker = fake();
+            $faker = FakerFactory::create(config('app.faker_locale', 'en_US'));
 
             $selectedTags = ProductTag::inRandomOrder()
                 ->limit($faker->numberBetween(2, 5))
