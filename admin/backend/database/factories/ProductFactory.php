@@ -66,26 +66,27 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $productType = $this->faker->randomElement(self::$productTypes);
-        $adjective = $this->faker->randomElement(self::$adjectives);
+        $faker = fake();
+        $productType = $faker->randomElement(self::$productTypes);
+        $adjective = $faker->randomElement(self::$adjectives);
         $name = "{$adjective} {$productType}";
-        $costPrice = $this->faker->randomFloat(2, 150, 800);
+        $costPrice = $faker->randomFloat(2, 150, 800);
 
         return [
             'name' => $name,
             'code' => 'PRD-' . strtoupper(Str::random(6)),
             'slug' => Str::slug($name) . '-' . Str::random(4),
-            'description' => $this->faker->paragraph(3),
-            'fabric' => $this->faker->randomElement(self::$fabricTypes),
+            'description' => $faker->paragraph(3),
+            'fabric' => $faker->randomElement(self::$fabricTypes),
             'cost_price' => $costPrice,
-            'sale_price' => $costPrice * $this->faker->randomFloat(2, 1.3, 2.0),
-            'wholesale_price' => $costPrice * $this->faker->randomFloat(2, 1.15, 1.4),
-            'discount' => $this->faker->optional(weight: 0.3)->randomFloat(2, 5, 30) ?? 0,
-            'stock' => $this->faker->numberBetween(10, 100),
-            'min_stock' => $this->faker->numberBetween(5, 20),
-            'featured' => $this->faker->boolean(20),
-            'order' => $this->faker->numberBetween(0, 100),
-            'status' => $this->faker->randomElement(['draft', 'published']),
+            'sale_price' => $costPrice * $faker->randomFloat(2, 1.3, 2.0),
+            'wholesale_price' => $costPrice * $faker->randomFloat(2, 1.15, 1.4),
+            'discount' => $faker->optional(weight: 0.3)->randomFloat(2, 5, 30) ?? 0,
+            'stock' => $faker->numberBetween(10, 100),
+            'min_stock' => $faker->numberBetween(5, 20),
+            'featured' => $faker->boolean(20),
+            'order' => $faker->numberBetween(0, 100),
+            'status' => $faker->randomElement(['draft', 'published']),
             'user_id' => User::inRandomOrder()->first()->id ?? 1,
             'category_id' => ProductCategory::inRandomOrder()->first()->id ?? null,
         ];
@@ -94,16 +95,18 @@ class ProductFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (Product $product) {
+            $faker = fake();
+
             $selectedTags = ProductTag::inRandomOrder()
-                ->limit($this->faker->numberBetween(2, 5))
+                ->limit($faker->numberBetween(2, 5))
                 ->pluck('id');
 
             $selectedSizes = ProductSize::inRandomOrder()
-                ->limit($this->faker->numberBetween(2, 4))
+                ->limit($faker->numberBetween(2, 4))
                 ->pluck('id');
 
             $selectedColors = ProductColor::inRandomOrder()
-                ->limit($this->faker->numberBetween(1, 3))
+                ->limit($faker->numberBetween(1, 3))
                 ->pluck('id');
 
             $product->tags()->sync($selectedTags);
@@ -126,9 +129,9 @@ class ProductFactory extends Factory
             }
 
             $coverUrl = "https://picsum.photos/seed/{$seed}/800/1000";
-            $coverContent = file_get_contents($coverUrl);
+            $coverContent = $this->downloadImage($coverUrl);
 
-            if ($coverContent !== false) {
+            if (is_string($coverContent) && $coverContent !== '') {
                 $coverFilename = "{$storagePath}/{$product->id}_cover_" . time() . ".jpg";
                 Storage::disk('public')->put($coverFilename, $coverContent);
                 $product->addMedia(Storage::disk('public')->path($coverFilename))
@@ -138,9 +141,9 @@ class ProductFactory extends Factory
 
             for ($i = 0; $i < 2; $i++) {
                 $galleryUrl = "https://picsum.photos/seed/{$seed}_gallery_{$i}/800/1000";
-                $galleryContent = file_get_contents($galleryUrl);
+                $galleryContent = $this->downloadImage($galleryUrl);
 
-                if ($galleryContent !== false) {
+                if (is_string($galleryContent) && $galleryContent !== '') {
                     $galleryFilename = "{$storagePath}/{$product->id}_gallery_{$i}_" . time() . ".jpg";
                     Storage::disk('public')->put($galleryFilename, $galleryContent);
                     $product->addMedia(Storage::disk('public')->path($galleryFilename))
@@ -153,9 +156,9 @@ class ProductFactory extends Factory
             foreach ($colors as $index => $color) {
                 $colorSeed = $seed . '_color_' . $color->id;
                 $colorUrl = "https://picsum.photos/seed/{$colorSeed}/800/1000";
-                $colorContent = file_get_contents($colorUrl);
+                $colorContent = $this->downloadImage($colorUrl);
 
-                if ($colorContent !== false) {
+                if (is_string($colorContent) && $colorContent !== '') {
                     $colorFilename = "{$storagePath}/{$product->id}_color_{$color->id}_" . time() . ".jpg";
                     Storage::disk('public')->put($colorFilename, $colorContent);
                     $product->addMedia(Storage::disk('public')->path($colorFilename))
@@ -167,6 +170,21 @@ class ProductFactory extends Factory
         } catch (\Exception $e) {
             // Silent fail - images are optional for factory
         }
+    }
+
+    private function downloadImage(string $url): ?string
+    {
+        try {
+            $response = Http::timeout(5)->get($url);
+
+            if ($response->successful()) {
+                return $response->body();
+            }
+        } catch (\Exception $e) {
+            // Images are optional seed data.
+        }
+
+        return null;
     }
 
     public function published(): static
