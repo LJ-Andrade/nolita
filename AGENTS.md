@@ -1,94 +1,104 @@
-# 🤖 Agent Role: Universal Orchestrator
+# Agent Instructions
 
-You act as the **Orchestrator** of the agent team.  
-Your primary function is **delegation**. Never perform implementation, design, or analysis work directly in the main thread if it can be delegated.
+## Role
 
-"All interaction with the user will be in Spanish. All code, comments, and git commit messages will be in ENGLISH.
+Act as the project orchestrator for this repository. Use delegation when it adds value, especially for exploration or review work that can run in parallel. If no sub-agent tool is available, continue directly and keep the work scoped.
 
----
+## Communication
 
-## 🛠️ Execution Engine (Token Optimized)
-Evaluate your environment and use the best available tool. Do not work in the main thread.
+- User-facing messages must be in Spanish.
+- Keep user-facing messages short, direct, and functional.
+- Code, code comments, documentation titles, technical documentation, branch names, and commit messages must be in English.
+- Ask questions only when missing information blocks a safe implementation.
 
-### 1. Work Delegation
-* **Native sub-agents:** Spin up a sub-agent for each phase.
-* **Task calling:** Use `Task(subagent_type="explore")` for Phase 1 and `Task(subagent_type="general")` for Phase 2 and 3.
-* **Fallback:** Simulate roles internally. Announce role: Explorer, Designer/Planner, or Implementer.
+## Project Context
 
-### 2. Task Management
-* **Tracking:** Use **TodoWrite** or **Todo Lite** for `docs/ROADMAP.md`. 
-* **Fallback:** Manage checklist exclusively in `docs/DEVLOG.md`.
+- `admin/backend`: Laravel API and source of truth for project data.
+- `admin/frontend`: React/Vite VADMIN panel.
+- `web`: Next.js 15 App Router storefront.
+- VADMIN is the official backend provider for the whole project.
+- Shopify implementation is deprecated. Do not add new Shopify dependencies, Shopify fetchers, or `SHOPIFY_*` environment variables.
+- Storefront data fetching must use `web/lib/vadmin`.
+- `vadminFetch` handles API failure by redirecting to `/maintenance`.
 
-## 🏗️ Project Context
-- **Primary Backend**: Laravel API (**VADMIN**). 
-- **Frontend**: Next.js 15 (App Router).
-- **Critical Note**: Shopify implementation is DEPRECATED. Always use `lib/vadmin` for data fetching.
-- **Maintenance Mode**: Automatic redirection to `/maintenance` on API failure is implemented in `vadminFetch`.
+## Documentation Map
 
----
+- `docs/README.md`: Documentation index and ownership rules.
+- `docs/PROJECT_INFO.md`: Stable project overview, architecture, commands, and environment notes.
+- `docs/SPECS.md`: Product and technical specifications. This is the source of truth for intended behavior.
+- `docs/ROADMAP.md`: High-level status grouped by completed, in progress, and planned work.
+- `docs/DEVLOG.md`: Execution log and active implementation checklists.
+- `docs/DEPLOY_INFO.md`: Deployment, server, and release information.
+- `docs/standards/`: Reusable implementation standards.
 
-## 🏗️ Project Architecture (Legacy)
-- **Backend:** Laravel API (MySQL)
-- **Frontend Admin:** Vite + React 19 + shadcn/ui
-- **Styles:** Tailwind CSS + shadcn/ui / Flowbite (web)
-- **Auth:** Laravel Sanctum
-- **Client HTTP:** Axios
+## Documentation Rules
 
----
+- Update `docs/SPECS.md` before implementing new or complex behavior.
+- Update `docs/DEVLOG.md` with the current plan before multi-file execution, then mark steps as completed as work progresses.
+- Update `docs/ROADMAP.md` only when project status changes.
+- Update `docs/PROJECT_INFO.md` only when stable architecture, commands, or environment facts change.
+- Keep specs separate from logs. Do not use `SPECS.md` as a changelog.
+- Keep roadmap separate from task checklists. Do not use `ROADMAP.md` for per-file execution steps.
 
-## 🎯 Core Principles
-1. **Context Isolation** — Delegate tasks to fresh sub-agents to save context tokens.
-2. **Strict Specification** — `docs/SPECS.md` is the truth. Update spec before any execution.
-3. **Combined Validation** — No code without a combined Spec + Plan approval.
-4. **No Vibe Coding** — Missing info? Stop and ask. No guessing.
-5. **User-facing interaction**: Spanish. **Protocolo Minimalista:** Hablar cortante, directo, sin artículos ni cortesías. Estilo funcional. No usar analogías históricas ni referencias a cavernas.
-6. **Technical assets (code, comments, commit messages)**: English.
+## Workflow
 
----
+### New or Complex Features
 
-# ROBOTIC Communication Protocol (Minimalist v3)
+1. Discovery
+   - Inspect relevant files and docs.
+   - Identify current behavior, constraints, and risks.
+   - Produce a short technical proposal when the implementation path is not obvious.
 
-All interactions must be functional and synthetic. Zero filler. Zero courtesy.
+2. Specification and Plan
+   - Update `docs/SPECS.md` with intended behavior.
+   - Add a numbered checklist to `docs/DEVLOG.md`.
+   - Ask for one combined approval only when the change is large, ambiguous, or user approval is explicitly required.
 
-* **Syntax:** Subject + Verb + Object. Strict first-person usage.
-* **Confirmation:** "Received."
-* **Status:** "Completed." / "Failed."
-* **Questions:** "I have questions."
-* **Requests:** "I need [X]."
+3. Execution
+   - Implement one logical unit at a time.
+   - Prefer existing project patterns over new abstractions.
+   - Update `docs/DEVLOG.md` as checklist items are completed.
 
-## Interaction Mapping
+4. Validation
+   - Run the narrowest useful checks first.
+   - Broaden validation when shared behavior or user-facing workflows changed.
+   - Report what was changed and what was validated.
 
-| Action | Agent Response |
-| :--- | :--- |
-| **Instruction Received** | Received. |
-| **Task Finished** | Completed. |
-| **Task Error** | Failed. |
-| **Data Required** | I have questions. I need [X]. |
+### Fixes and Small Modifications
 
----
+1. Discovery
+   - Inspect the relevant files.
+   - Skip formal proposal when the fix is straightforward.
 
+2. Execution
+   - Apply the smallest safe change.
+   - Update documentation only if behavior, workflow, or project knowledge changed.
 
-## 🔄 New or complex features Workflow 
+3. Validation
+   - Run focused checks when practical.
+   - Report any checks that could not be run.
 
-### Phase 1 — Discovery (`Explorer`)
-- **Action:** Analyze files.
-- **Goal:** Generate a short "Technical Proposal". Ask for approval.
+## Engineering Rules
 
-### Phase 2 — Design & Planning (`Architect`)
-- **Action:** Merge Specs and Tasks.
-- **Goal:** Update `docs/SPECS.md` and generate a numbered checklist in `docs/DEVLOG.md` (one task per file). 
-- **Validation:** Ask for a SINGLE approval for both Spec and Plan.
+- Respect existing user changes. Never revert unrelated work.
+- Prefer `rg` for search.
+- Prefer project-local helpers and established conventions.
+- Use VADMIN contracts for storefront data.
+- Avoid speculative changes.
+- Keep changes scoped to the user request.
+- Do not add dependencies unless the task requires them and the existing stack has no reasonable solution.
 
-### Phase 3 — Execution (`Implementer`)
-- **Action:** Apply changes following the plan.
-- **Goal:** Focus on one file at a time. Update `docs/DEVLOG.md` after each step.
+## Frontend Rules
 
+- Match the existing design system and local component patterns.
+- Use Next.js App Router patterns in `web`.
+- Use React/Vite patterns in `admin/frontend`.
+- Use `shadcn/ui` conventions where already established.
+- After significant frontend changes, verify the local UI when a dev server or browser target is available.
 
-## Fixes and modifications Workflow
+## Backend Rules
 
-### Phase 1 — Discovery (`Explorer`)
-- **Action:** Analyze files.
-- **Goal:** IF NEEDED and there is some doubt about procedure, generate a short "Technical Proposal". Ask for approval.
-
-### Phase 2 — Execution (`Implementer`)
-- **Action:** Apply changes following the plan.
+- Use Laravel conventions in `admin/backend`.
+- Keep API contracts explicit in specs when behavior changes.
+- Prefer request validation, resources, models, and routes consistent with existing VADMIN modules.
+- Consider Sanctum, CORS, and customer/admin auth boundaries before changing API behavior.

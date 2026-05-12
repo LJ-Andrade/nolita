@@ -13,7 +13,7 @@ export default async function FavoritesPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login?redirect=/favoritos");
+    redirect("/ingreso?redirect=/favoritos");
   }
 
   const favorites = await getFavorites();

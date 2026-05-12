@@ -28,7 +28,7 @@ export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const activeCategory = searchParams.get("category") ?? "";
+  const activeCategory = searchParams.get("categoria") ?? searchParams.get("category") ?? "";
   const activeSizes = searchParams.getAll("size");
 
   const updateParam = useCallback(
@@ -45,6 +45,9 @@ export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
           params.append(key, value);
         }
       } else {
+        if (key === "categoria") {
+          params.delete("category");
+        }
         if (params.get(key) === value) {
           params.delete(key);
         } else {
@@ -115,7 +118,7 @@ export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
             {categories.map((cat) => (
               <li key={cat.handle}>
                 <button
-                  onClick={() => updateParam("category", cat.handle)}
+                  onClick={() => updateParam("categoria", cat.handle)}
                   className={`text-left text-sm transition-all ${
                     activeCategory === cat.handle
                       ? "font-semibold"

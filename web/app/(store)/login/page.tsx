@@ -1,3 +1,4 @@
+import { PasswordInput } from "components/auth/password-input";
 import { login } from "lib/vadmin/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -15,7 +16,7 @@ export default async function LoginPage({
     if (result.success) {
       redirect(searchParams.redirect || "/");
     }
-    redirect(`/login?error=${encodeURIComponent(result.error || "Error de inicio de sesión")}`);
+    redirect(`/ingreso?error=${encodeURIComponent(result.error || "Error de inicio de sesión")}`);
   }
 
   return (
@@ -47,13 +48,7 @@ export default async function LoginPage({
             <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-neutral-500">
               Contraseña
             </label>
-            <input
-              name="password"
-              type="password"
-              required
-              className="w-full border-b border-neutral-200 bg-transparent py-3 text-sm outline-none transition-colors focus:border-black"
-              placeholder="••••••••"
-            />
+            <PasswordInput />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -78,7 +73,7 @@ export default async function LoginPage({
         </form>
         <p className="mt-8 text-center text-sm text-neutral-500">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="font-bold text-black underline underline-offset-4">
+          <Link href="/registro" className="font-bold text-black underline underline-offset-4">
             Regístrate aquí
           </Link>
         </p>

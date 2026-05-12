@@ -12,7 +12,7 @@ export default async function PerfilPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/login?redirect=/perfil");
+    redirect("/ingreso?redirect=/perfil");
   }
 
   const [provinces, localities] = await Promise.all([

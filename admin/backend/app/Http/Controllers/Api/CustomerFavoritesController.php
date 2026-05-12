@@ -43,6 +43,18 @@ class CustomerFavoritesController extends Controller
 
     private function transformProduct(Product $product): array
     {
+        $originalPrice = $this->getOriginalPrice($product);
+        $finalPrice = $this->getFinalPrice($product);
+        $discount = $this->getDiscountPercent($product);
+        $hasDiscount = $discount > 0 && $finalPrice < $originalPrice;
+        $compareAtPrice = $hasDiscount ? [
+            'amount' => (string) $originalPrice,
+            'currencyCode' => '$',
+        ] : null;
+        $finalPricePayload = [
+            'amount' => (string) $finalPrice,
+            'currencyCode' => '$',
+        ];
         $colorImages = $product->getMedia('color_images')->map(function ($media) use ($product) {
             $color = $product->colors->firstWhere('id', $media->getCustomProperty('color_id'));
             if (!$color) return null;
@@ -78,16 +90,16 @@ class CustomerFavoritesController extends Controller
                 ] : null,
             ])),
             'priceRange' => [
-                'maxVariantPrice' => [
-                    'amount' => (string) $product->sale_price,
-                    'currencyCode' => '$',
-                ],
-                'minVariantPrice' => [
-                    'amount' => (string) $product->sale_price,
-                    'currencyCode' => '$',
-                ],
+                'maxVariantPrice' => $finalPricePayload,
+                'minVariantPrice' => $finalPricePayload,
             ],
-            'variants' => $product->variants->map(function ($variant) use ($product) {
+            'compareAtPriceRange' => $hasDiscount ? [
+                'maxVariantPrice' => $compareAtPrice,
+                'minVariantPrice' => $compareAtPrice,
+            ] : null,
+            'discount' => $discount,
+            'hasDiscount' => $hasDiscount,
+            'variants' => $product->variants->map(function ($variant) use ($product, $finalPricePayload, $compareAtPrice, $discount, $hasDiscount) {
                 $variantOptions = [];
                 if ($variant->color) {
                     $variantOptions[] = ['name' => 'Color', 'value' => $variant->color->name];
@@ -101,10 +113,10 @@ class CustomerFavoritesController extends Controller
                     'availableForSale' => $variant->stock > 0 && $variant->active,
                     'quantityAvailable' => (int) ($variant->stock ?? 0),
                     'selectedOptions' => $variantOptions,
-                    'price' => [
-                        'amount' => (string) ($variant->price ?? $variant->product->sale_price),
-                        'currencyCode' => '$',
-                    ],
+                    'price' => $finalPricePayload,
+                    'compareAtPrice' => $compareAtPrice,
+                    'discount' => $discount,
+                    'hasDiscount' => $hasDiscount,
                 ];
             }),
             'images' => $gallery->map(fn ($m) => [
@@ -127,5 +139,27 @@ class CustomerFavoritesController extends Controller
             'updatedAt' => $product->updated_at->toISOString(),
             'colorImages' => $colorImages,
         ];
+    }
+
+    private function getOriginalPrice(Product $product): float
+    {
+        return round((float) $product->sale_price, 2);
+    }
+
+    private function getDiscountPercent(Product $product): float
+    {
+        return max(min((float) ($product->discount ?? 0), 100), 0);
+    }
+
+    private function getFinalPrice(Product $product): float
+    {
+        $originalPrice = $this->getOriginalPrice($product);
+        $discount = $this->getDiscountPercent($product);
+
+        if ($discount <= 0) {
+            return $originalPrice;
+        }
+
+        return round($originalPrice * (1 - ($discount / 100)), 2);
     }
 }

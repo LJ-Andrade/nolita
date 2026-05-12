@@ -23,6 +23,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ImageGallery } from "@/components/ui/image-gallery";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { PageHeader } from "@/components/page-header";
+import { isSuperAdmin } from "@/components/can";
 import {
 	Table,
 	TableBody,
@@ -54,6 +55,7 @@ export default function ProductForm() {
 		stock: "",
 		minStock: "",
 	});
+	const canFillFakeData = isSuperAdmin();
 
 	const formSchema = z.object({
 		name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -1074,7 +1076,7 @@ export default function ProductForm() {
 
 					{/* Row 5: Actions */}
 					<div className="flex justify-end gap-2">
-						{!id && (
+						{!id && canFillFakeData && (
 							<Button type="button" variant="secondary" onClick={fillFakeData} disabled={loading || fillingFakeData}>
 								{fillingFakeData ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
 								Llenar Datos

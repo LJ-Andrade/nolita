@@ -4,7 +4,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Fragment, Suspense, useEffect, useState } from "react";
-import { logoutAction } from "lib/vadmin/actions";
+import { LogoutButton } from "./logout-button";
 
 // Manual Icons with forced black color
 const BarsIcon = () => (
@@ -83,22 +83,25 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
 
                 <ul className="flex w-full flex-col">
                   <li className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white">
-                    <Link href="/catalog" prefetch={true} onClick={closeMobileMenu}>
+                    <Link href="/catalogo" prefetch={true} onClick={closeMobileMenu}>
                       Catálogo
                     </Link>
                   </li>
                   <li className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white border-t mt-4 pt-4">
                     {customer ? (
                       <>
-                        <Link href="/profile" onClick={closeMobileMenu} className="block mb-2 font-medium">
+                        <Link href="/perfil" onClick={closeMobileMenu} className="block mb-2 font-medium">
                           Mi Perfil
                         </Link>
-                        <button onClick={() => logoutAction()} className="text-left w-full text-red-500 font-medium">
+                        <LogoutButton
+                          onBeforeLogout={closeMobileMenu}
+                          className="text-left w-full text-red-500 font-medium"
+                        >
                           Cerrar Sesión
-                        </button>
+                        </LogoutButton>
                       </>
                     ) : (
-                      <Link href="/login" onClick={closeMobileMenu} className="font-medium">
+                      <Link href="/ingreso" onClick={closeMobileMenu} className="font-medium">
                         Ingresar
                       </Link>
                     )}

@@ -2,6 +2,25 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 13: Agent and Documentation Organization (Completed)
+- [x] `AGENTS.md`: Replace brittle orchestration rules with Codex-compatible workflow, documentation ownership, and project guardrails.
+- [x] `docs/README.md`: Add documentation index and update rules.
+- [x] `docs/SPECS.md`: Add documentation governance and document ownership section.
+
+## Phase 14: Storefront Auth Pricing, Size Curves, Favorites, Logout, and Discounts (Completed)
+1. [x] `docs/SPECS.md`: Define authenticated pricing and product discount behavior.
+2. [x] `web/app/(store)/page.tsx`: Load customer session and favorites for featured product cards.
+3. [x] `web/components/catalog/product-card.tsx`: Hide prices for guests and render discount pricing for customers.
+4. [x] `web/components/product/product-description.tsx`: Hide prices for guests, render discount pricing, and add size curve action.
+5. [x] `web/components/product/add-size-curve-button.tsx`: Add shared size curve button for product cards and detail page.
+6. [x] `web/app/(store)/login/page.tsx`: Add password visibility toggle.
+7. [x] `web/components/layout/navbar/*`: Clear and close cart UI during logout.
+8. [x] `web/lib/vadmin/types.ts`: Add discount and compare-at pricing fields.
+9. [x] `admin/backend/app/Http/Controllers/Api/CatalogController.php`: Return discounted price metadata.
+10. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Use discounted effective price for cart and checkout totals.
+11. [x] `web/components/cart/*` and checkout summary: Display discounted line prices when available.
+12. [x] Validation: Run focused TypeScript/build and PHP syntax checks.
+
 ## Phase 2: Definition (Completed)
 - [x] Create initial `SPECS.md` proposing the Data Contracts.
 - [x] User approve Option B (Product Variants) and Professional eCommerce features.
@@ -239,3 +258,47 @@ Once SPECS are approved, the actionable checklist will be expanded.
 ## Phase 26: Admin Login Local Network CORS Fix
 - [x] `admin/frontend/src/lib/axios.js`: Register `192.168.56.1` as a known local admin host.
 - [x] `admin/backend/config/cors.php`: Allow `http://192.168.56.1:5173` as a local Vite origin.
+
+## Phase 27: Storefront Home Product Sections
+1. [x] `docs/SPECS.md`: Document reusable home product section behavior.
+2. [x] `web/lib/vadmin/index.ts`: Allow storefront product fetching by featured flag.
+3. [x] `web/components/home/product-section.tsx`: Create reusable home product grid section.
+4. [x] `web/app/(store)/page.tsx`: Add untitled featured products section above "Nuevos ingresos".
+5. [x] Validate the web build.
+
+## Phase 28: Product Detail Related Products
+1. [x] `docs/SPECS.md`: Document product detail related products behavior.
+2. [x] `admin/backend/app/Http/Controllers/Api/CatalogController.php`: Expose product category metadata in the storefront catalog contract.
+3. [x] `web/lib/vadmin/types.ts`: Add product category metadata to the storefront product type.
+4. [x] `web/app/(store)/product/[handle]/page.tsx`: Render same-category related products above the footer.
+5. [x] Validate the web build.
+
+## Phase 29: Related Products Fallback Fill
+1. [x] `docs/SPECS.md`: Document fallback behavior for related products.
+2. [x] `web/app/(store)/product/[handle]/page.tsx`: Fill related products with random catalog items when same-category products are fewer than four.
+3. [x] Validate the web build.
+
+## Phase 30: Admin Product Order Inline Editing
+1. [x] `docs/SPECS.md`: Document explicit product order save behavior.
+2. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Copy category order inline editing flow to products.
+3. [x] Validate the admin frontend build and lint.
+
+## Phase 31: CRUD Inline Order Editor Component
+1. [x] `admin/frontend/src/components/crud-inline-order-editor.jsx`: Create reusable CRUD inline order editor.
+2. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Use shared inline order editor.
+3. [x] `admin/frontend/src/views/product-categories/CategoriesList.jsx`: Use shared inline order editor.
+4. [x] `docs/standards/CRUD_STANDARDS.md`: Document inline order editing standard.
+5. [x] Validate the admin frontend build and lint.
+
+## Phase 32: Storefront Footer Categories
+1. [x] `docs/SPECS.md`: Document dynamic footer category links.
+2. [x] `web/components/layout/footer.tsx`: Render all listed VADMIN categories in the footer and increase logo/social spacing.
+3. [x] Validate the web build.
+
+## Phase 33: Storefront Spanish Routes and Footer Category Filtering
+1. [x] `docs/SPECS.md`: Document Spanish storefront routes and footer category rules.
+2. [x] `web/components/layout/footer.tsx`: Show only categories with products and link them to catalog filters.
+3. [x] `web/app/(store)`: Add Spanish route aliases for catalog, product, auth, checkout, and search.
+4. [x] `web/next.config.ts`: Redirect legacy English paths to Spanish storefront paths.
+5. [x] Update internal storefront links to Spanish routes.
+6. [x] Validate the web build.

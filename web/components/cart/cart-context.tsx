@@ -67,10 +67,16 @@ function updateCartItem(
   if (newQuantity === 0) return null;
 
   const singleItemAmount = Number(item.cost.totalAmount.amount) / item.quantity;
+  const singleCompareAtAmount = item.cost.compareAtTotalAmount
+    ? Number(item.cost.compareAtTotalAmount.amount) / item.quantity
+    : null;
   const newTotalAmount = calculateItemCost(
     newQuantity,
     singleItemAmount.toString(),
   );
+  const newCompareAtTotalAmount = singleCompareAtAmount
+    ? calculateItemCost(newQuantity, singleCompareAtAmount.toString())
+    : null;
 
   const stockDelta = updateType === "plus" ? -1 : 1;
 
@@ -83,6 +89,12 @@ function updateCartItem(
         ...item.cost.totalAmount,
         amount: newTotalAmount,
       },
+      compareAtTotalAmount: item.cost.compareAtTotalAmount && newCompareAtTotalAmount
+        ? {
+            ...item.cost.compareAtTotalAmount,
+            amount: newCompareAtTotalAmount,
+          }
+        : null,
     },
     merchandise: {
       ...item.merchandise,
@@ -102,6 +114,9 @@ function createOrUpdateCartItem(
 ): CartItem {
   const quantity = existingItem ? existingItem.quantity + qty : qty;
   const totalAmount = calculateItemCost(quantity, variant.price.amount);
+  const compareAtTotalAmount = variant.compareAtPrice
+    ? calculateItemCost(quantity, variant.compareAtPrice.amount)
+    : null;
   const currentStock =
     existingItem?.merchandise.product.stock ?? variant.quantityAvailable;
   const remainingStock =
@@ -115,7 +130,15 @@ function createOrUpdateCartItem(
         amount: totalAmount,
         currencyCode: variant.price.currencyCode,
       },
+      compareAtTotalAmount: variant.compareAtPrice && compareAtTotalAmount
+        ? {
+            amount: compareAtTotalAmount,
+            currencyCode: variant.compareAtPrice.currencyCode,
+          }
+        : null,
     },
+    discount: variant.discount,
+    hasDiscount: variant.hasDiscount,
     merchandise: {
       id: variant.id,
       title: variant.title,
@@ -269,6 +292,10 @@ export function CartProvider({
   const [isOpen, setIsOpen] = React.useState(false);
   const initialCart = use(cartPromise);
   const [cart, setCart] = React.useState<Cart | undefined>(initialCart);
+
+  React.useEffect(() => {
+    setCart(initialCart);
+  }, [initialCart]);
 
   const dispatchCartAction = (action: CartAction) => {
     setCart((currentCart) => cartReducer(currentCart, action));

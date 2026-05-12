@@ -8,8 +8,8 @@ export function PageHeader() {
   
   // Don't show header on some pages if needed, or adapt it
   const isHome = pathname === "/";
-  const isCatalog = pathname === "/catalog";
-  const isSearch = pathname.startsWith("/search");
+  const isCatalog = pathname === "/catalog" || pathname === "/catalogo";
+  const isSearch = pathname.startsWith("/search") || pathname.startsWith("/buscar");
   
   let title = "Plan B";
   let subtitle = "";
@@ -24,13 +24,13 @@ export function PageHeader() {
     title = "Búsqueda";
     const q = searchParams.get("q");
     if (q) subtitle = `Resultados para "${q}"`;
-  } else if (pathname === "/login") {
+  } else if (pathname === "/login" || pathname === "/ingreso") {
     title = "Iniciar Sesión";
-  } else if (pathname === "/register") {
+  } else if (pathname === "/register" || pathname === "/registro") {
     title = "Crear Cuenta";
-  } else if (pathname === "/checkout") {
+  } else if (pathname === "/checkout" || pathname === "/finalizar-compra") {
     title = "Finalizar Pedido";
-  } else if (pathname.startsWith("/product/")) {
+  } else if (pathname.startsWith("/product/") || pathname.startsWith("/producto/")) {
     title = "Producto"; // Could fetch product name if we use a provider, but for now simple
   }
 

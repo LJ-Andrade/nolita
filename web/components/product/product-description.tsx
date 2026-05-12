@@ -1,10 +1,17 @@
 import { AddToCart } from "components/cart/add-to-cart";
-import Price from "components/price";
 import Prose from "components/prose";
 import { Product } from "lib/vadmin/types";
+import { AddSizeCurveButton } from "./add-size-curve-button";
+import { ProductPrice } from "./product-price";
 import { VariantSelector } from "./variant-selector";
 
-export function ProductDescription({ product }: { product: Product }) {
+export function ProductDescription({
+	product,
+	isAuthenticated,
+}: {
+	product: Product;
+	isAuthenticated: boolean;
+}) {
 	return (
 		<>
 			<div className="mb-8 flex flex-col border-b border-neutral-200 pb-6 dark:border-neutral-800">
@@ -27,10 +34,13 @@ export function ProductDescription({ product }: { product: Product }) {
 
 				<div className="flex items-center gap-4">
 					<div className="text-2xl font-medium tracking-tight" style={{ color: "var(--pb-text)" }}>
-						<Price
-							amount={product.priceRange.maxVariantPrice.amount}
-							currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-						/>
+						{isAuthenticated ? (
+							<ProductPrice product={product} size="detail" />
+						) : (
+							<p className="text-sm font-medium uppercase tracking-[0.16em] text-neutral-400">
+								Ingresá para ver precios
+							</p>
+						)}
 					</div>
 				</div>
 			</div>
@@ -41,6 +51,14 @@ export function ProductDescription({ product }: { product: Product }) {
 
 			<div className="mb-8">
 				<AddToCart product={product} />
+				{isAuthenticated && (
+					<div className="mt-4">
+						<AddSizeCurveButton
+							product={product}
+							className="text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
+						/>
+					</div>
+				)}
 			</div>
 
 

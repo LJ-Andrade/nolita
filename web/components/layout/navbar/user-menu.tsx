@@ -2,13 +2,16 @@
 
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from "@headlessui/react";
 import Link from "next/link";
-import { Fragment, useState, useEffect } from "react";
-import { logoutAction } from "lib/vadmin/actions";
+import { Fragment, useState, useEffect, useTransition } from "react";
 import { ConfirmDialog } from "components/ui/confirm-dialog";
+import { logoutAction } from "lib/vadmin/actions";
+import { useCart } from "components/cart/cart-context";
 
 export default function UserMenu({ customer }: { customer: any }) {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { clearCart, setIsOpen } = useCart();
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     setMounted(true);
@@ -31,7 +34,7 @@ export default function UserMenu({ customer }: { customer: any }) {
   if (!customer) {
     return (
       <Link
-        href="/login"
+        href="/ingreso"
         className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-black transition-colors hover:bg-neutral-50 shadow-sm"
       >
         <UserIcon />
@@ -47,6 +50,15 @@ export default function UserMenu({ customer }: { customer: any }) {
       </div>
     );
   }
+
+  const handleLogout = () => {
+    clearCart();
+    setIsOpen(false);
+    setIsLogoutConfirmOpen(false);
+    startTransition(() => {
+      logoutAction();
+    });
+  };
 
   return (
     <>
@@ -116,7 +128,7 @@ export default function UserMenu({ customer }: { customer: any }) {
       <ConfirmDialog
         isOpen={isLogoutConfirmOpen}
         onClose={() => setIsLogoutConfirmOpen(false)}
-        onConfirm={() => logoutAction()}
+        onConfirm={handleLogout}
         title="¿Cerrar sesión?"
         description="Tendrás que volver a ingresar tus credenciales para acceder a tu cuenta."
         confirmLabel="Cerrar Sesión"

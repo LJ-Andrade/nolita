@@ -8,7 +8,7 @@ export function ActiveFilters() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const category = searchParams.get("category");
+  const category = searchParams.get("categoria") ?? searchParams.get("category");
   const sizes = searchParams.getAll("size");
 
   const hasFilters = !!category || sizes.length > 0;
@@ -29,6 +29,14 @@ export function ActiveFilters() {
     [searchParams, pathname, router]
   );
 
+  const removeCategoryFilter = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("categoria");
+    params.delete("category");
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
   const clearAll = useCallback(() => {
     router.push(pathname, { scroll: false });
   }, [pathname, router]);
@@ -40,7 +48,7 @@ export function ActiveFilters() {
       {category && (
         <FilterChip
           label={`Categoría: ${category}`}
-          onRemove={() => removeFilter("category")}
+          onRemove={removeCategoryFilter}
         />
       )}
       {sizes.map((size) => (

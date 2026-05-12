@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Price from "components/price";
+import { formatPriceAmount } from "components/price";
 import { Cart, ShopConfiguration } from "lib/vadmin/types";
 import Image from "next/image";
 import { DeleteItemButton } from "components/cart/delete-item-button";
@@ -178,11 +179,23 @@ export default function OrderSummary({
                 />
               </div>
             </div>
-            <Price
-              className="text-sm font-bold mt-1"
-              amount={item.cost.totalAmount.amount}
-              currencyCode={item.cost.totalAmount.currencyCode}
-            />
+            <div className="mt-1 flex flex-col items-end gap-1">
+              {item.hasDiscount && item.cost.compareAtTotalAmount && (
+                <span className="text-xs text-stone-brown/50 line-through">
+                  {formatPriceAmount(item.cost.compareAtTotalAmount.amount)}
+                </span>
+              )}
+              <Price
+                className="text-sm font-bold"
+                amount={item.cost.totalAmount.amount}
+                currencyCode={item.cost.totalAmount.currencyCode}
+              />
+              {item.hasDiscount && Number(item.discount ?? 0) > 0 && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  -{Math.round(Number(item.discount))}%
+                </span>
+              )}
+            </div>
           </li>
           );
         })}

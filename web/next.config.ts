@@ -1,5 +1,64 @@
 export default {
   cacheComponents: true,
+  async redirects() {
+    return [
+      {
+        source: "/catalog",
+        destination: "/catalogo",
+        permanent: false,
+      },
+      {
+        source: "/product/:handle",
+        destination: "/producto/:handle",
+        permanent: false,
+      },
+      {
+        source: "/register",
+        destination: "/registro",
+        permanent: false,
+      },
+      {
+        source: "/login",
+        destination: "/ingreso",
+        permanent: false,
+      },
+      {
+        source: "/checkout",
+        destination: "/finalizar-compra",
+        permanent: false,
+      },
+      {
+        source: "/checkout/success",
+        destination: "/finalizar-compra/exito",
+        permanent: false,
+      },
+      {
+        source: "/search/:collection",
+        destination: "/catalogo?categoria=:collection",
+        permanent: false,
+      },
+      {
+        source: "/search",
+        destination: "/buscar",
+        permanent: false,
+      },
+      {
+        source: "/profile",
+        destination: "/perfil",
+        permanent: false,
+      },
+      {
+        source: "/categories",
+        destination: "/catalogo",
+        permanent: false,
+      },
+      {
+        source: "/categorias",
+        destination: "/catalogo",
+        permanent: false,
+      },
+    ];
+  },
   experimental: {
     inlineCss: true,
   },

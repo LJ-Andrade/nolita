@@ -15,7 +15,7 @@ export default async function RegisterPage({
     if (result.success) {
       redirect("/");
     }
-    redirect(`/register?error=${encodeURIComponent(result.error || "Error al crear cuenta")}`);
+    redirect(`/registro?error=${encodeURIComponent(result.error || "Error al crear cuenta")}`);
   }
 
   return (
@@ -103,7 +103,7 @@ export default async function RegisterPage({
         </form>
         <p className="mt-8 text-center text-sm text-neutral-500">
           ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="font-bold text-black underline underline-offset-4">
+          <Link href="/ingreso" className="font-bold text-black underline underline-offset-4">
             Inicia sesión
           </Link>
         </p>

@@ -6,12 +6,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useCart } from "components/cart/cart-context";
-import { addMultipleItems } from "components/cart/actions";
 import { toast } from "sonner";
-import { formatPriceAmount } from "components/price";
-import { HeartIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { toggleFavoriteAction } from "lib/vadmin/favorites-actions";
+import { AddSizeCurveButton } from "components/product/add-size-curve-button";
+import { ProductPrice } from "components/product/product-price";
 
 type ProductCardProps = {
 	product: Product;
@@ -19,44 +18,6 @@ type ProductCardProps = {
 	isFavorited?: boolean;
 	isAuthenticated?: boolean;
 };
-
-function AddSizeCurveButton({ product }: { product: Product }) {
-	const { addMultipleCartItems } = useCart();
-	const [isPending, startTransition] = useTransition();
-
-	const availableVariants = product.variants?.filter(v => v.availableForSale) || [];
-
-	if (availableVariants.length === 0) return null;
-
-	const handleAdd = () => {
-		startTransition(async () => {
-			addMultipleCartItems(availableVariants, product);
-			const error = await addMultipleItems(null, availableVariants.map(v => v.id));
-			if (error) {
-				toast.error(error);
-			} else {
-				toast.success("Curva de talle agregada");
-			}
-		});
-	};
-
-	return (
-		<button
-			onClick={(e) => { e.preventDefault(); handleAdd(); }}
-			disabled={isPending}
-			className="flex h-12 w-52 flex-col items-center justify-center border border-white bg-white text-[10px] font-semibold uppercase tracking-[0.2em] text-black shadow-lg transition-all hover:bg-neutral-100 disabled:opacity-50 rounded-[var(--pb-radius)] leading-tight"
-		>
-			{isPending ? (
-				"Agregando..."
-			) : (
-				<>
-					<span>Agregar curva</span>
-					<span>de talle</span>
-				</>
-			)}
-		</button>
-	);
-}
 
 export function ProductCard({ product, priority = false, isFavorited = false, isAuthenticated = false }: ProductCardProps) {
 	const router = useRouter();
@@ -70,7 +31,6 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 	const imageAlt =
 		product.featuredImage?.altText ?? product.title;
 
-	const price = product.priceRange.minVariantPrice;
 	const isNew =
 		new Date(product.updatedAt) >
 		new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -89,7 +49,7 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 		e.preventDefault();
 		e.stopPropagation();
 		if (!isAuthenticated) {
-			router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+			router.push(`/ingreso?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
 			return;
 		}
 		startTransition(async () => {
@@ -107,7 +67,7 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 		<article className="pb-card group relative flex flex-col">
 			{/* ── Image ──────────────────────────────────────────────────── */}
 			<Link
-				href={`/product/${product.handle}`}
+				href={`/producto/${product.handle}`}
 				className="relative block overflow-hidden rounded-[12px] isolate"
 				style={{ aspectRatio: "4/5", backgroundColor: "var(--pb-surface)" }}
 			>
@@ -154,15 +114,21 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 					/>
 				</button>
 
-				{/* Hover overlay — "Ver producto" */}
+				{/* Hover actions */}
 				<div
-					className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-					style={{ background: "rgba(0,0,0,0.1)" }}
+					className="absolute inset-0 flex items-end justify-center gap-5 p-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+					style={{ background: "rgba(0,0,0,0.04)" }}
 				>
-					<span className="flex h-12 w-52 items-center justify-center border border-white bg-black/60 text-xs font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-sm transition-all hover:bg-white hover:text-black rounded-[var(--pb-radius)]">
-						Ver producto
+					{isAuthenticated && (
+						<AddSizeCurveButton
+							product={product}
+							compact
+							className="flex h-14 min-w-0 flex-1 items-center justify-center rounded-[8px] bg-white px-5 text-sm font-semibold tracking-normal text-black shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white disabled:opacity-50"
+						/>
+					)}
+					<span className="flex h-14 w-16 shrink-0 items-center justify-center rounded-[8px] bg-white text-black shadow-lg transition-transform hover:-translate-y-0.5">
+						<EyeIcon className="h-6 w-6" />
 					</span>
-					<AddSizeCurveButton product={product} />
 				</div>
 			</Link>
 
@@ -218,20 +184,19 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 
 				{/* Product name — Serif */}
 				<Link
-					href={`/product/${product.handle}`}
+					href={`/producto/${product.handle}`}
 					className="line-clamp-2 text-sm font-medium leading-snug transition-opacity hover:opacity-70"
 					style={{ fontFamily: "var(--font-serif)", color: "var(--pb-text)" }}
 				>
 					{product.title}
 				</Link>
 
-				{/* Price */}
-				<p
-					className="text-sm font-medium"
-					style={{ color: "var(--pb-text)" }}
-				>
-					{formatPriceAmount(price.amount)}
-				</p>
+				{isAuthenticated && (
+					<ProductPrice
+						product={product}
+						className="text-sm font-medium"
+					/>
+				)}
 			</div>
 		</article>
 	);

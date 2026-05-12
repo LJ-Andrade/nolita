@@ -1,0 +1,53 @@
+import { formatPriceAmount } from "components/price";
+import type { Product } from "lib/vadmin/types";
+
+type ProductPriceProps = {
+  product: Product;
+  className?: string;
+  size?: "card" | "detail";
+};
+
+export function ProductPrice({
+  product,
+  className = "",
+  size = "card",
+}: ProductPriceProps) {
+  const price = product.priceRange.minVariantPrice;
+  const compareAtPrice = product.compareAtPriceRange?.minVariantPrice;
+  const hasDiscount =
+    product.hasDiscount &&
+    compareAtPrice &&
+    Number(compareAtPrice.amount) > Number(price.amount);
+
+  if (!hasDiscount) {
+    return (
+      <p className={className}>
+        {formatPriceAmount(price.amount)}
+      </p>
+    );
+  }
+
+  const discount = Math.round(Number(product.discount ?? 0));
+  const layoutClass =
+    size === "detail"
+      ? "flex flex-wrap items-center gap-3"
+      : "flex flex-wrap items-center gap-x-2 gap-y-1";
+  const priceClass = size === "detail" ? "text-2xl font-semibold" : "text-sm font-medium";
+  const compareClass = size === "detail" ? "text-base" : "text-xs";
+
+  return (
+    <div className={`${layoutClass} ${className}`}>
+      <span className={`${compareClass} text-neutral-400 line-through`}>
+        {formatPriceAmount(compareAtPrice.amount)}
+      </span>
+      <span className={priceClass}>
+        {formatPriceAmount(price.amount)}
+      </span>
+      {discount > 0 && (
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+          -{discount}%
+        </span>
+      )}
+    </div>
+  );
+}

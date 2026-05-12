@@ -45,6 +45,7 @@ class OrderController extends Controller
 		]);
 
 		$variant = ProductVariant::with('product')->find($request->product_variant_id);
+		$unitPrice = $this->getVariantUnitPrice($variant);
 
 		// Stock check
 		if ($variant->stock < $request->quantity) {
@@ -73,7 +74,8 @@ class OrderController extends Controller
 				// Update quantity
 				$item->increment('quantity', $request->quantity);
 				$item->update([
-					'subtotal' => $item->quantity * $item->unit_price
+					'unit_price' => $unitPrice,
+					'subtotal' => $item->quantity * $unitPrice
 				]);
 			} else {
 				// Create item
@@ -82,8 +84,8 @@ class OrderController extends Controller
 					'product_variant_id' => $variant->id,
 					'product_name' => $variant->product->name,
 					'quantity' => $request->quantity,
-					'unit_price' => $variant->price ?? $variant->product->sale_price,
-					'subtotal' => ($variant->price ?? $variant->product->sale_price) * $request->quantity,
+					'unit_price' => $unitPrice,
+					'subtotal' => $unitPrice * $request->quantity,
 				]);
 			}
 
@@ -110,7 +112,7 @@ class OrderController extends Controller
 			'quantity' => 'required|integer|min:1',
 		]);
 
-		$item = OrderItem::with('variant')->findOrFail($itemId);
+		$item = OrderItem::with('variant.product')->findOrFail($itemId);
 		$cart = $item->order;
 
 		if ($cart->customer_id !== $request->user()->id || $cart->status !== 'pending') {
@@ -132,9 +134,11 @@ class OrderController extends Controller
 				$item->variant->increment('stock', abs($diff));
 			}
 
+			$unitPrice = $this->getVariantUnitPrice($item->variant);
 			$item->update([
 				'quantity' => $request->quantity,
-				'subtotal' => $request->quantity * $item->unit_price
+				'unit_price' => $unitPrice,
+				'subtotal' => $request->quantity * $unitPrice
 			]);
 
 			$this->updateCartTotal($cart);
@@ -229,7 +233,7 @@ class OrderController extends Controller
 
 		$cart = Order::where('customer_id', $request->user()->id)
 			->where('status', 'pending')
-			->with('items')
+			->with('items.variant.product')
 			->first();
 
 		if (!$cart) {
@@ -243,7 +247,7 @@ class OrderController extends Controller
 		$deliveryFee = (float) $deliveryMethod->fee;
 		$paymentFee = (float) $paymentMethod->fee;
 		$subtotal = $cart->items->reduce(function (float $total, OrderItem $item): float {
-			return $total + ((float) $item->unit_price * (int) $item->quantity);
+			return $total + ($this->getVariantUnitPrice($item->variant) * (int) $item->quantity);
 		}, 0.0);
 		$couponCode = trim((string) ($validated['coupon_code'] ?? ''));
 		$couponDiscountAmount = 0;
@@ -275,8 +279,10 @@ class OrderController extends Controller
 			$appliedCouponCode
 		) {
 			foreach ($cart->items as $item) {
+				$unitPrice = $this->getVariantUnitPrice($item->variant);
 				$item->update([
-					'subtotal' => (float) $item->unit_price * (int) $item->quantity,
+					'unit_price' => $unitPrice,
+					'subtotal' => $unitPrice * (int) $item->quantity,
 				]);
 			}
 
@@ -358,6 +364,43 @@ class OrderController extends Controller
 		]);
 	}
 
+	private function getVariantUnitPrice(?ProductVariant $variant): float
+	{
+		if (!$variant || !$variant->product) {
+			return 0.0;
+		}
+
+		$originalPrice = round((float) $variant->product->sale_price, 2);
+		$discount = max(min((float) ($variant->product->discount ?? 0), 100), 0);
+
+		if ($discount <= 0) {
+			return $originalPrice;
+		}
+
+		return round($originalPrice * (1 - ($discount / 100)), 2);
+	}
+
+	private function getVariantCompareAtPrice(?ProductVariant $variant): ?float
+	{
+		if (!$variant || !$variant->product) {
+			return null;
+		}
+
+		$originalPrice = round((float) $variant->product->sale_price, 2);
+		$unitPrice = $this->getVariantUnitPrice($variant);
+
+		return $unitPrice < $originalPrice ? $originalPrice : null;
+	}
+
+	private function getVariantDiscountPercent(?ProductVariant $variant): float
+	{
+		if (!$variant || !$variant->product) {
+			return 0.0;
+		}
+
+		return max(min((float) ($variant->product->discount ?? 0), 100), 0);
+	}
+
 	private function transformCart(Order $cart)
 	{
 		// Re-use logic for Next.js Commerce Cart interface
@@ -382,6 +425,9 @@ class OrderController extends Controller
 				if (!$item->variant || !$item->variant->product) {
 					return null;
 				}
+				$compareAtPrice = $this->getVariantCompareAtPrice($item->variant);
+				$discount = $this->getVariantDiscountPercent($item->variant);
+				$hasDiscount = $compareAtPrice !== null && $discount > 0;
 				return [
 					'id' => (string) $item->id,
 					'quantity' => $item->quantity,
@@ -390,7 +436,13 @@ class OrderController extends Controller
 							'amount' => (string) $item->subtotal,
 							'currencyCode' => $item->order->currency,
 						],
+						'compareAtTotalAmount' => $hasDiscount ? [
+							'amount' => (string) ($compareAtPrice * (int) $item->quantity),
+							'currencyCode' => $item->order->currency,
+						] : null,
 					],
+					'discount' => $discount,
+					'hasDiscount' => $hasDiscount,
 					'merchandise' => [
 						'id' => (string) $item->product_variant_id,
 						'title' => $item->product_name,

@@ -10,6 +10,7 @@ import { Suspense } from "react";
 
 type SearchParams = {
   category?: string;
+  categoria?: string;
   size?: string | string[];
   sort?: string;
   q?: string;
@@ -58,12 +59,36 @@ function filterProducts(
   return result;
 }
 
+function hasAvailableVariant(product: Product) {
+  return product.variants.some((variant) => variant.availableForSale);
+}
+
+function getAvailableProductSizes(products: Product[]) {
+  const sizes = new Set<string>();
+
+  products.forEach((product) => {
+    product.variants.forEach((variant) => {
+      if (!variant.availableForSale) {
+        return;
+      }
+
+      const size = variant.selectedOptions.find((option) => option.name === "Talle")?.value;
+
+      if (size) {
+        sizes.add(size);
+      }
+    });
+  });
+
+  return Array.from(sizes);
+}
+
 export default async function CatalogPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
   const searchParams = await props.searchParams;
 
-  const category = searchParams.category;
+  const category = searchParams.categoria ?? searchParams.category;
   const sizes = searchParams.size
     ? Array.isArray(searchParams.size)
       ? searchParams.size
@@ -72,27 +97,30 @@ export default async function CatalogPage(props: {
   const sort = searchParams.sort ?? "newest";
   const query = searchParams.q;
 
-  const [allProducts, collections, session] = await Promise.all([
+  const [allProducts, collections, session, categoryFilterProducts] = await Promise.all([
     getProducts({ category, query }),
     getCollections(),
     getSession(),
+    category ? getProducts({ query }) : Promise.resolve(null),
   ]);
 
   const favorites = session ? await getFavorites() : [];
   const favoriteIds = new Set(favorites.map((p) => p.id));
   const isAuthenticated = !!session;
 
-  const allSizes = Array.from(
-    new Set(
-      allProducts.flatMap(
-        (p) => p.options.find((o) => o.name === "Talle")?.values ?? []
-      )
-    )
-  );
+  const allSizes = getAvailableProductSizes(allProducts);
 
   const filtered = filterProducts(allProducts, sizes);
   const sorted = sortProducts(filtered, sort);
-  const sidebarCategories = collections.filter((c) => c.handle !== "");
+  const categoryProductHandles = new Set(
+    (categoryFilterProducts ?? allProducts)
+      .filter(hasAvailableVariant)
+      .map((product) => product.category?.handle)
+      .filter(Boolean)
+  );
+  const sidebarCategories = collections.filter(
+    (collection) => collection.handle && categoryProductHandles.has(collection.handle)
+  );
 
   return (
     <div className="mx-auto max-w-screen-2xl px-4 py-8 lg:px-8">

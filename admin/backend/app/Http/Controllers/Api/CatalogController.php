@@ -83,6 +83,19 @@ class CatalogController extends Controller
 	 */
 	private function transformProduct(Product $product)
 	{
+		$originalPrice = $this->getOriginalPrice($product);
+		$finalPrice = $this->getFinalPrice($product);
+		$discount = $this->getDiscountPercent($product);
+		$hasDiscount = $discount > 0 && $finalPrice < $originalPrice;
+		$compareAtPrice = $hasDiscount ? [
+			'amount' => (string) $originalPrice,
+			'currencyCode' => '$',
+		] : null;
+		$finalPricePayload = [
+			'amount' => (string) $finalPrice,
+			'currencyCode' => '$',
+		];
+
 		return [
 			'id' => (string) $product->id,
 			'handle' => $product->slug,
@@ -92,26 +105,26 @@ class CatalogController extends Controller
 			'descriptionHtml' => $product->description,
 			'options' => $this->getProductOptions($product),
 			'priceRange' => [
-				'maxVariantPrice' => [
-					'amount' => (string) $product->sale_price,
-					'currencyCode' => '$',
-				],
-				'minVariantPrice' => [
-					'amount' => (string) $product->sale_price,
-					'currencyCode' => '$',
-				],
+				'maxVariantPrice' => $finalPricePayload,
+				'minVariantPrice' => $finalPricePayload,
 			],
-			'variants' => $product->variants->map(function ($variant) {
+			'compareAtPriceRange' => $hasDiscount ? [
+				'maxVariantPrice' => $compareAtPrice,
+				'minVariantPrice' => $compareAtPrice,
+			] : null,
+			'discount' => $discount,
+			'hasDiscount' => $hasDiscount,
+			'variants' => $product->variants->map(function ($variant) use ($finalPricePayload, $compareAtPrice, $discount, $hasDiscount) {
 				return [
 					'id' => (string) $variant->id,
 					'title' => $this->getVariantTitle($variant),
 					'availableForSale' => $variant->stock > 0 && $variant->active,
 					'quantityAvailable' => (int) ($variant->stock ?? 0),
 					'selectedOptions' => $this->getVariantOptions($variant),
-					'price' => [
-						'amount' => (string) ($variant->price ?? $variant->product->sale_price),
-						'currencyCode' => '$',
-					],
+					'price' => $finalPricePayload,
+					'compareAtPrice' => $compareAtPrice,
+					'discount' => $discount,
+					'hasDiscount' => $hasDiscount,
 				];
 			}),
 			'images' => $this->getProductImages($product),
@@ -120,6 +133,10 @@ class CatalogController extends Controller
 				'title' => $product->name,
 				'description' => $product->description,
 			],
+			'category' => $product->category ? [
+				'handle' => $product->category->slug,
+				'title' => $product->category->name,
+			] : null,
 			'tags' => $product->tags->pluck('name')->toArray(),
 			'updatedAt' => $product->updated_at->toISOString(),
 			'colorImages' => $product->getMedia('color_images')->map(function ($media) use ($product) {
@@ -132,6 +149,28 @@ class CatalogController extends Controller
 				];
 			})->filter()->values()->toArray(),
 		];
+	}
+
+	private function getOriginalPrice(Product $product): float
+	{
+		return round((float) $product->sale_price, 2);
+	}
+
+	private function getDiscountPercent(Product $product): float
+	{
+		return max(min((float) ($product->discount ?? 0), 100), 0);
+	}
+
+	private function getFinalPrice(Product $product): float
+	{
+		$originalPrice = $this->getOriginalPrice($product);
+		$discount = $this->getDiscountPercent($product);
+
+		if ($discount <= 0) {
+			return $originalPrice;
+		}
+
+		return round($originalPrice * (1 - ($discount / 100)), 2);
 	}
 
 	private function getProductOptions(Product $product)

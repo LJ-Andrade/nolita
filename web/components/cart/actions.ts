@@ -23,7 +23,7 @@ export async function addItem(
 
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) {
-    redirect("/login");
+    redirect("/ingreso");
   }
 
 
@@ -46,7 +46,7 @@ export async function addMultipleItems(
 
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) {
-    redirect("/login");
+    redirect("/ingreso");
   }
 
   try {
@@ -128,6 +128,6 @@ export async function updateItemQuantity(
 }
 
 export async function redirectToCheckout() {
-  redirect("/checkout");
+  redirect("/finalizar-compra");
 }
 

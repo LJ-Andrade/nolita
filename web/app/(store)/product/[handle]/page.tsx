@@ -1,11 +1,12 @@
-import { GridTileImage } from "components/grid/tile";
+import { HomeProductSection } from "components/home/product-section";
 import { Gallery } from "components/product/gallery";
 import { ProductDescription } from "components/product/product-description";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
-import { getProduct } from "lib/vadmin";
+import { getProduct, getProducts } from "lib/vadmin";
+import { getSession } from "lib/vadmin/auth";
+import { getFavorites } from "lib/vadmin/favorites";
 import type { Image } from "lib/vadmin/types";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -50,17 +51,29 @@ export default async function ProductPage(props: {
   params: Promise<{ handle: string }>;
 }) {
   const params = await props.params;
-  const product = await getProduct(params.handle);
+  const [product, session] = await Promise.all([
+    getProduct(params.handle),
+    getSession(),
+  ]);
 
   if (!product) return notFound();
+  const isAuthenticated = Boolean(session);
+  const [favorites, relatedProducts] = await Promise.all([
+    session ? getFavorites() : Promise.resolve([]),
+    getRelatedProducts(product.id, product.category?.handle),
+  ]);
+  const favoriteIds = new Set(favorites.map((favorite) => favorite.id));
 
-  const productJsonLd = {
+  const productJsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
     description: product.description,
     image: product.featuredImage.url,
-    offers: {
+  };
+
+  if (isAuthenticated) {
+    productJsonLd.offers = {
       "@type": "AggregateOffer",
       availability: product.availableForSale
         ? "https://schema.org/InStock"
@@ -68,8 +81,8 @@ export default async function ProductPage(props: {
       priceCurrency: product.priceRange.minVariantPrice.currencyCode,
       highPrice: product.priceRange.maxVariantPrice.amount,
       lowPrice: product.priceRange.minVariantPrice.amount,
-    },
-  };
+    };
+  }
 
   return (
     <>
@@ -107,52 +120,61 @@ export default async function ProductPage(props: {
           <div className="basis-full lg:basis-5/12">
             <div className="lg:sticky lg:top-32">
               <Suspense fallback={null}>
-                <ProductDescription product={product} />
+                <ProductDescription product={product} isAuthenticated={isAuthenticated} />
               </Suspense>
             </div>
           </div>
         </div>
-        <RelatedProducts id={product.id} />
       </div>
+      <HomeProductSection
+        products={relatedProducts}
+        favoriteIds={favoriteIds}
+        isAuthenticated={isAuthenticated}
+        title="Productos relacionados"
+      />
     </>
   );
 }
 
-async function RelatedProducts({ id }: { id: string }) {
-  // TODO: Implement recommendations in backend
-  const relatedProducts: any[] = [];
+async function getRelatedProducts(productId: string, categoryHandle?: string) {
+  const [categoryProducts, allProducts] = await Promise.all([
+    categoryHandle ? getProducts({ category: categoryHandle }) : Promise.resolve([]),
+    getProducts(),
+  ]);
 
-  if (!relatedProducts.length) return null;
-
-  return (
-    <div className="py-8">
-      <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
-      <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {relatedProducts.map((product) => (
-          <li
-            key={product.handle}
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-          >
-            <Link
-              className="relative h-full w-full"
-              href={`/product/${product.handle}`}
-              prefetch={true}
-            >
-              <GridTileImage
-                alt={product.title}
-                label={{
-                  title: product.title,
-                  amount: product.priceRange.maxVariantPrice.amount,
-                  currencyCode: product.priceRange.maxVariantPrice.currencyCode,
-                }}
-                src={product.featuredImage?.url}
-                fill
-                sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, (min-width: 475px) 50vw, 100vw"
-              />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+  const shuffledCategoryProducts = shuffleProducts(
+    categoryProducts.filter((product) => product.id !== productId),
+    `${productId}:category`,
   );
+  const selectedProducts = shuffledCategoryProducts.slice(0, 4);
+
+  if (selectedProducts.length >= 4) {
+    return selectedProducts;
+  }
+
+  const selectedIds = new Set([
+    productId,
+    ...selectedProducts.map((product) => product.id),
+  ]);
+  const fallbackProducts = shuffleProducts(
+    allProducts.filter((product) => !selectedIds.has(product.id)),
+    `${productId}:fallback`,
+  );
+
+  return [...selectedProducts, ...fallbackProducts].slice(0, 4);
+}
+
+function shuffleProducts<T>(items: T[], seed: string): T[] {
+  const shuffled = [...items];
+  let hash = Array.from(seed).reduce((value, char) => value + char.charCodeAt(0), 0);
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    hash = (hash * 9301 + 49297) % 233280;
+    const randomIndex = hash % (index + 1);
+    const current = shuffled[index]!;
+    shuffled[index] = shuffled[randomIndex]!;
+    shuffled[randomIndex] = current;
+  }
+
+  return shuffled;
 }

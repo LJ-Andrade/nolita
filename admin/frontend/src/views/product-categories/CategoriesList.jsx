@@ -22,7 +22,6 @@ import {
 	Filter,
 	X,
 	ChevronDown,
-	Check,
 	ArrowUpDown,
 	ArrowUp,
 	ArrowDown,
@@ -41,18 +40,13 @@ import { CrudPagination } from '@/components/crud-pagination';
 import { BulkActionsBar } from '@/components/bulk-actions-bar';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { PageHeader } from '@/components/page-header';
+import { CrudInlineOrderEditor } from '@/components/crud-inline-order-editor';
 
 export default function CategoriesList() {
 	const navigate = useNavigate();
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [categoryToDelete, setCategoryToDelete] = useState(null);
-
-	// Inline editing states
-	const [editingOrderId, setEditingOrderId] = useState(null);
-	const [editingOrderValue, setEditingOrderValue] = useState("");
-	const [savingOrderId, setSavingOrderId] = useState(null);
-	const [showSuccessId, setShowSuccessId] = useState(null);
 
 	const {
 		items: categories,
@@ -119,49 +113,14 @@ export default function CategoriesList() {
 		if (success) clearSelection();
 	};
 
-	// Inline order editing
-	const startEditOrder = (id, currentOrder) => {
-		setEditingOrderId(id);
-		setEditingOrderValue(currentOrder !== null ? String(currentOrder) : "0");
-	};
-
-	const cancelEditOrder = () => {
-		setEditingOrderId(null);
-		setEditingOrderValue("");
-	};
-
-	const saveEditOrder = (id) => {
-		if (editingOrderValue === "") {
-			cancelEditOrder();
-			return;
-		}
-		const orderValue = parseInt(editingOrderValue);
-		if (isNaN(orderValue)) {
-			toast.error("Ingresá un número válido");
-			return;
-		}
-		setSavingOrderId(id);
-		axiosClient.put(`product-categories/${id}`, { order: orderValue })
-			.then(() => {
-				setEditingOrderId(null);
-				setShowSuccessId(id);
-				setTimeout(() => setShowSuccessId(null), 2000);
-				refresh();
-			})
-			.catch(() => {
-				toast.error("Error al guardar");
-			})
-			.finally(() => {
-				setSavingOrderId(null);
-			});
-	};
-
-	const handleOrderKeyDown = (e, id) => {
-		if (e.key === "Enter") {
-			saveEditOrder(id);
-		} else if (e.key === "Escape") {
-			cancelEditOrder();
-		}
+	const saveCategoryOrder = async (category, order) => {
+		await axiosClient.put(`product-categories/${category.id}`, {
+			order,
+			name: category.name,
+			slug: category.slug,
+			listed: category.listed,
+		});
+		refresh();
 	};
 
 	// Toggle listed
@@ -378,43 +337,10 @@ export default function CategoriesList() {
 												/>
 											</TableCell>
 											<TableCell className="w-[100px]">
-												{editingOrderId === category.id ? (
-													<div className="flex items-center gap-1">
-														<Input
-															type="number"
-															className="w-16 h-7 text-sm"
-															value={editingOrderValue}
-															onChange={(e) => setEditingOrderValue(e.target.value)}
-															onKeyDown={(e) => handleOrderKeyDown(e, category.id)}
-															autoFocus
-														/>
-														<Button
-															variant="ghost"
-															size="icon"
-															className="h-7 w-7 text-green-500 hover:text-green-600"
-															onClick={() => saveEditOrder(category.id)}
-															disabled={savingOrderId === category.id}
-														>
-															{savingOrderId === category.id ? (
-																<div className="h-4 w-4 border-2 border-t-green-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
-															) : (
-																<Check className="h-4 w-4" />
-															)}
-														</Button>
-													</div>
-												) : showSuccessId === category.id ? (
-													<div className="flex items-center gap-1 text-green-500">
-														<span className="text-sm">{category.order}</span>
-														<Check className="h-4 w-4" />
-													</div>
-												) : (
-													<div
-														className="cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 inline-block"
-														onClick={() => startEditOrder(category.id, category.order)}
-													>
-														<span className="text-sm">{category.order}</span>
-													</div>
-												)}
+												<CrudInlineOrderEditor
+													value={category.order}
+													onSave={(order) => saveCategoryOrder(category, order)}
+												/>
 											</TableCell>
 											<TableCell className="text-right w-[130px]">
 												{new Date(category.created_at).toLocaleDateString()}

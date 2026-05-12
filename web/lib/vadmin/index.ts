@@ -25,7 +25,7 @@ const storefrontTags = [
   TAGS.shopConfiguration,
   TAGS.checkoutMethods,
 ] as const;
-const storefrontPaths = ["/", "/catalog", "/search"] as const;
+const storefrontPaths = ["/", "/catalogo", "/catalog", "/buscar", "/search"] as const;
 
 export async function vadminFetch<T>({
   cache,
@@ -109,7 +109,11 @@ export async function vadminFetch<T>({
       body: data,
     };
   } catch (e: any) {
-    const isSilent = e.status === 404 || silentStatuses.includes(e.status);
+    const isAbortError =
+      e.name === "AbortError" ||
+      e.code === "ABORT_ERR" ||
+      e.message === "This operation was aborted";
+    const isSilent = isAbortError || e.status === 404 || silentStatuses.includes(e.status);
     if (!isSilent) {
       console.error(`[vadminFetch Error] path: ${path}`, {
         message: e.message,
@@ -119,7 +123,7 @@ export async function vadminFetch<T>({
     }
     
     // Check for connection errors or server failures (500, 503, Network, DB)
-    const isNetworkError = e.message?.includes("fetch failed") || e.cause?.code === "ECONNREFUSED" || e.cause?.code === "ENOTFOUND";
+    const isNetworkError = !isAbortError && (e.message?.includes("fetch failed") || e.cause?.code === "ECONNREFUSED" || e.cause?.code === "ENOTFOUND");
     const isDbError = e.message?.toLowerCase().includes("base de datos") || e.message?.toLowerCase().includes("database connection");
     const isServerError = e.status === 500 || e.status === 503;
 
@@ -145,11 +149,13 @@ export function getVadminImageUrl(path: string | null | undefined): string {
 // CATALOG
 export async function getProducts({
   category,
+  featured,
   query,
   reverse,
   sortKey,
 }: {
   category?: string;
+  featured?: boolean;
   query?: string;
   reverse?: boolean;
   sortKey?: string;
@@ -160,7 +166,7 @@ export async function getProducts({
 
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
-    params: { category, search: query, reverse, sortKey },
+    params: { category, featured, search: query, reverse, sortKey },
     tags: [TAGS.products],
   });
 
@@ -207,7 +213,7 @@ export async function getCollections(params?: { listed?: boolean }): Promise<Col
       description: cat.description || "",
     },
     updatedAt: cat.updated_at,
-    path: `/search/${cat.slug}`,
+    path: `/catalogo?categoria=${cat.slug}`,
     image: cat.image ? getVadminImageUrl(cat.image) : undefined,
   }));
 
@@ -222,7 +228,7 @@ export async function getCollections(params?: { listed?: boolean }): Promise<Col
       title: "Todo",
       description: "Todos los productos",
       seo: { title: "Todo", description: "Todos los productos" },
-      path: "/search",
+      path: "/catalogo",
       updatedAt: new Date().toISOString(),
     },
     ...collections,

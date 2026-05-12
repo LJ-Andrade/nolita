@@ -4,7 +4,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ShoppingCartIcon, XMarkIcon, ArrowRightIcon, ExclamationCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import LoadingDots from "components/loading-dots";
-import Price from "components/price";
+import Price, { formatPriceAmount } from "components/price";
 import { DEFAULT_OPTION } from "lib/constants";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
@@ -37,7 +37,9 @@ export default function CartModal() {
   const closeCart = () => setIsOpen(false);
   const [shopConfig, setShopConfig] = useState<ShopConfig>({ id: 0, min_quantity: 0, min_amount: 0 });
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
-  const isCheckoutPage = pathname?.startsWith("/checkout");
+  const isCheckoutPage =
+    pathname?.startsWith("/checkout") ||
+    pathname?.startsWith("/finalizar-compra");
 
   useEffect(() => {
     fetch(`${VADMIN_API}/public/shop-configuration`)
@@ -134,7 +136,7 @@ export default function CartModal() {
                       });
 
                       const merchandiseUrl = createUrl(
-                        `/product/${item.merchandise.product.handle}`,
+                        `/producto/${item.merchandise.product.handle}`,
                         new URLSearchParams(merchandiseSearchParams),
                       );
 
@@ -207,11 +209,23 @@ export default function CartModal() {
                                       optimisticUpdate={updateCartItem}
                                     />
                                   </div>
-                                  <Price
-                                    className="text-sm font-bold"
-                                    amount={item.cost.totalAmount.amount}
-                                    currencyCode={item.cost.totalAmount.currencyCode}
-                                  />
+                                  <div className="flex flex-col items-end gap-0.5">
+                                    {item.hasDiscount && item.cost.compareAtTotalAmount && (
+                                      <span className="text-xs text-stone-brown/50 line-through">
+                                        {formatPriceAmount(item.cost.compareAtTotalAmount.amount)}
+                                      </span>
+                                    )}
+                                    <Price
+                                      className="text-sm font-bold"
+                                      amount={item.cost.totalAmount.amount}
+                                      currencyCode={item.cost.totalAmount.currencyCode}
+                                    />
+                                    {item.hasDiscount && Number(item.discount ?? 0) > 0 && (
+                                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                        -{Math.round(Number(item.discount))}%
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

@@ -280,6 +280,31 @@ import { toast } from "sonner";
 - **Destructive Actions** (Delete): `variant="ghost"` with `className="text-red-500"`
 - **Icon Usage**: All action buttons should have icons (from lucide-react)
 
+### Inline Order Editing
+
+CRUD list tables that expose an `order` field must use `CrudInlineOrderEditor` from `admin/frontend/src/components/crud-inline-order-editor.jsx`.
+
+Required behavior:
+- Display the current order as compact clickable text.
+- Enter edit mode only after the user clicks the order value.
+- Do not send API requests while typing.
+- Save only when the user presses Enter or the save check action.
+- Cancel with Escape.
+- Show a spinner while saving and a green check after a successful save.
+- Refresh the list after the save request completes.
+
+Example:
+
+```jsx
+<CrudInlineOrderEditor
+  value={item.order}
+  onSave={async (order) => {
+    await axiosClient.patch(`/items/${item.id}/quick-update`, { order });
+    fetchItems();
+  }}
+/>
+```
+
 ### Form Handling
 
 - Use `react-hook-form` with `zodResolver` for validation
@@ -436,6 +461,7 @@ Before submitting a new CRUD module, verify:
 - [ ] Empty CardHeader (no title)
 - [ ] Collapsible filters section
 - [ ] Data table with sortable columns
+- [ ] Order fields use `CrudInlineOrderEditor` when inline ordering is available
 - [ ] Bulk selection checkboxes
 - [ ] BulkActionsBar implementation
 - [ ] Pagination
@@ -476,9 +502,13 @@ Use these as templates when creating new modules.
 
 ## Last Updated
 
-Date: 2026-03-14
-Version: 1.1
+Date: 2026-05-11
+Version: 1.2
 Author: Development Team
+
+### Changes in v1.2:
+- Added `CrudInlineOrderEditor` as the standard component for editable order fields in CRUD lists.
+- Documented explicit save behavior for order edits.
 
 ### Changes in v1.1:
 - Added explicit requirement for CardTitle in form views (must match PageHeader title)

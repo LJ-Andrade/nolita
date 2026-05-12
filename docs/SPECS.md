@@ -1,5 +1,21 @@
 # Technical Specifications
 
+## 0. Documentation Governance
+
+### 0.1 Source of Truth
+`docs/SPECS.md` defines intended product and technical behavior. It must describe what the system should do, not the step-by-step execution history.
+
+### 0.2 Document Ownership
+- `docs/PROJECT_INFO.md`: Stable architecture, commands, applications, and environment facts.
+- `docs/SPECS.md`: Intended behavior, data contracts, workflow rules, and technical requirements.
+- `docs/ROADMAP.md`: High-level project status.
+- `docs/DEVLOG.md`: Active plans, per-file checklists, and implementation notes.
+- `docs/DEPLOY_INFO.md`: Deployment and operations notes.
+- `docs/standards/`: Reusable implementation standards.
+
+### 0.3 Agent Workflow
+For new or complex behavior, update this specification first, then track execution in `docs/DEVLOG.md`. For small fixes, update documentation only when the fix changes behavior, workflow, or project knowledge.
+
 ## 1. E-commerce Web Integration
 
 ### Overview
@@ -12,6 +28,37 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 3. **Catalog Category Filtering:** The catalog must send the selected category slug to VADMIN through `GET /api/catalog/products?category={slug}` and must not show unrelated products when a category is active.
 4. **Orders:** Create new models and tables in VADMIN for storing Customer Orders and their complete details.
 5. **CORS:** Ensure CORS is configured properly in VADMIN to allow requests from the Web frontend.
+
+### Storefront Home Sections
+- Home product sections must reuse a shared product grid section component for consistent spacing, layout, favorites, and authenticated pricing behavior.
+- The featured products section appears above "Nuevos ingresos", has no title or "Ver todo" link, and displays every product marked as featured in VADMIN using the catalog API order.
+- "Nuevos ingresos" displays the first four published products returned by VADMIN using the catalog API order.
+
+### Storefront Product Detail
+- Product detail pages must display a "Productos relacionados" section above the footer when same-category products exist.
+- Related products are fetched from VADMIN using the current product category slug first, exclude the current product, and display four products whenever the catalog has enough other products.
+- If fewer than four same-category products are available, the storefront fills the remaining slots with random products from any category, without duplicates.
+- The catalog product contract must expose the product category slug and title so the storefront can request same-category related products.
+
+### Storefront Footer
+- The storefront footer must fetch product categories from VADMIN and render only existing category links that currently have published products.
+- Footer category links must use the same category order returned by the VADMIN catalog API.
+- Footer category links must point to the catalog filter URL, not legacy `/search/{category}` collection URLs.
+
+### Storefront Spanish Routes
+- Public storefront links must use Spanish route slugs:
+  - `/catalogo` for catalog.
+  - `/catalogo?categoria={slug}` for category filters.
+  - `/producto/{handle}` for product detail.
+  - `/registro` for customer registration.
+  - `/ingreso` for customer login.
+  - `/finalizar-compra` for checkout.
+  - `/finalizar-compra/exito` for checkout success.
+  - `/buscar` for search.
+- Legacy English routes must remain available through redirects for compatibility.
+
+### Admin Product Ordering
+- Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
 
 > [!IMPORTANT]
 > **OFFICIAL BACKEND: VADMIN**
@@ -117,6 +164,21 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 ### 6.1 Overview
 A multi-step checkout process implemented in the frontend to collect shipping and payment information before finalizing the order.
+
+### 6.2 Authenticated Pricing
+Storefront prices are private customer data. Product cards, product detail pages, cart-entry actions, and checkout totals must only expose prices to authenticated customers. Guests can browse product names, images, colors, sizes, and descriptions, but price labels must be hidden.
+
+### 6.3 Product Discounts
+VADMIN product `discount` is a percentage applied to `sale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator. Cart and checkout calculations must use the discounted final unit price.
+
+The catalog API product contract must expose enough pricing metadata for the storefront:
+
+- `priceRange.minVariantPrice` and `priceRange.maxVariantPrice`: discounted final price.
+- `compareAtPriceRange.minVariantPrice` and `compareAtPriceRange.maxVariantPrice`: original `sale_price` when a discount applies.
+- `discount`: discount percentage.
+- `hasDiscount`: whether the product has an active discount.
+
+The checkout backend must recalculate item `unit_price` and `subtotal` from current VADMIN product pricing before completing the order, so frontend totals and persisted order totals stay aligned.
 
 ### 6.2 Data Flow
 1. **Redirection**: The cart modal "Finalizar Pedido" redirects to `/checkout`.

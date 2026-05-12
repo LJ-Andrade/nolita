@@ -1,5 +1,7 @@
-import { ProductCard } from "components/catalog/product-card";
+import { HomeProductSection } from "components/home/product-section";
 import { getCollections, getProducts, getSiteContent, getVadminImageUrl } from "lib/vadmin";
+import { getSession } from "lib/vadmin/auth";
+import { getFavorites } from "lib/vadmin/favorites";
 import Link from "next/link";
 
 export const metadata = {
@@ -19,7 +21,7 @@ function CategoryCard({
 }) {
 	return (
 		<Link
-			href={`/catalog?category=${handle}`}
+			href={`/catalogo?categoria=${handle}`}
 			className="group relative flex items-end overflow-hidden"
 			style={{
 				aspectRatio: "3/4",
@@ -44,14 +46,17 @@ function CategoryCard({
 }
 
 export default async function HomePage() {
-	const [products, collections, listedCategories, content] = await Promise.all([
+	const [products, featuredProducts, listedCategories, content, session] = await Promise.all([
 		getProducts(),
-		getCollections(),
+		getProducts({ featured: true }),
 		getCollections({ listed: true }),
 		getSiteContent('home'),
+		getSession(),
 	]);
 
-	const featuredProducts = products.slice(0, 4);
+	const favorites = session ? await getFavorites() : [];
+	const favoriteIds = new Set(favorites.map((product) => product.id));
+	const newArrivalProducts = products.slice(0, 4);
 	const heroImage = getVadminImageUrl(content.home_hero_banner || "/storage/web/hero_1.jpg");
 
 	return (
@@ -108,7 +113,7 @@ export default async function HomePage() {
 						precio para tu negocio.
 					</p>
 					<Link
-						href="/catalog"
+						href="/catalogo"
 						className="inline-block border px-10 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition-all duration-200 hover:opacity-70 rounded-[var(--pb-radius)]"
 						style={{
 							borderColor: "var(--pb-accent)",
@@ -127,7 +132,7 @@ export default async function HomePage() {
 						{listedCategories.map((category) => (
 							<Link
 								key={category.handle}
-								href={`/catalog?category=${category.handle}`}
+								href={`/catalogo?categoria=${category.handle}`}
 								className="group relative h-[80vw] grow basis-full overflow-hidden md:h-[60vh] md:basis-1/3"
 							>
 								{category.image ? (
@@ -160,43 +165,19 @@ export default async function HomePage() {
 				</section>
 			)}
 
-			{/* ── Featured Products ─────────────────────────────────────────── */}
-			{featuredProducts.length > 0 && (
-				<section
-					className="py-16"
-					style={{ backgroundColor: "var(--pb-bg)" }}
-				>
-					<div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
-						<div className="mb-10 flex items-end justify-between">
-							<h2
-								className="text-2xl font-medium"
-								style={{
-									fontFamily: "var(--font-serif)",
-									color: "var(--pb-text)",
-								}}
-							>
-								Nuevos ingresos
-							</h2>
-							<Link
-								href="/catalog"
-								className="text-xs font-medium uppercase tracking-widest underline underline-offset-4 transition-opacity hover:opacity-60"
-								style={{ color: "var(--pb-text-secondary)" }}
-							>
-								Ver todo →
-							</Link>
-						</div>
-						<div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-							{featuredProducts.map((product, i) => (
-								<ProductCard
-									key={product.id}
-									product={product}
-									priority={i < 2}
-								/>
-							))}
-						</div>
-					</div>
-				</section>
-			)}
+			<HomeProductSection
+				products={featuredProducts}
+				favoriteIds={favoriteIds}
+				isAuthenticated={Boolean(session)}
+			/>
+
+			<HomeProductSection
+				products={newArrivalProducts}
+				favoriteIds={favoriteIds}
+				isAuthenticated={Boolean(session)}
+				title="Nuevos ingresos"
+				viewAllHref="/catalogo"
+			/>
 
 		</>
 	);

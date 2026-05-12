@@ -31,7 +31,7 @@ export async function Navbar() {
         {/* Left: empty for balance or keep Catalog if desired? User said "saquemos las categorias" */}
         <div className="flex items-center gap-8">
           <Link
-            href="/catalog"
+            href="/catalogo"
             className="text-xs font-medium uppercase tracking-widest transition-colors hover:opacity-60"
             style={{ color: "var(--pb-text)" }}
           >
@@ -48,6 +48,7 @@ export async function Navbar() {
               width={180}
               height={24}
               className="h-6 w-auto no-radius"
+              style={{ width: "auto" }}
               priority
             />
           </Link>
@@ -72,6 +73,7 @@ export async function Navbar() {
             width={140}
             height={20}
             className="h-5 w-auto no-radius"
+            style={{ width: "auto" }}
           />
         </Link>
         <CartTrigger />

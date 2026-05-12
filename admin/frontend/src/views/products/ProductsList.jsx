@@ -51,6 +51,7 @@ import { CrudPagination } from '@/components/crud-pagination';
 import { BulkActionsBar } from '@/components/bulk-actions-bar';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { PageHeader } from '@/components/page-header';
+import { CrudInlineOrderEditor } from '@/components/crud-inline-order-editor';
 
 export default function ProductsList() {
 	const navigate = useNavigate();
@@ -117,10 +118,6 @@ export default function ProductsList() {
 	const handleStatusChange = (product, newStatus) => {
 		quickUpdate(product.id, 'status', newStatus);
 	};
-
-	const handleOrderChange = useCallback((id, newOrder) => {
-		quickUpdate(id, 'order', parseInt(newOrder) || 0);
-	}, [quickUpdate]);
 
 	const hasVariantChanges = useMemo(() => {
 		return Object.keys(variantChanges).length > 0;
@@ -225,6 +222,11 @@ export default function ProductsList() {
 		});
 
 		if (success) clearSelection();
+	};
+
+	const saveProductOrder = async (productId, order) => {
+		await axiosClient.patch(`/products/${productId}/quick-update`, { order });
+		fetchItems();
 	};
 
 	return (
@@ -414,11 +416,9 @@ export default function ProductsList() {
 														<Star className="h-4 w-4 text-muted-foreground/30 shrink-0 cursor-pointer hover:scale-110 transition-transform" />
 													)}
 												</button>
-												<Input
-													type="number"
-													className="h-7 w-16 text-sm"
-													value={product.order ?? 0}
-													onChange={(e) => handleOrderChange(product.id, e.target.value)}
+												<CrudInlineOrderEditor
+													value={product.order}
+													onSave={(order) => saveProductOrder(product.id, order)}
 												/>
 											</div>
 										</TableCell>

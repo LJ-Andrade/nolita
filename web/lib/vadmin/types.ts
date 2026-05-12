@@ -33,6 +33,9 @@ export type ProductVariant = {
     value: string;
   }[];
   price: Money;
+  compareAtPrice?: Money | null;
+  discount?: number;
+  hasDiscount?: boolean;
 };
 
 export type Product = {
@@ -47,10 +50,20 @@ export type Product = {
     maxVariantPrice: Money;
     minVariantPrice: Money;
   };
+  compareAtPriceRange?: {
+    maxVariantPrice: Money;
+    minVariantPrice: Money;
+  } | null;
+  discount?: number;
+  hasDiscount?: boolean;
   variants: ProductVariant[];
   featuredImage: Image;
   images: Image[];
   seo: SEO;
+  category?: {
+    handle: string;
+    title: string;
+  } | null;
   tags: string[];
   updatedAt: string;
   colorImages?: { color: string; url: string }[];
@@ -72,7 +85,10 @@ export type CartItem = {
   quantity: number;
   cost: {
     totalAmount: Money;
+    compareAtTotalAmount?: Money | null;
   };
+  discount?: number;
+  hasDiscount?: boolean;
   merchandise: {
     id: string;
     title: string;
