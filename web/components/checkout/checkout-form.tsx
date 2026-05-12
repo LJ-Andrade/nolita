@@ -123,7 +123,10 @@ export default function CheckoutForm({
               <span>
                 <span className="block text-sm font-bold">{method.name}</span>
                 {method.description && (
-                  <span className="block text-xs text-stone-brown">{method.description}</span>
+                  <span
+                    className="block text-xs text-stone-brown"
+                    dangerouslySetInnerHTML={{ __html: method.description }}
+                  />
                 )}
                 {parseFloat(method.fee || "0") > 0 && (
                   <span className="block text-xs font-semibold text-stone-brown">

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Save, X } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useCrudForm } from '@/hooks/use-crud-form';
 import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
@@ -149,11 +150,7 @@ export default function PaymentMethodForm() {
                     <FormItem>
                       <FormLabel>Descripción</FormLabel>
                       <FormControl>
-                        <textarea
-                          {...field}
-                          placeholder="Descripción del método de pago"
-                          className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        />
+                        <RichTextEditor value={field.value || ''} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
