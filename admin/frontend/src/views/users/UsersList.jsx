@@ -41,11 +41,20 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Can from "@/components/can";
+import Can, { isSuperAdmin } from "@/components/can";
 import { useBulkSelect } from "@/hooks/use-bulk-select";
 import { BulkActionsBar } from "@/components/bulk-actions-bar";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { PageHeader } from "@/components/page-header";
+
+const ROLE_LABELS = {
+	"Super Admin": "Super Administrador",
+	Admin: "Administrador",
+	Employee: "Empleado",
+};
+
+const getRoleLabel = (role) => role.display_name || ROLE_LABELS[role.name] || role.name;
+const userHasRole = (user, roleName) => user.roles?.some((role) => role.name === roleName);
 
 export default function UsersList() {
 	const [users, setUsers] = useState([]);
@@ -67,6 +76,11 @@ export default function UsersList() {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [userToDelete, setUserToDelete] = useState(null);
+	const currentUserIsSuperAdmin = isSuperAdmin();
+	const canModifyUser = (user) => currentUserIsSuperAdmin || !userHasRole(user, "Super Admin");
+	const selectableUsers = currentUserIsSuperAdmin
+		? users
+		: users.filter((user) => canModifyUser(user));
 
 	const {
 		selectedIds,
@@ -76,7 +90,7 @@ export default function UsersList() {
 		toggleSelectAll,
 		clearSelection,
 		isSelected,
-	} = useBulkSelect(users);
+	} = useBulkSelect(selectableUsers);
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
@@ -178,7 +192,7 @@ export default function UsersList() {
 
 	const handleBulkDelete = () => {
 		setIsDeleting(true);
-		axiosClient.post("users/bulk-delete")
+		axiosClient.post("users/bulk-delete", { ids: selectedIds })
 			.then(() => {
 				toast.success("Elementos eliminados exitosamente");
 				clearSelection();
@@ -225,7 +239,7 @@ export default function UsersList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="create users">
+					<Can permission="users.create">
 						<Button onClick={() => navigate("/usuarios/crear")}>
 							<Plus className="mr-2 h-4 w-4" /> Nuevo Usuario
 						</Button>
@@ -306,6 +320,7 @@ export default function UsersList() {
 									<Checkbox
 										checked={isAllSelected}
 										onCheckedChange={toggleSelectAll}
+										disabled={selectableUsers.length === 0}
 									/>
 								</TableHead>
 								<TableHead
@@ -363,8 +378,9 @@ export default function UsersList() {
 								<TableRow key={user.id}>
 									<TableCell>
 										<Checkbox
-											checked={isSelected(user.id)}
-											onCheckedChange={() => toggleSelect(user.id)}
+											checked={canModifyUser(user) && isSelected(user.id)}
+											onCheckedChange={() => canModifyUser(user) && toggleSelect(user.id)}
+											disabled={!canModifyUser(user)}
 										/>
 									</TableCell>
 									<TableCell className="w-[60px]">{user.id}</TableCell>
@@ -374,7 +390,7 @@ export default function UsersList() {
 										<div className="flex flex-wrap gap-1">
 											{user.roles?.map((role) => (
 												<Badge key={role.id} variant="secondary">
-													{role.name}
+													{getRoleLabel(role)}
 												</Badge>
 											))}
 										</div>
@@ -389,29 +405,37 @@ export default function UsersList() {
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
-													<Can permission="edit users">
-														<DropdownMenuItem onClick={() => navigate(`/usuarios/editar/${user.id}`)}>
-															<Edit className="mr-2 h-4 w-4" /> Editar
-														</DropdownMenuItem>
-													</Can>
-													<Can permission="delete users">
-														<DropdownMenuItem onClick={() => onDeleteClick(user)} className="text-red-500">
-															<Trash2 className="mr-2 h-4 w-4" /> Eliminar
-														</DropdownMenuItem>
-													</Can>
+													{canModifyUser(user) && (
+														<Can permission="users.edit">
+															<DropdownMenuItem onClick={() => navigate(`/usuarios/editar/${user.id}`)}>
+																<Edit className="mr-2 h-4 w-4" /> Editar
+															</DropdownMenuItem>
+														</Can>
+													)}
+													{canModifyUser(user) && (
+														<Can permission="users.delete">
+															<DropdownMenuItem onClick={() => onDeleteClick(user)} className="text-red-500">
+																<Trash2 className="mr-2 h-4 w-4" /> Eliminar
+															</DropdownMenuItem>
+														</Can>
+													)}
 												</DropdownMenuContent>
 											</DropdownMenu>
 											<div className="hidden lg:flex items-center gap-1">
-												<Can permission="edit users">
-													<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/usuarios/editar/${user.id}`)}>
-														<Edit className="h-4 w-4" />
-													</Button>
-												</Can>
-												<Can permission="delete users">
-													<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDeleteClick(user)}>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</Can>
+												{canModifyUser(user) && (
+													<Can permission="users.edit">
+														<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/usuarios/editar/${user.id}`)}>
+															<Edit className="h-4 w-4" />
+														</Button>
+													</Can>
+												)}
+												{canModifyUser(user) && (
+													<Can permission="users.delete">
+														<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDeleteClick(user)}>
+															<Trash2 className="h-4 w-4" />
+														</Button>
+													</Can>
+												)}
 											</div>
 										</div>
 									</TableCell>

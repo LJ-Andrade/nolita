@@ -5,7 +5,7 @@ import axiosClient from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Star, Edit, Package, Image as ImageIcon, Palette, Layers } from "lucide-react";
+import { Star, Edit, Package, Image as ImageIcon, Palette, Layers } from "lucide-react";
 import {
 	Table,
 	TableBody,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { ImageLightbox, useImageLightbox } from "@/components/ui/image-lightbox";
+import { PageHeader } from "@/components/page-header";
 
 export default function ProductsShow() {
 	const { id } = useParams();
@@ -99,30 +100,25 @@ export default function ProductsShow() {
 				/>
 			)}
 
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-4">
-					<Button variant="outline" size="icon" asChild>
-						<Link to="/productos">
-							<ArrowLeft className="h-4 w-4" />
-						</Link>
-					</Button>
-					<div className="flex items-center gap-3">
-						<h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-						<Badge variant={product.status === "published" ? "default" : "secondary"} className="text-sm">
-							{product.status === "published" ? "Publicado" : "Borrador"}
-						</Badge>
+			<PageHeader
+				breadcrumbs={[
+					{ label: "Productos", href: "/productos" },
+					{ label: product.name },
+				]}
+				actions={(
+					<>
 						{product.featured && (
 							<Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
 						)}
-					</div>
-				</div>
-				<Button asChild>
-					<Link to={`/productos/editar/${product.id}`}>
-						<Edit className="h-4 w-4 mr-2" />
-						{"Editar"}
-					</Link>
-				</Button>
-			</div>
+						<Button asChild>
+							<Link to={`/productos/editar/${product.id}`}>
+								<Edit className="h-4 w-4 mr-2" />
+								{"Editar"}
+							</Link>
+						</Button>
+					</>
+				)}
+			/>
 
 			<div className="grid gap-6 lg:grid-cols-3">
 				<div className="lg:col-span-2 space-y-6">
@@ -150,6 +146,12 @@ export default function ProductsShow() {
 								<div>
 									<p className="text-sm text-muted-foreground">Orden</p>
 									<p className="font-semibold">{product.order ?? 0}</p>
+								</div>
+								<div>
+									<p className="text-sm text-muted-foreground">Estado</p>
+									<Badge variant={product.status === "published" ? "default" : "secondary"} className="mt-1 text-sm">
+										{product.status === "published" ? "Publicado" : "Borrador"}
+									</Badge>
 								</div>
 							</div>
 

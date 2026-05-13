@@ -39,6 +39,13 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useBulkSelect } from '@/hooks/use-bulk-select';
 import { PageHeader } from "@/components/page-header";
 
+const orderStatuses = [
+	{ value: 'pending', label: 'Pendiente' },
+	{ value: 'processing', label: 'Procesando' },
+	{ value: 'completed', label: 'Completada' },
+	{ value: 'cancelled', label: 'Cancelada' },
+];
+
 export default function OrdersList() {
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -48,6 +55,7 @@ export default function OrdersList() {
 	const [page, setPage] = useState(1);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [exportingFormat, setExportingFormat] = useState(null);
+	const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
 	const {
 		selectedIds,
@@ -158,6 +166,28 @@ export default function OrdersList() {
 		}
 	};
 
+	const handleStatusChange = async (order, newStatus) => {
+		if (order.status === newStatus || updatingStatusId === order.id) return;
+
+		const previousOrders = orders;
+		setUpdatingStatusId(order.id);
+		setOrders((currentOrders) => currentOrders.map((currentOrder) => (
+			currentOrder.id === order.id
+				? { ...currentOrder, status: newStatus }
+				: currentOrder
+		)));
+
+		try {
+			await axiosClient.put(`admin/orders/${order.id}`, { status: newStatus });
+			toast.success('Estado actualizado correctamente');
+		} catch (error) {
+			setOrders(previousOrders);
+			toast.error('Error al actualizar el estado');
+		} finally {
+			setUpdatingStatusId(null);
+		}
+	};
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [orderToDelete, setOrderToDelete] = useState(null);
 
@@ -189,6 +219,35 @@ export default function OrdersList() {
 			default:
 				return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Pendiente</Badge>;
 		}
+	};
+
+	const renderStatusDropdown = (order) => {
+		const isUpdating = updatingStatusId === order.id;
+
+		return (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						className="h-8 w-full justify-start px-2 cursor-pointer"
+						disabled={isUpdating}
+					>
+						{getStatusBadge(order.status)}
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start">
+					{orderStatuses.map((status) => (
+						<DropdownMenuItem
+							key={status.value}
+							disabled={isUpdating || order.status === status.value}
+							onClick={() => handleStatusChange(order, status.value)}
+						>
+							{status.label}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		);
 	};
 
 	return (
@@ -286,7 +345,7 @@ export default function OrdersList() {
 										{new Date(order.created_at).toLocaleDateString()}
 									</TableCell>
 									<TableCell>
-										{getStatusBadge(order.status)}
+										{renderStatusDropdown(order)}
 									</TableCell>
 									<TableCell className="text-right font-medium">
 										${parseFloat(order.total_amount).toFixed(2)} {order.currency}

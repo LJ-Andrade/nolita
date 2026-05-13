@@ -33,6 +33,12 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Home product sections must reuse a shared product grid section component for consistent spacing, layout, favorites, and authenticated pricing behavior.
 - The featured products section appears above "Nuevos ingresos", has no title or "Ver todo" link, and displays every product marked as featured in VADMIN using the catalog API order.
 - "Nuevos ingresos" displays the first four published products returned by VADMIN using the catalog API order.
+- The home hero uses site content keys for responsive imagery:
+  - `home_hero_banner`: required desktop/background image.
+  - `home_hero_banner_mobile`: optional mobile image.
+- When `home_hero_banner_mobile` is present, the storefront must render it on small viewports and switch to `home_hero_banner` on medium and larger viewports.
+- When `home_hero_banner_mobile` is missing, the storefront must fall back to the desktop hero image on all viewport sizes.
+- The admin content editor must show desktop and mobile hero uploads in the same row on large screens, with the mobile upload in a narrower column, and stack them on smaller admin viewports.
 
 ### Storefront Product Detail
 - Product detail pages must display a "Productos relacionados" section above the footer when same-category products exist.
@@ -57,8 +63,28 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
   - `/buscar` for search.
 - Legacy English routes must remain available through redirects for compatibility.
 
+### Storefront Catalog Filters
+- Desktop catalog filters must remain visible as a left sidebar on large viewports.
+- Mobile catalog filters must be accessible from a visible "Filtros" control near the catalog sort/count bar.
+- The mobile filter control must open an overlay drawer that reuses the same category and size filter behavior as desktop.
+- Category and size filters must continue to update URL search params so filtered catalog URLs remain shareable.
+- Active filters and "Limpiar todo" behavior must stay consistent across desktop and mobile.
+
 ### Admin Product Ordering
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
+
+### Admin Order Management
+- The admin orders list must allow changing an order status directly from the status column, using the same inline dropdown interaction pattern as product status changes.
+- Inline order status changes must use the existing VADMIN admin order update endpoint and support only `pending`, `processing`, `completed`, and `cancelled`.
+- After a successful inline status change, the list should show the updated status without requiring the admin to open the order detail page.
+
+### Admin User Role Management
+- `Super Admin` users can view and manage all admin modules, users, roles, and permissions.
+- `Admin` users can view the users section when they have `users.view`.
+- `Admin` users must not access the roles or permissions sections.
+- `Admin` users must not modify, delete, bulk-delete, or update avatars for users with the `Super Admin` role.
+- The user create/edit form must expose only assignable roles for the acting user. For `Admin`, `Super Admin` must not be returned as an assignable role.
+- The admin UI must display role labels in Spanish in the users list and user create/edit form.
 
 > [!IMPORTANT]
 > **OFFICIAL BACKEND: VADMIN**
@@ -361,3 +387,66 @@ Supported filters must match the admin orders list where applicable:
 - The order detail page displays separate buttons for XLSX and PDF exports.
 - Export requests include the current search filter.
 - Downloads use authenticated Axios requests with `blob` response type.
+
+---
+
+## 14. Admin Statistics Section
+
+### 14.1 Overview
+VADMIN must include an administrative statistics section for future business metrics.
+
+### 14.2 Frontend Rules
+- The admin sidebar must expose a top-level "Estadísticas" menu item.
+- The statistics route is `/estadisticas`.
+- The statistics section is available to users with the `Super Admin` or `Admin` role.
+- Users with the `Employee` role must not see or access the statistics section.
+- The statistics view must use the shared `PageHeader` breadcrumb pattern.
+- Statistics categories must be switchable through tabs.
+- Initial tabs:
+  - `Favoritos`: favorites analytics summary and product ranking.
+  - `Ventas`: sales analytics summary and product ranking.
+- Both statistics tabs must be visible to authorized statistics users.
+- Ranking tables must support CSV export from the currently visible dataset.
+- Empty states should guide the admin toward the next useful action.
+
+### 14.3 Favorites Analytics Contract
+- Admin favorites analytics are exposed through `GET /api/admin/statistics/favorites`.
+- The endpoint requires authenticated admin access with the `Super Admin` or `Admin` role.
+- The endpoint accepts an optional `category_id` query parameter.
+- The response must include:
+  - `summary.total_favorites`: total customer favorite records.
+  - `summary.unique_products`: number of distinct products favorited at least once.
+  - `summary.customers_with_favorites`: number of customers with at least one favorite.
+  - `products`: products ordered by favorite count descending.
+  - `opportunities`: high-favorite products with low stock.
+  - `categories`: category filter options.
+- Each product row must include product ID, name, slug, category name, status, total stock, and favorite count.
+- The admin UI must show KPI cards and a table ordered by most favorited products.
+- The admin UI must show opportunity cards for products with many favorites and low stock.
+- Demo seed data may create additional customers and customer favorite assignments for local analytics testing.
+
+### 14.4 Sales Analytics Contract
+- Admin sales analytics are exposed through `GET /api/admin/statistics/sales`.
+- The endpoint requires authenticated admin access with the `Super Admin` or `Admin` role.
+- Sales totals must use `completed` orders only.
+- The endpoint accepts a `period` query parameter with allowed values `7d`, `30d`, `90d`, and `all`; default is `30d`.
+- The endpoint accepts an optional `category_id` query parameter.
+- Period filtering applies to completed order `created_at` timestamps.
+- Sales responses may be cached for a short period by resolved period and category.
+- The response must include:
+  - `period`: the resolved period key.
+  - `summary.total_revenue`: sum of completed order totals.
+  - `summary.orders_count`: count of completed orders.
+  - `summary.average_order_value`: completed revenue divided by completed order count.
+  - `summary.units_sold`: sum of item quantities in completed orders.
+  - `comparison`: percentage changes against the previous equivalent period when the period is not `all`.
+  - `products`: products ordered by sold units descending.
+  - `opportunities`: high-selling products with low stock.
+  - `categories`: category filter options.
+- Each product row must include product ID, name, category name, units sold, revenue, total stock, and current status.
+- The admin UI must show KPI cards and a table ordered by most sold products.
+- The admin UI must expose period controls and default to the last 30 days.
+- The admin UI must expose a category filter.
+- The admin UI must show opportunity cards for best-selling products with low stock.
+- The database must index sales statistics access paths, including order status/date and order item order/product lookups.
+- Demo seed data may create completed, processing, pending, and cancelled orders for local analytics testing, but only completed orders should affect sales totals.

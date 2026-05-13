@@ -26,7 +26,12 @@ class RoleSeeder extends Seeder
         $permissions = Permission::all();
 
         Role::where('name', 'Super Admin')->first()?->syncPermissions($permissions);
-        Role::where('name', 'Admin')->first()?->syncPermissions($permissions);
+
+        $adminPermissions = $permissions->reject(function (Permission $permission) {
+            return in_array($permission->name, ['roles.view', 'roles.manage'], true);
+        });
+
+        Role::where('name', 'Admin')->first()?->syncPermissions($adminPermissions);
 
         $employeePermissions = Permission::whereIn('name', [
             'view products',

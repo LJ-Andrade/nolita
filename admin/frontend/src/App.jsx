@@ -57,14 +57,15 @@ import ProvinceForm from './views/provinces/ProvinceForm';
 import OrdersList from './views/orders/OrdersList';
 import OrderDetails from './views/orders/OrderDetails';
 import ContactMessagesList from './views/contact-messages/ContactMessagesList';
+import Statistics from './views/statistics/Statistics';
 import NotFound from './views/NotFound';
 import DashboardLayout from './components/dashboard-layout';
-import { hasPermission, isSuperAdmin } from './components/can';
+import { hasAnyRole, hasPermission, isSuperAdmin } from './components/can';
 import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword';
 
 
-const ProtectedRoute = ({ children, permission, superAdminOnly }) => {
+const ProtectedRoute = ({ children, permission, roles, superAdminOnly }) => {
 	const token = localStorage.getItem('ACCESS_TOKEN');
 	const expiresAt = localStorage.getItem('TOKEN_EXPIRES_AT');
 	
@@ -85,6 +86,7 @@ const ProtectedRoute = ({ children, permission, superAdminOnly }) => {
 	}
 	
 	if (superAdminOnly && !isSuperAdmin()) return <Navigate to="/" />;
+	if (roles && !hasAnyRole(roles)) return <Navigate to="/" />;
 	if (permission && !hasPermission(permission)) return <Navigate to="/" />;
 	return (
 		<DashboardLayout>
@@ -118,19 +120,19 @@ function App() {
 				} />
 
 				<Route path="/usuarios" element={
-					<ProtectedRoute permission="view users">
+					<ProtectedRoute permission="users.view">
 						<UsersList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/usuarios/crear" element={
-					<ProtectedRoute permission="create users">
+					<ProtectedRoute permission="users.create">
 						<UserForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/usuarios/editar/:id" element={
-					<ProtectedRoute permission="edit users">
+					<ProtectedRoute permission="users.edit">
 						<UserForm />
 					</ProtectedRoute>
 				} />
@@ -251,37 +253,37 @@ function App() {
 
 				<Route path="/roles" element={
 
-					<ProtectedRoute permission="view roles">
+					<ProtectedRoute superAdminOnly={true}>
 						<RolesList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/roles/crear" element={
-					<ProtectedRoute permission="create roles">
+					<ProtectedRoute superAdminOnly={true}>
 						<RoleForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/roles/editar/:id" element={
-					<ProtectedRoute permission="edit roles">
+					<ProtectedRoute superAdminOnly={true}>
 						<RoleForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/permisos" element={
-					<ProtectedRoute permission="roles.manage">
+					<ProtectedRoute superAdminOnly={true}>
 						<PermissionsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/permisos/crear" element={
-					<ProtectedRoute permission="roles.manage">
+					<ProtectedRoute superAdminOnly={true}>
 						<PermissionForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/permisos/editar/:id" element={
-					<ProtectedRoute permission="roles.manage">
+					<ProtectedRoute superAdminOnly={true}>
 						<PermissionForm />
 					</ProtectedRoute>
 				} />
@@ -379,6 +381,12 @@ function App() {
 				<Route path="/mensajes-contacto" element={
 					<ProtectedRoute permission="users.view">
 						<ContactMessagesList />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/estadisticas" element={
+					<ProtectedRoute roles={["Super Admin", "Admin"]}>
+						<Statistics />
 					</ProtectedRoute>
 				} />
 

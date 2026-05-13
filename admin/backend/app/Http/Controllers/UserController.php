@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
+use App\Http\Resources\RoleResource;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -12,6 +14,18 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function assignableRoles(Request $request): AnonymousResourceCollection
+    {
+        $roles = Role::query()
+            ->when(! $this->actingUserIsSuperAdmin($request), function ($query) {
+                $query->where('name', '!=', 'Super Admin');
+            })
+            ->orderBy('name')
+            ->get();
+
+        return RoleResource::collection($roles);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -78,6 +92,8 @@ class UserController extends Controller
             'avatar' => 'nullable|image|max:2048',
         ]);
 
+        $this->ensureCanAssignRoles($request, $validated['role_ids'] ?? []);
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -115,6 +131,8 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): UserResource
     {
+        $this->ensureCanModifyTarget($request, $user);
+
         $validated = $request->validate([
             'name' => 'string|max:255',
             'email' => [
@@ -128,14 +146,18 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
+        $roleIds = $validated['role_ids'] ?? null;
+        unset($validated['role_ids']);
+
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         }
 
         $user->update($validated);
 
-        if ($request->has('role_ids')) {
-            $user->roles()->sync($request->role_ids);
+        if ($roleIds !== null) {
+            $this->ensureCanAssignRoles($request, $roleIds);
+            $user->roles()->sync($roleIds);
         }
 
         return new UserResource($user->load(['roles.permissions', 'media']));
@@ -144,11 +166,14 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
+     * @param  Request  $request
      * @param  User  $user
      * @return Response
      */
-    public function destroy(User $user): Response
+    public function destroy(Request $request, User $user): Response
     {
+        $this->ensureCanModifyTarget($request, $user);
+
         $user->delete();
 
         return response()->noContent();
@@ -163,6 +188,8 @@ class UserController extends Controller
      */
     public function uploadAvatar(Request $request, User $user): UserResource
     {
+        $this->ensureCanModifyTarget($request, $user);
+
         $request->validate([
             'avatar' => 'required|image',
         ]);
@@ -186,8 +213,39 @@ class UserController extends Controller
         ]);
 
         $ids = $request->input('ids');
+
+        if (! $this->actingUserIsSuperAdmin($request)) {
+            abort_if(User::role('Super Admin')->whereIn('id', $ids)->exists(), 403);
+        }
+
         User::whereIn('id', $ids)->delete();
 
         return response()->noContent();
+    }
+
+    private function actingUserIsSuperAdmin(Request $request): bool
+    {
+        return (bool) $request->user()?->hasRole('Super Admin');
+    }
+
+    private function ensureCanModifyTarget(Request $request, User $user): void
+    {
+        if ($this->actingUserIsSuperAdmin($request)) {
+            return;
+        }
+
+        abort_if($user->hasRole('Super Admin'), 403);
+    }
+
+    private function ensureCanAssignRoles(Request $request, array $roleIds): void
+    {
+        if ($this->actingUserIsSuperAdmin($request) || empty($roleIds)) {
+            return;
+        }
+
+        abort_if(
+            Role::query()->whereIn('id', $roleIds)->where('name', 'Super Admin')->exists(),
+            403
+        );
     }
 }

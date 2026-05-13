@@ -117,8 +117,9 @@ export function ImageUpload({
       <div 
         className={cn(
           "relative group border-2 border-dashed border-muted rounded-lg overflow-hidden bg-muted/50 transition-all hover:bg-muted",
-          aspect === 1 ? "w-full max-w-[280px] aspect-square" : "w-full aspect-video"
+          aspect === 1 ? "w-full max-w-[280px]" : "w-full"
         )}
+        style={{ aspectRatio: aspect }}
       >
         {value ? (
           <>

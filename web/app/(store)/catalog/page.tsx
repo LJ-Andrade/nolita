@@ -1,5 +1,6 @@
 import { ActiveFilters } from "components/catalog/active-filters";
 import { FilterSidebar } from "components/catalog/filter-sidebar";
+import { MobileFilterDrawer } from "components/catalog/mobile-filter-drawer";
 import { ProductGrid } from "components/catalog/product-grid";
 import { SortBar } from "components/catalog/sort-bar";
 import { getCollections, getProducts } from "lib/vadmin";
@@ -136,7 +137,10 @@ export default async function CatalogPage(props: {
 
         <div className="min-w-0 flex-1">
           <Suspense fallback={null}>
-            <SortBar total={sorted.length} />
+            <SortBar
+              total={sorted.length}
+              filtersAction={<MobileFilterDrawer categories={sidebarCategories} sizes={allSizes} />}
+            />
             <ActiveFilters />
           </Suspense>
           <div className="mt-6">

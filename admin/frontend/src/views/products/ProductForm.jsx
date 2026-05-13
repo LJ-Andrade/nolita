@@ -491,8 +491,8 @@ export default function ProductForm() {
 		}
 
 		const request = id
-			? axiosClient.post(`products/${id}`, formData)
-			: axiosClient.post("products", formData);
+			? axiosClient.post(`productos/${id}`, formData)
+			: axiosClient.post("productos", formData);
 
 		request
 			.then(() => {
@@ -526,7 +526,7 @@ export default function ProductForm() {
 				<PageHeader
 					title={`Editando producto "${productName}"`}
 					breadcrumbs={[
-						{ label: "Productos", href: "/products" },
+						{ label: "Productos", href: "/productos" },
 						{ label: "Editar" },
 					]}
 				/>
@@ -534,7 +534,7 @@ export default function ProductForm() {
 				<PageHeader
 					title={"Crear Nuevo Producto"}
 					breadcrumbs={[
-						{ label: "Productos", href: "/products" },
+						{ label: "Productos", href: "/productos" },
 						{ label: "Crear" },
 					]}
 				/>
@@ -646,7 +646,7 @@ export default function ProductForm() {
 									name="category_id"
 									render={({ field }) => (
 										<FormItem>
-									<FormLabel>{"Categoría"}</FormLabel>
+											<FormLabel>{"Categoría"}</FormLabel>
 											<FormControl>
 												<select
 													className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"

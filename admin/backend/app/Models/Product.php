@@ -80,6 +80,12 @@ class Product extends Model implements HasMedia
         return $this->belongsToMany(ProductColor::class, 'product_product_color', 'product_id', 'product_color_id');
     }
 
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(Customer::class, 'customer_favorites')
+            ->withTimestamps();
+    }
+
     public function variants(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ProductVariant::class);

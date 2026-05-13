@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
-import { Save, Loader2, Layout, Type, Image as ImageIcon } from "lucide-react";
+import { Save, Loader2, Type, Image as ImageIcon } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
-import { Separator } from "@/components/ui/separator";
+
+const HERO_DESKTOP_KEY = 'home_hero_banner';
+const HERO_MOBILE_KEY = 'home_hero_banner_mobile';
 
 const getFullUrl = (path) => {
     if (!path) return "";
@@ -24,6 +26,24 @@ export default function ContentSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [heroImage, setHeroImage] = useState(null);
+    const [heroMobileImage, setHeroMobileImage] = useState(null);
+
+    const getOriginalImageUrl = (key) => {
+        const value = originalSettings[key]?.value;
+        return value ? getFullUrl(value) : null;
+    };
+
+    const hasImageChanged = (value, key) => {
+        if (value instanceof File) return true;
+        return (value || null) !== getOriginalImageUrl(key);
+    };
+
+    const getPersistedImageValue = (value, key) => {
+        const originalValue = originalSettings[key]?.value || '';
+        if (!value) return '';
+        if (value === getOriginalImageUrl(key)) return originalValue;
+        return value;
+    };
 
     useEffect(() => {
         const fetchContent = async () => {
@@ -38,8 +58,11 @@ export default function ContentSettings() {
                 setSettings(contentMap);
                 setOriginalSettings(contentMap);
                 
-                if (contentMap['home_hero_banner']?.value) {
-                    setHeroImage(getFullUrl(contentMap['home_hero_banner'].value));
+                if (contentMap[HERO_DESKTOP_KEY]?.value) {
+                    setHeroImage(getFullUrl(contentMap[HERO_DESKTOP_KEY].value));
+                }
+                if (contentMap[HERO_MOBILE_KEY]?.value) {
+                    setHeroMobileImage(getFullUrl(contentMap[HERO_MOBILE_KEY].value));
                 }
             } catch (error) {
                 toast.error("Error al cargar el contenido");
@@ -53,7 +76,8 @@ export default function ContentSettings() {
 
     const hasChanges = () => {
         if (settings['home_top_text']?.value !== originalSettings['home_top_text']?.value) return true;
-        if (heroImage !== originalSettings['home_hero_banner']?.value) return true;
+        if (hasImageChanged(heroImage, HERO_DESKTOP_KEY)) return true;
+        if (hasImageChanged(heroMobileImage, HERO_MOBILE_KEY)) return true;
         return false;
     };
 
@@ -61,15 +85,29 @@ export default function ContentSettings() {
         setSaving(true);
         try {
             let heroImageUrl = heroImage;
+            let heroMobileImageUrl = heroMobileImage;
 
-            // 1. Upload image if it's a new file
+            // 1. Upload images when they are new files.
             if (heroImage instanceof File) {
                 const formData = new FormData();
                 formData.append('image', heroImage);
-                formData.append('key', 'home_hero_banner');
+                formData.append('key', HERO_DESKTOP_KEY);
                 
                 const { data: uploadData } = await axiosClient.post('/site-content/upload', formData);
                 heroImageUrl = uploadData.url;
+            } else {
+                heroImageUrl = getPersistedImageValue(heroImage, HERO_DESKTOP_KEY);
+            }
+
+            if (heroMobileImage instanceof File) {
+                const formData = new FormData();
+                formData.append('image', heroMobileImage);
+                formData.append('key', HERO_MOBILE_KEY);
+
+                const { data: uploadData } = await axiosClient.post('/site-content/upload', formData);
+                heroMobileImageUrl = uploadData.url;
+            } else {
+                heroMobileImageUrl = getPersistedImageValue(heroMobileImage, HERO_MOBILE_KEY);
             }
 
             // 2. Bulk update content
@@ -81,8 +119,14 @@ export default function ContentSettings() {
                     type: 'text'
                 },
                 {
-                    key: 'home_hero_banner',
+                    key: HERO_DESKTOP_KEY,
                     value: heroImageUrl,
+                    section: 'home',
+                    type: 'image'
+                },
+                {
+                    key: HERO_MOBILE_KEY,
+                    value: heroMobileImageUrl,
                     section: 'home',
                     type: 'image'
                 }
@@ -100,9 +144,8 @@ export default function ContentSettings() {
             });
             setSettings(contentMap);
             setOriginalSettings(contentMap);
-            if (contentMap['home_hero_banner']?.value) {
-                setHeroImage(getFullUrl(contentMap['home_hero_banner'].value));
-            }
+            setHeroImage(contentMap[HERO_DESKTOP_KEY]?.value ? getFullUrl(contentMap[HERO_DESKTOP_KEY].value) : null);
+            setHeroMobileImage(contentMap[HERO_MOBILE_KEY]?.value ? getFullUrl(contentMap[HERO_MOBILE_KEY].value) : null);
 
             toast.success("Contenido actualizado correctamente");
         } catch (error) {
@@ -119,6 +162,27 @@ export default function ContentSettings() {
             [key]: { ...prev[key], value }
         }));
     };
+
+    const renderSaveButton = () => (
+        <Button
+            type="submit"
+            form="content-form"
+            disabled={saving || !hasChanges()}
+            className="shadow-md hover:shadow-lg transition-all"
+        >
+            {saving ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {"Guardando..."}
+                </>
+            ) : (
+                <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {"Guardar Cambios"}
+                </>
+            )}
+        </Button>
+    );
 
     if (loading) {
         return (
@@ -137,26 +201,7 @@ export default function ContentSettings() {
                     { label: 'SITIO' },
                     { label: "Contenido" },
                 ]}
-                actions={
-                    <Button
-                        type="submit"
-                        form="content-form"
-                        disabled={saving || !hasChanges()}
-                        className="shadow-md hover:shadow-lg transition-all"
-                    >
-                        {saving ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {"Guardando..."}
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" />
-                                {"Guardar Cambios"}
-                            </>
-                        )}
-                    </Button>
-                }
+                actions={renderSaveButton()}
             />
 
             <form id="content-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
@@ -197,22 +242,49 @@ export default function ContentSettings() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4">
-                            <Label>{"Imagen de fondo"}</Label>
-                            <div className="flex justify-center">
+                        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                            <div className="grid gap-3">
+                                <div className="space-y-1">
+                                    <Label>{"Imagen desktop"}</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        {"Se muestra en tablets horizontales, notebooks y pantallas grandes."}
+                                    </p>
+                                </div>
                                 <ImageUpload 
                                     value={heroImage}
                                     onChange={(file) => setHeroImage(file)}
                                     aspect={21 / 9}
                                     className="w-full"
                                 />
+                                <p className="text-sm text-muted-foreground italic">
+                                    {"Sugerencia: 1920x800px o similar."}
+                                </p>
                             </div>
-                            <p className="text-sm text-muted-foreground text-center italic">
-                                {"Sugerencia: Usar imágenes de 1920x800px o similares para mejor visualización."}
-                            </p>
+
+                            <div className="grid gap-3">
+                                <div className="space-y-1">
+                                    <Label>{"Imagen mobile"}</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        {"Se muestra en celulares. Si falta, se usa la imagen desktop."}
+                                    </p>
+                                </div>
+                                <ImageUpload
+                                    value={heroMobileImage}
+                                    onChange={(file) => setHeroMobileImage(file)}
+                                    aspect={4 / 5}
+                                    className="w-full"
+                                />
+                                <p className="text-sm text-muted-foreground italic">
+                                    {"Sugerencia: 1080x1350px o similar."}
+                                </p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
+
+                <div className="flex justify-end">
+                    {renderSaveButton()}
+                </div>
             </form>
         </div>
     );

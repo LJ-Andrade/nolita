@@ -1,23 +1,19 @@
 "use client";
 
 import { Dialog, Transition } from "@headlessui/react";
+import {
+  ArrowLeftOnRectangleIcon,
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
+  HeartIcon,
+  Squares2X2Icon,
+  UserCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Fragment, Suspense, useEffect, useState } from "react";
 import { LogoutButton } from "./logout-button";
-
-// Manual Icons with forced black color
-const BarsIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#000000" className="h-4 w-4">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#000000" className="h-6 w-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-  </svg>
-);
 
 export default function MobileMenu({ menu, customer }: { menu: any[]; customer: any }) {
   const pathname = usePathname();
@@ -47,7 +43,7 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
         aria-label="Open mobile menu"
         className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 text-black transition-colors md:hidden dark:border-neutral-700"
       >
-        <BarsIcon />
+        <Bars3Icon className="h-5 w-5" />
       </button>
       <Transition show={isOpen}>
         <Dialog onClose={closeMobileMenu} className="relative z-50">
@@ -71,42 +67,96 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
             leaveFrom="translate-x-0"
             leaveTo="translate-x-[-100%]"
           >
-            <Dialog.Panel className="fixed bottom-0 left-0 right-0 top-0 flex h-full w-full flex-col bg-white pb-6 dark:bg-black">
+            <Dialog.Panel className="fixed bottom-0 left-0 right-0 top-0 flex h-full w-full flex-col overflow-y-auto bg-white pb-8 text-black">
               <div className="p-4">
                 <button
-                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 text-black transition-colors dark:border-neutral-700"
+                  className="mb-8 flex h-10 w-10 items-center justify-center rounded-[12px] border border-neutral-200 text-black transition-colors hover:bg-neutral-50"
                   onClick={closeMobileMenu}
                   aria-label="Close mobile menu"
                 >
-                  <XIcon />
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
 
-                <ul className="flex w-full flex-col">
-                  <li className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white">
-                    <Link href="/catalogo" prefetch={true} onClick={closeMobileMenu}>
-                      Catálogo
-                    </Link>
-                  </li>
-                  <li className="py-2 text-xl text-black transition-colors hover:text-neutral-500 dark:text-white border-t mt-4 pt-4">
-                    {customer ? (
-                      <>
-                        <Link href="/perfil" onClick={closeMobileMenu} className="block mb-2 font-medium">
-                          Mi Perfil
-                        </Link>
-                        <LogoutButton
-                          onBeforeLogout={closeMobileMenu}
-                          className="text-left w-full text-red-500 font-medium"
+                <div className="space-y-8">
+                  <nav aria-label="Store navigation">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                      Tienda
+                    </p>
+                    <ul className="flex w-full flex-col divide-y divide-neutral-100 border-y border-neutral-100">
+                      <li>
+                        <Link
+                          href="/catalogo"
+                          prefetch={true}
+                          onClick={closeMobileMenu}
+                          className="flex items-center gap-3 py-4 text-lg font-medium text-black transition-colors hover:text-neutral-500"
                         >
-                          Cerrar Sesión
-                        </LogoutButton>
-                      </>
+                          <Squares2X2Icon className="h-5 w-5 text-neutral-500" />
+                          Catálogo
+                        </Link>
+                      </li>
+                    </ul>
+                  </nav>
+
+                  <nav aria-label="Account navigation">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                      Cuenta
+                    </p>
+
+                    {customer ? (
+                      <div className="space-y-4">
+                        <div className="rounded-[12px] border border-neutral-100 bg-neutral-50 px-4 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                            Sesión iniciada
+                          </p>
+                          <p className="mt-1 truncate text-base font-medium text-black">
+                            {customer.name}
+                          </p>
+                        </div>
+
+                        <ul className="flex w-full flex-col divide-y divide-neutral-100 border-y border-neutral-100">
+                          <li>
+                            <Link
+                              href="/perfil"
+                              onClick={closeMobileMenu}
+                              className="flex items-center gap-3 py-4 text-lg font-medium text-black transition-colors hover:text-neutral-500"
+                            >
+                              <UserCircleIcon className="h-5 w-5 text-neutral-500" />
+                              Mi perfil
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/favoritos"
+                              onClick={closeMobileMenu}
+                              className="flex items-center gap-3 py-4 text-lg font-medium text-black transition-colors hover:text-neutral-500"
+                            >
+                              <HeartIcon className="h-5 w-5 text-neutral-500" />
+                              Favoritos
+                            </Link>
+                          </li>
+                          <li>
+                            <LogoutButton
+                              onBeforeLogout={closeMobileMenu}
+                              className="flex w-full items-center gap-3 py-4 text-left text-lg font-medium text-red-600 transition-colors hover:text-red-700"
+                            >
+                              <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                              Cerrar sesión
+                            </LogoutButton>
+                          </li>
+                        </ul>
+                      </div>
                     ) : (
-                      <Link href="/ingreso" onClick={closeMobileMenu} className="font-medium">
+                      <Link
+                        href="/ingreso"
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-3 border-y border-neutral-100 py-4 text-lg font-medium text-black transition-colors hover:text-neutral-500"
+                      >
+                        <ArrowRightOnRectangleIcon className="h-5 w-5 text-neutral-500" />
                         Ingresar
                       </Link>
                     )}
-                  </li>
-                </ul>
+                  </nav>
+                </div>
               </div>
             </Dialog.Panel>
           </Transition.Child>

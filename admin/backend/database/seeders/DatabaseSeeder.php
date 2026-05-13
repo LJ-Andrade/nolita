@@ -58,6 +58,8 @@ class DatabaseSeeder extends Seeder
             SiteContentSeeder::class,
             ShopConfigurationSeeder::class,
             ProductSeeder::class,
+            CustomerFavoriteSeeder::class,
+            OrderSeeder::class,
             PostSeeder::class,
         ]);
 	}

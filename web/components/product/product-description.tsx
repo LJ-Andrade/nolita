@@ -55,7 +55,7 @@ export function ProductDescription({
 					<div className="mt-4">
 						<AddSizeCurveButton
 							product={product}
-							className="text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
+							className="flex w-full items-center justify-center text-center text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
 						/>
 					</div>
 				)}

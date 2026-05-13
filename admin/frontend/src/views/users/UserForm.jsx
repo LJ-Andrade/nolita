@@ -21,6 +21,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { PageHeader } from "@/components/page-header";
 
+const ROLE_LABELS = {
+  "Super Admin": "Super Administrador",
+  Admin: "Administrador",
+  Employee: "Empleado",
+};
+
+const getRoleLabel = (role) => role.display_name || ROLE_LABELS[role.name] || role.name;
+
 export default function UserForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -51,7 +59,7 @@ export default function UserForm() {
 
   useEffect(() => {
     // Fetch all available roles
-    axiosClient.get("roles?all=1").then(({ data }) => {
+    axiosClient.get("users/assignable-roles").then(({ data }) => {
       setRoles(data.data || []);
     }).catch(error => {
       console.error("Error fetching roles:", error);
@@ -250,7 +258,7 @@ export default function UserForm() {
                                   />
                                 </FormControl>
                                 <FormLabel className="font-normal cursor-pointer">
-                                  {role.name}
+                                  {getRoleLabel(role)}
                                 </FormLabel>
                               </FormItem>
                             )}

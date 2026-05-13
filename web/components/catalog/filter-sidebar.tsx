@@ -2,16 +2,20 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import clsx from "clsx";
+import type { ReactNode } from "react";
 import { Collection } from "lib/vadmin/types";
 
 type FilterSidebarProps = {
   categories: Collection[];
   sizes: string[];
+  layout?: "desktop" | "mobile";
+  footer?: ReactNode;
 };
 
 const SIZES_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Único"];
 
-type SectionTitleProps = { children: React.ReactNode };
+type SectionTitleProps = { children: ReactNode };
 function SectionTitle({ children }: SectionTitleProps) {
   return (
     <h3
@@ -23,7 +27,7 @@ function SectionTitle({ children }: SectionTitleProps) {
   );
 }
 
-export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
+export function FilterSidebar({ categories, sizes, layout = "desktop", footer }: FilterSidebarProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -75,7 +79,10 @@ export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
 
   return (
     <aside
-      className="flex h-full w-full flex-col gap-8 py-6 pr-6"
+      className={clsx(
+        "flex h-full w-full flex-col gap-8",
+        layout === "desktop" ? "py-6 pr-6" : "py-4",
+      )}
       style={{ color: "var(--pb-text)" }}
     >
       {/* Header */}
@@ -162,6 +169,8 @@ export function FilterSidebar({ categories, sizes }: FilterSidebarProps) {
           </div>
         </section>
       )}
+
+      {footer}
     </aside>
   );
 }

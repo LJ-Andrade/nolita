@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\Admin\ProvinceController;
 use App\Http\Controllers\Api\Admin\LocalityController;
 use App\Http\Controllers\Api\Admin\OrderDocumentExportController;
 use App\Http\Controllers\Api\Admin\OrderExportController;
+use App\Http\Controllers\Api\Admin\StatisticsController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,12 +78,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
+    Route::get('/users/assignable-roles', [UserController::class, 'assignableRoles'])->middleware('permission:users.view');
     Route::apiResource('users', UserController::class)->middleware('permission:users.view');
     Route::post('/users/{user}/avatar', [UserController::class, 'uploadAvatar']);
     Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])->middleware('permission:users.delete');
-    Route::apiResource('roles', RoleController::class)->middleware('permission:roles.view');
-    Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->middleware('permission:roles.manage');
-    Route::apiResource('permissions', PermissionController::class)->middleware('permission:roles.manage');
+    Route::apiResource('roles', RoleController::class)->middleware('super_admin');
+    Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])->middleware('super_admin');
+    Route::apiResource('permissions', PermissionController::class)->middleware('super_admin');
 
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:view blog');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:view blog');
@@ -193,6 +195,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('admin/orders/export', OrderExportController::class)->middleware('permission:view orders');
     Route::get('admin/orders/{order}/export', OrderDocumentExportController::class)->middleware('permission:view orders');
     Route::apiResource('admin/orders', \App\Http\Controllers\Api\Admin\OrderController::class)->middleware('permission:view orders');
+
+    // Statistics
+    Route::get('admin/statistics/favorites', [StatisticsController::class, 'favorites']);
+    Route::get('admin/statistics/sales', [StatisticsController::class, 'sales']);
 
     // Payment Methods (CRUD - auth required for write operations)
     Route::post('payment-methods', [PaymentMethodController::class, 'store'])->middleware('permission:users.view');

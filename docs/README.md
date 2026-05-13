@@ -13,6 +13,15 @@ This directory is the operational memory for the project. Keep each document foc
 | `DEPLOY_INFO.md` | Deployment, server, release, and operations notes. | Deployment process or production infrastructure changes. |
 | `standards/` | Reusable implementation standards. | A standard pattern is introduced or revised. |
 
+## Standards
+
+| File | Purpose |
+| --- | --- |
+| `standards/AUTH_UI_STANDARDS.md` | Authentication page layout and visual rules. |
+| `standards/CRUD_STANDARDS.md` | CRUD list, form, table, and action patterns. |
+| `standards/FILE_HANDLING_STANDARDS.md` | File upload and handling rules. |
+| `standards/ADMIN_TABBED_SECTION_STANDARDS.md` | Admin pages with breadcrumbs, tabs, and active content cards. |
+
 ## Agent Update Rules
 
 1. Update `SPECS.md` before implementing new or complex behavior.

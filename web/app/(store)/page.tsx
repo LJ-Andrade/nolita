@@ -58,6 +58,9 @@ export default async function HomePage() {
 	const favoriteIds = new Set(favorites.map((product) => product.id));
 	const newArrivalProducts = products.slice(0, 4);
 	const heroImage = getVadminImageUrl(content.home_hero_banner || "/storage/web/hero_1.jpg");
+	const heroMobileImage = getVadminImageUrl(
+		content.home_hero_banner_mobile || content.home_hero_banner || "/storage/web/hero_1.jpg",
+	);
 
 	return (
 		<>
@@ -67,16 +70,23 @@ export default async function HomePage() {
 				style={{ backgroundColor: "var(--pb-surface)" }}
 			>
 				{/* Hero background */}
-				{heroImage ? (
-					<div
-						className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-						style={{
-							backgroundImage: `url(${heroImage})`,
-						}}
-					>
+				{heroImage || heroMobileImage ? (
+					<>
+						<div
+							className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 md:hidden"
+							style={{
+								backgroundImage: `url(${heroMobileImage || heroImage})`,
+							}}
+						/>
+						<div
+							className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat transition-opacity duration-1000 md:block"
+							style={{
+								backgroundImage: `url(${heroImage || heroMobileImage})`,
+							}}
+						/>
 						{/* Subtle overlay to ensure text readability */}
 						<div className="absolute inset-0 bg-black/10" />
-					</div>
+					</>
 				) : (
 					<div
 						className="absolute inset-0"

@@ -49,16 +49,15 @@ export function AddSizeCurveButton({
       className={
         className ||
         (compact
-          ? "flex h-12 w-52 flex-col items-center justify-center rounded-[var(--pb-radius)] border border-white bg-white text-[10px] font-semibold uppercase leading-tight tracking-[0.2em] text-black shadow-lg transition-all hover:bg-neutral-100 disabled:opacity-50"
-          : "flex h-12 w-full items-center justify-center rounded-[var(--pb-radius)] border border-black bg-white px-6 text-xs font-semibold uppercase tracking-[0.18em] text-black transition-colors hover:bg-black hover:text-white disabled:opacity-50")
+          ? "flex h-12 w-52 flex-col items-center justify-center rounded-[var(--pb-radius)] border border-white bg-white text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.2em] text-black shadow-lg transition-all hover:bg-neutral-100 disabled:opacity-50"
+          : "flex h-12 w-full items-center justify-center rounded-[var(--pb-radius)] border border-black bg-white px-6 text-center text-xs font-semibold uppercase leading-tight tracking-[0.18em] text-black transition-colors hover:bg-black hover:text-white disabled:opacity-50")
       }
     >
       {isPending ? (
         "Agregando..."
       ) : compact ? (
         <>
-          <span>Agregar curva</span>
-          <span>de talle</span>
+          <span className="block text-center">Agregar curva de talle</span>
         </>
       ) : (
         "Agregar curva de talles"

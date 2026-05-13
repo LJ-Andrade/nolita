@@ -5,7 +5,6 @@ import { getSession } from "lib/vadmin/auth";
 import { Menu } from "lib/vadmin/types";
 import Link from "next/link";
 import { Suspense } from "react";
-import Image from "next/image";
 import MobileMenu from "./mobile-menu";
 import UserMenu from "./user-menu";
 
@@ -42,14 +41,12 @@ export async function Navbar() {
         {/* Center: Logo */}
         <div className="flex justify-center">
           <Link href="/" prefetch={true} className="flex items-center gap-3">
-            <Image
+            <img
               src="/logo-black.svg"
               alt={SITE_NAME || "Plan B"}
               width={180}
               height={24}
-              className="h-6 w-auto no-radius"
-              style={{ width: "auto" }}
-              priority
+              className="no-radius"
             />
           </Link>
         </div>
@@ -67,13 +64,12 @@ export async function Navbar() {
           <MobileMenu menu={menu} customer={session} />
         </Suspense>
         <Link href="/" prefetch={true} className="flex items-center gap-2">
-          <Image
+          <img
             src="/logo-black.svg"
             alt={SITE_NAME || "Plan B"}
             width={140}
             height={20}
-            className="h-5 w-auto no-radius"
-            style={{ width: "auto" }}
+            className="no-radius"
           />
         </Link>
         <CartTrigger />

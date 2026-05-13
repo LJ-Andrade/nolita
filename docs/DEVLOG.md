@@ -2,6 +2,97 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 44: Admin User Role Restrictions
+1. [x] `docs/SPECS.md`: Document Admin and Super Admin behavior for users, roles, and permissions.
+2. [x] `admin/backend/app/Http/Controllers/UserController.php` and `routes/api.php`: Add assignable roles endpoint and enforce Super Admin modification restrictions.
+3. [x] `admin/backend/database/seeders/RoleSeeder.php`: Stop assigning role-management permissions to Admin.
+4. [x] `admin/frontend/src/App.jsx`, `app-sidebar.jsx`, and user views: Gate roles/permissions to Super Admin, use correct user permissions, and translate role labels.
+5. [x] Validation: Run focused backend lint and admin frontend build/lint checks.
+
+## Phase 43: Statistics Role Access Simplification
+1. [x] `docs/SPECS.md`: Document role-based statistics access for Super Admin and Admin.
+2. [x] `admin/backend/routes/api.php` and `StatisticsController.php`: Replace fine-grained statistics permission middleware with role authorization.
+3. [x] `admin/frontend/src/App.jsx`, `app-sidebar.jsx`, and `Statistics.jsx`: Gate the section by role and show both tabs to authorized users.
+4. [x] `admin/backend/database/seeders/*`: Stop assigning statistics access to Employee through seeded permissions.
+5. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 42: Statistics UX and Permissions
+1. [x] `docs/SPECS.md`: Document statistics permissions, category filters, CSV export, opportunities, cache, and sales comparison.
+2. [x] `admin/backend/database/seeders/PermissionSeeder.php`: Add statistics permissions.
+3. [x] `admin/backend/database/seeders/RoleSeeder.php`: Assign statistics permissions to roles.
+4. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add category filters, opportunities, cache, and sales comparison.
+5. [x] `admin/frontend/src/views/statistics/*`: Add permissions, category filters, opportunities, empty-state actions, and CSV export.
+6. [x] `admin/frontend/src/App.jsx` and `app-sidebar.jsx`: Switch statistics access to `view statistics`.
+7. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 41: Admin Order Inline Status Editing
+1. [x] `docs/SPECS.md`: Document inline status editing behavior for the admin orders list.
+2. [x] `admin/frontend/src/views/orders/OrdersList.jsx`: Add an inline order status dropdown using the existing admin update endpoint.
+3. [x] Validation: Run focused admin frontend checks.
+
+## Phase 40: Sales Statistics Performance
+1. [x] `docs/SPECS.md`: Document sales period filtering and database index requirements.
+2. [x] `admin/backend/database/migrations/*_add_statistics_indexes_to_orders_tables.php`: Add indexes for sales statistics queries.
+3. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add `period` filtering with default `30d`.
+4. [x] `admin/frontend/src/views/statistics/SalesStatistics.jsx`: Add period controls and send the selected period.
+5. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 39: Sales Statistics Analytics
+1. [x] `docs/SPECS.md`: Document sales analytics endpoint and UI behavior.
+2. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add sales analytics endpoint.
+3. [x] `admin/backend/routes/api.php`: Register the admin sales statistics route.
+4. [x] `admin/backend/database/seeders/OrderSeeder.php`: Create demo orders and order items.
+5. [x] `admin/backend/database/seeders/DatabaseSeeder.php`: Run demo orders after products and favorites exist.
+6. [x] `admin/frontend/src/views/statistics/SalesStatistics.jsx`: Render sales KPIs and ranked product table.
+7. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Use the sales analytics component in the tab.
+8. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 38: Storefront Mobile Catalog Filters
+1. [x] `docs/SPECS.md`: Document mobile catalog filter drawer behavior.
+2. [x] `web/components/catalog/filter-sidebar.tsx`: Allow the existing filter UI to render cleanly inside mobile surfaces.
+3. [x] `web/components/catalog/mobile-filter-drawer.tsx`: Add a mobile-only filter drawer that reuses catalog categories and sizes.
+4. [x] `web/components/catalog/sort-bar.tsx`: Add a mobile filter trigger next to catalog count/sort controls.
+5. [x] `web/app/(store)/catalog/page.tsx`: Pass filter data into the mobile trigger while preserving the desktop sidebar.
+6. [x] Validation: Run the storefront build.
+
+## Phase 37: Favorites Statistics Analytics
+1. [x] `docs/SPECS.md`: Document favorites analytics endpoint and UI behavior.
+2. [x] `admin/backend/app/Models/Product.php`: Add the customer favorites relationship.
+3. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add favorites analytics endpoint.
+4. [x] `admin/backend/routes/api.php`: Register the admin statistics route.
+5. [x] `admin/backend/database/seeders/CustomerFavoriteSeeder.php`: Create demo customers and favorite assignments.
+6. [x] `admin/backend/database/seeders/DatabaseSeeder.php`: Run the favorites seeder after products exist.
+7. [x] `admin/frontend/src/views/statistics/FavoritesStatistics.jsx`: Render favorites KPIs and ranked product table.
+8. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Use the favorites analytics component in the tab.
+9. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 36: Admin Tabbed Section Standard
+1. [x] `admin/frontend/src/components/admin-tabbed-section.jsx`: Extract reusable tabbed admin section component.
+2. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Use the shared tabbed section component.
+3. [x] `docs/standards/ADMIN_TABBED_SECTION_STANDARDS.md`: Document the reusable pattern.
+4. [x] `docs/README.md`: Add the new standard to the documentation index.
+5. [x] Validation: Run focused admin frontend checks.
+
+## Phase 35: Admin Statistics Section
+1. [x] `docs/SPECS.md`: Document the initial admin statistics section contract.
+2. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Create the statistics view with breadcrumb, tabs, and placeholder cards.
+3. [x] `admin/frontend/src/App.jsx`: Register the `/estadisticas` protected route.
+4. [x] `admin/frontend/src/components/app-sidebar.jsx`: Add the "Estadísticas" sidebar item.
+5. [x] Validation: Run focused admin frontend checks.
+
+## Phase 34: Responsive Home Hero Image
+1. [x] `docs/SPECS.md`: Document responsive hero image keys and admin layout behavior.
+2. [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Save the mobile hero image with a fixed predictable filename.
+3. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Add desktop/mobile hero uploads in one responsive row and persist both site content keys.
+4. [x] `web/app/(store)/page.tsx`: Render the mobile hero image on small viewports with desktop fallback.
+5. [x] Validation: Run focused backend syntax and frontend build checks.
+
+## Phase 15: Storefront Mobile Navigation Responsiveness (Completed)
+1. [x] `web/components/layout/navbar/mobile-menu.tsx`: Keep the mobile drawer white in all themes.
+2. [x] `web/components/layout/navbar/mobile-menu.tsx`: Add the authenticated user links available from the desktop user menu.
+3. [x] `web/components/layout/navbar/mobile-menu.tsx`: Add clear account action icons and preserve logout behavior.
+4. [x] Validation: Run the storefront build.
+
 ## Phase 13: Agent and Documentation Organization (Completed)
 - [x] `AGENTS.md`: Replace brittle orchestration rules with Codex-compatible workflow, documentation ownership, and project guardrails.
 - [x] `docs/README.md`: Add documentation index and update rules.

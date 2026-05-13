@@ -24,6 +24,7 @@ import {
 	Ruler,
 	Ticket,
 	ShoppingBag,
+	BarChart3,
 	Wallet,
 	Truck,
 	Layout,
@@ -58,7 +59,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { hasPermission, isSuperAdmin } from "@/components/can"
+import { hasAnyRole, hasPermission, isSuperAdmin } from "@/components/can"
 import { useTheme } from "@/components/theme-provider"
 import { useState, useEffect } from "react"
 import axiosClient from "@/lib/axios"
@@ -131,6 +132,12 @@ const items = [
 		permission: "view orders",
 	},
 	{
+		title: "Estadísticas",
+		url: "/estadisticas",
+		icon: BarChart3,
+		roles: ["Super Admin", "Admin"],
+	},
+	{
 		title: "Clientes",
 		url: "/clientes",
 		icon: Building2,
@@ -170,13 +177,13 @@ const items = [
 				title: "Roles",
 				url: "/roles",
 				icon: ShieldCheck,
-				permission: "roles.view",
+				superAdminOnly: true,
 			},
 			{
 				title: "Permisos",
 				url: "/permisos",
 				icon: KeyRound,
-				permission: "roles.manage",
+				superAdminOnly: true,
 			},
 			{
 				title: "Registros de Actividad",
@@ -277,6 +284,9 @@ export function AppSidebar() {
 				if (child.superAdminOnly) {
 					return isSuperAdmin();
 				}
+				if (child.roles) {
+					return hasAnyRole(child.roles);
+				}
 				return !child.permission || hasPermission(child.permission);
 			});
 			return { ...item, children: filteredChildren };
@@ -288,6 +298,9 @@ export function AppSidebar() {
 		}
 		if (item.superAdminOnly) {
 			return isSuperAdmin();
+		}
+		if (item.roles) {
+			return hasAnyRole(item.roles);
 		}
 		return !item.permission || hasPermission(item.permission);
 	});

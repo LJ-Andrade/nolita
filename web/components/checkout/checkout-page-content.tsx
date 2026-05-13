@@ -105,6 +105,8 @@ export default function CheckoutPageContent({
       return;
     }
 
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     const timeout = window.setTimeout(() => {
       setShowCompletion(true);
     }, MIN_PROCESSING_MS);

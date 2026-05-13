@@ -5,6 +5,11 @@ const isSuperAdmin = () => {
   return userRoles.includes('Super Admin');
 };
 
+export const hasAnyRole = (roles) => {
+  const userRoles = JSON.parse(localStorage.getItem('USER_ROLES') || '[]');
+  return roles.some((role) => userRoles.includes(role));
+};
+
 export const hasPermission = (permission) => {
   if (isSuperAdmin()) {
     return true;

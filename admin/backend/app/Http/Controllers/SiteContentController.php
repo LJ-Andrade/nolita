@@ -101,11 +101,13 @@ class SiteContentController extends Controller
             $file = $request->file('image');
             $key  = $request->input('key');
 
-            // Hero banner is always saved with a fixed filename so the web
-            // can reference a predictable path (hero_1.<ext>).
-            if ($key === 'home_hero_banner') {
+            // Hero banners are saved with fixed filenames so the storefront
+            // can reference predictable paths.
+            if ($key === 'home_hero_banner' || $key === 'home_hero_banner_mobile') {
                 $extension = $file->getClientOriginalExtension();
-                $filename  = "hero_1.{$extension}";
+                $filename  = $key === 'home_hero_banner_mobile'
+                    ? "hero_mobile_1.{$extension}"
+                    : "hero_1.{$extension}";
                 $path      = $file->storeAs('web', $filename, 'public');
             } else {
                 $path = $file->store('web', 'public');

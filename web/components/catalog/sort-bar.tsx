@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import type { ReactNode } from "react";
 
 const SORT_OPTIONS = [
   { label: "Más nuevo", value: "newest" },
@@ -14,9 +15,10 @@ type SortValue = typeof SORT_OPTIONS[number]["value"];
 
 type SortBarProps = {
   total: number;
+  filtersAction?: ReactNode;
 };
 
-export function SortBar({ total }: SortBarProps) {
+export function SortBar({ total, filtersAction }: SortBarProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -35,7 +37,7 @@ export function SortBar({ total }: SortBarProps) {
 
   return (
     <div
-      className="flex items-center justify-between py-4"
+      className="flex flex-wrap items-center justify-between gap-3 py-4"
       style={{ borderBottom: "1px solid var(--pb-border)" }}
     >
       {/* Count */}
@@ -46,10 +48,10 @@ export function SortBar({ total }: SortBarProps) {
         {total} {total === 1 ? "producto" : "productos"}
       </p>
 
-      {/* Sort select */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {filtersAction}
         <span
-          className="text-xs uppercase tracking-widest"
+          className="hidden text-xs uppercase tracking-widest sm:inline"
           style={{ color: "var(--pb-text-muted)" }}
         >
           Ordenar:
