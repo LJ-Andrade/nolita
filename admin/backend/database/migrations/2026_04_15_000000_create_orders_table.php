@@ -23,6 +23,7 @@ return new class extends Migration
             $table->json('billing_address')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->index(['status', 'created_at'], 'orders_status_created_at_index');
         });
     }
 

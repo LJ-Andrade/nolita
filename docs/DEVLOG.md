@@ -2,6 +2,13 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 45: Consolidated Statistics Index Migrations
+1. [x] `docs/SPECS.md`: Document that sales statistics indexes live in base order migrations for fresh installs.
+2. [x] `admin/backend/database/migrations/2026_04_15_000000_create_orders_table.php`: Add the order status/date statistics index to the base table migration.
+3. [x] `admin/backend/database/migrations/2026_04_15_000001_create_order_items_table.php`: Add order/product lookup indexes to the base table migration.
+4. [x] `admin/backend/database/migrations/2026_05_13_000001_add_statistics_indexes_to_orders_tables.php`: Remove the now-redundant additive migration.
+5. [x] Validation: Run focused migration syntax and route checks.
+
 ## Phase 44: Admin User Role Restrictions
 1. [x] `docs/SPECS.md`: Document Admin and Super Admin behavior for users, roles, and permissions.
 2. [x] `admin/backend/app/Http/Controllers/UserController.php` and `routes/api.php`: Add assignable roles endpoint and enforce Super Admin modification restrictions.

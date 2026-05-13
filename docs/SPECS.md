@@ -448,5 +448,5 @@ VADMIN must include an administrative statistics section for future business met
 - The admin UI must expose period controls and default to the last 30 days.
 - The admin UI must expose a category filter.
 - The admin UI must show opportunity cards for best-selling products with low stock.
-- The database must index sales statistics access paths, including order status/date and order item order/product lookups.
+- The database must index sales statistics access paths, including order status/date and order item order/product lookups, directly in the base order table migrations for fresh installs.
 - Demo seed data may create completed, processing, pending, and cancelled orders for local analytics testing, but only completed orders should affect sales totals.

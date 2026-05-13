@@ -22,6 +22,8 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2);
             $table->json('metadata')->nullable();
             $table->timestamps();
+            $table->index(['order_id', 'product_id'], 'order_items_order_product_index');
+            $table->index(['product_id', 'order_id'], 'order_items_product_order_index');
         });
     }
 
