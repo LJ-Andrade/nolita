@@ -1,6 +1,6 @@
-# Plan B Storefront
+# Nolita Storefront
 
-A high-performance, server-rendered Next.js 15 application designed for the Plan B wholesale storefront.
+A high-performance, server-rendered Next.js 15 application designed for the Nolita wholesale storefront.
 
 > [!IMPORTANT]
 > **This project uses the VADMIN (Laravel) API as its official backend.**
@@ -22,8 +22,8 @@ You must configure the following in your `.env` file:
 NEXT_PUBLIC_VADMIN_API_URL="http://localhost:8000/api"
 
 # Site Settings
-SITE_NAME="Plan B Store"
-COMPANY_NAME="Plan B"
+SITE_NAME="Nolita"
+COMPANY_NAME="Nolita"
 ```
 
 ## Running Locally
@@ -85,4 +85,4 @@ These tests validate shared selection, pagination, and bulk action behavior befo
 - **Maintenance**: `vadminFetch` utility in `lib/vadmin/index.ts` handles global error catching and redirection to `/maintenance`.
 
 ---
-*Based on the Next.js Commerce template, migrated to VADMIN by the Plan B Dev Team.*
+*Based on the Next.js Commerce template, migrated to VADMIN by the Nolita Dev Team.*

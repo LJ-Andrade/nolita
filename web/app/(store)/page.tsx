@@ -5,45 +5,11 @@ import { getFavorites } from "lib/vadmin/favorites";
 import Link from "next/link";
 
 export const metadata = {
-	title: "Plan B Store — Moda Mayorista",
+	title: "Nolita — Moda Mayorista",
 	description:
-		"Descubrí la nueva colección de moda mayorista. Envíos a todo el país.",
+		"Descubrí la nueva colección de Nolita. Envíos a todo el país.",
 	openGraph: { type: "website" },
 };
-
-// Category card component
-function CategoryCard({
-	title,
-	handle,
-}: {
-	title: string;
-	handle: string;
-}) {
-	return (
-		<Link
-			href={`/catalogo?categoria=${handle}`}
-			className="group relative flex items-end overflow-hidden"
-			style={{
-				aspectRatio: "3/4",
-				backgroundColor: "var(--pb-surface)",
-			}}
-		>
-			{/* Gradient overlay */}
-			<div
-				className="absolute inset-0 z-10 transition-opacity duration-300 group-hover:opacity-80"
-				style={{
-					background:
-						"linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)",
-				}}
-			/>
-			<span
-				className="relative z-20 w-full p-4 text-center text-sm font-semibold uppercase tracking-[0.2em] text-white"
-			>
-				{title}
-			</span>
-		</Link>
-	);
-}
 
 export default async function HomePage() {
 	const [products, featuredProducts, listedCategories, content, session] = await Promise.all([
@@ -66,8 +32,7 @@ export default async function HomePage() {
 		<>
 			{/* ── Hero ─────────────────────────────────────────────────────── */}
 			<section
-				className="relative flex min-h-screen flex-col items-center justify-center text-center overflow-hidden"
-				style={{ backgroundColor: "var(--pb-surface)" }}
+				className="relative flex min-h-[calc(100svh-76px)] overflow-hidden bg-[#eee8e3]"
 			>
 				{/* Hero background */}
 				{heroImage || heroMobileImage ? (
@@ -84,54 +49,40 @@ export default async function HomePage() {
 								backgroundImage: `url(${heroImage || heroMobileImage})`,
 							}}
 						/>
-						{/* Subtle overlay to ensure text readability */}
-						<div className="absolute inset-0 bg-black/10" />
+						<div className="absolute inset-0 bg-[#f4eee9]/20" />
+						<div className="absolute inset-0 bg-gradient-to-r from-black/36 via-black/10 to-white/12" />
 					</>
 				) : (
 					<div
 						className="absolute inset-0"
 						style={{
-							background:
-								"radial-gradient(ellipse at 50% 120%, #EEECEA 0%, #F7F7F5 70%)",
+							background: "linear-gradient(120deg, #d7cbc3 0%, #f8f1ec 100%)",
 						}}
 					/>
 				)}
 
-				<div className="relative z-10 px-6">
+				<div className="relative z-10 flex w-full items-end px-6 pb-24 pt-20 md:px-28 md:pb-28">
+					<div className="max-w-2xl">
 					<p
-						className="mb-4 text-xs font-medium uppercase tracking-[0.4em]"
-						style={{ color: "var(--pb-text-muted)" }}
+						className="mb-5 text-[11px] font-medium uppercase tracking-[0.42em] text-[#f3deaf]"
 					>
-						Nueva Temporada
+						SS 2026 Collection
 					</p>
 					<h1
-						className="mb-6 text-5xl font-medium leading-tight md:text-7xl"
+						className="text-6xl font-normal leading-[0.98] text-white md:text-8xl"
 						style={{
 							fontFamily: "var(--font-serif)",
-							color: "var(--pb-text)",
 						}}
 					>
-						Otoño–Invierno
+						La Elegancia
 						<br />
-						<em className="font-normal italic">2025</em>
+						<em className="font-normal italic">que no caduca</em>
 					</h1>
-					<p
-						className="mx-auto mb-10 max-w-md text-sm leading-relaxed"
-						style={{ color: "var(--pb-text-secondary)" }}
-					>
-						Colecciones diseñadas para el comercio mayorista. Estilo, calidad y
-						precio para tu negocio.
-					</p>
-					<Link
-						href="/catalogo"
-						className="inline-block border px-10 py-3 text-xs font-semibold uppercase tracking-[0.25em] transition-all duration-200 hover:opacity-70 rounded-[var(--pb-radius)]"
-						style={{
-							borderColor: "var(--pb-accent)",
-							color: "var(--pb-accent)",
-						}}
-					>
-						Ver catálogo
-					</Link>
+					</div>
+				</div>
+
+				<div className="absolute bottom-0 left-0 right-0 z-20 flex h-12 items-center justify-center bg-[#f7f4f0]/95 px-6 text-center text-[10px] font-medium uppercase tracking-[0.28em] text-stone-brown">
+					Envíos bonificados en pedidos mayoristas · Nueva colección disponible
 				</div>
 			</section>
 

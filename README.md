@@ -1,4 +1,4 @@
-# Plan B Deployment
+# Nolita Deployment
 
 Production build helpers live in the repository root.
 
@@ -18,7 +18,7 @@ The script checks:
 
 - `web/.env.production` exists.
 - `admin/backend/.env` exists.
-- `NEXT_PUBLIC_VADMIN_API_URL` is `https://soyplanb.com.ar/api`.
+- `NEXT_PUBLIC_VADMIN_API_URL` is `https://nolita.com.ar/api`.
 - `NEXTJS_REVALIDATE_TOKEN` exists in both web and backend env files.
 - Web and backend revalidation tokens match.
 - `NEXTJS_REVALIDATE_WEBHOOK_URL` is `http://127.0.0.1:3002/api/revalidate`.
@@ -32,13 +32,13 @@ corepack pnpm install --frozen-lockfile
 # If the lockfile is outdated, the script falls back to:
 corepack pnpm install --no-frozen-lockfile
 corepack pnpm build
-pm2 restart planb-web
+pm2 restart nolita-web
 ```
 
 Optional overrides:
 
 ```bash
-PM2_APP_NAME=planb-web ./build-web.sh
+PM2_APP_NAME=nolita-web ./build-web.sh
 EXPECTED_WEBHOOK_URL=http://127.0.0.1:3002/api/revalidate ./build-web.sh
 ```
 

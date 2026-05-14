@@ -1,8 +1,8 @@
-# Plan B - Project Information
+# Nolita - Project Information
 
 ## Overview
 
-Plan B is split into two main applications:
+Nolita is split into two main applications:
 
 - `admin/`: VADMIN, the internal administration system.
 - `web/`: Public e-commerce storefront.
@@ -12,7 +12,7 @@ VADMIN is the official backend provider for the whole project. The storefront mu
 ## Project Structure
 
 ```text
-planb/
+nolita/
 +-- admin/
 |   +-- backend/      # Laravel API used by the admin panel and storefront
 |   +-- frontend/     # React/Vite VADMIN panel
@@ -100,7 +100,7 @@ Rules:
 
 - Production server: VPS with Nginx.
 - Production database: MySQL.
-- Local backend database: SQLite when `APP_ENV=local`.
+- Local backend database: MySQL database named `nolita`.
 
 ## Commands
 

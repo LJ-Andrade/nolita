@@ -51,15 +51,15 @@ sudo apt-get install supervisor
 Crear configuracion:
 
 ```bash
-sudo nano /etc/supervisor/conf.d/planb-worker.conf
+sudo nano /etc/supervisor/conf.d/nolita-worker.conf
 ```
 
 Contenido recomendado:
 
 ```ini
-[program:planb-worker]
+[program:nolita-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/planb/admin/backend/artisan queue:work database --sleep=3 --tries=3 --timeout=90
+command=php /var/www/nolita/admin/backend/artisan queue:work database --sleep=3 --tries=3 --timeout=90
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -67,7 +67,7 @@ killasgroup=true
 user=www-data
 numprocs=1
 redirect_stderr=true
-stdout_logfile=/var/www/planb/admin/backend/storage/logs/worker.log
+stdout_logfile=/var/www/nolita/admin/backend/storage/logs/worker.log
 stopwaitsecs=3600
 ```
 
@@ -76,7 +76,7 @@ Aplicar cambios:
 ```bash
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start planb-worker:*
+sudo supervisorctl start nolita-worker:*
 sudo supervisorctl status
 ```
 
@@ -84,7 +84,7 @@ Reiniciar workers despues de deploy:
 
 ```bash
 php artisan queue:restart
-sudo supervisorctl restart planb-worker:*
+sudo supervisorctl restart nolita-worker:*
 ```
 
 ## Produccion Linux Con Systemd
@@ -92,14 +92,14 @@ sudo supervisorctl restart planb-worker:*
 Crear servicio:
 
 ```bash
-sudo nano /etc/systemd/system/planb-worker.service
+sudo nano /etc/systemd/system/nolita-worker.service
 ```
 
 Contenido recomendado:
 
 ```ini
 [Unit]
-Description=PlanB Laravel Queue Worker
+Description=Nolita Laravel Queue Worker
 After=network.target
 
 [Service]
@@ -107,7 +107,7 @@ User=www-data
 Group=www-data
 Restart=always
 RestartSec=10
-WorkingDirectory=/var/www/planb/admin/backend
+WorkingDirectory=/var/www/nolita/admin/backend
 ExecStart=/usr/bin/php artisan queue:work database --sleep=3 --tries=3 --timeout=90
 
 [Install]
@@ -118,16 +118,16 @@ Activar:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable planb-worker
-sudo systemctl start planb-worker
-sudo systemctl status planb-worker
+sudo systemctl enable nolita-worker
+sudo systemctl start nolita-worker
+sudo systemctl status nolita-worker
 ```
 
 Reiniciar despues de deploy:
 
 ```bash
 php artisan queue:restart
-sudo systemctl restart planb-worker
+sudo systemctl restart nolita-worker
 ```
 
 ## Desarrollo Local En Windows

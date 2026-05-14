@@ -16,7 +16,7 @@ export default async function Footer() {
 		"business_name",
 		"company_name",
 		"site_name",
-	]) || COMPANY_NAME || SITE_NAME || "Plan B";
+	]) || COMPANY_NAME || SITE_NAME || "Nolita";
 	const developerLabel = getSiteValue(businessInfo, [
 		"footer_developer_label",
 		"business_developer_label",
@@ -131,12 +131,12 @@ export default async function Footer() {
 				<div className="flex items-center justify-between gap-12 md:gap-16">
 					<Link
 						href="/"
-						aria-label={SITE_NAME || "Plan B"}
+						aria-label={SITE_NAME || "Nolita"}
 						className="relative mr-0 block aspect-[5.45/1] min-w-0 flex-1 pr-4 transition-opacity hover:opacity-80 md:mr-12 md:pr-8 lg:mr-24 xl:mr-32"
 					>
 						<Image
 							src="/logo-white.png"
-							alt={SITE_NAME || "Plan B"}
+							alt={SITE_NAME || "Nolita"}
 							fill
 							className="no-radius object-contain object-left opacity-35"
 						/>

@@ -16,10 +16,10 @@ class PaymentMethodSeeder extends Seeder
 								A nombre de Georgina Giorgi <br>
 								Cuit 27333493549 <br>
 								CBU 0110201930020109390247 <br>
-								ALIAS: planbmayorista <br><br>
+								ALIAS: nolitamayorista <br><br>
 
 								Una vez realizada la transferencia, enviá el comprobante a<br>
-								info@soyplanb.com.ar<br>
+								info@nolita.com.ar<br>
 								Por favor, indicá en el asunto del mail tu número de pedido para que podamos identificar el pago más rápido.<br>
 								Tu pedido comenzará a procesarse una vez acreditado el pago.",
                 'status' => 'active',

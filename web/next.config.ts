@@ -1,5 +1,13 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const appRoot = dirname(fileURLToPath(import.meta.url));
+
 export default {
   cacheComponents: true,
+  turbopack: {
+    root: appRoot,
+  },
   async redirects() {
     return [
       {
@@ -79,13 +87,13 @@ export default {
         pathname: "/**",
       },
       {
-        protocol: "http",
-        hostname: "soyplanb.com.ar",
+        protocol: "https",
+        hostname: "nolita.test",
         pathname: "/storage/**",
       },
       {
         protocol: "https",
-        hostname: "soyplanb.com.ar",
+        hostname: "nolita.studiovimana.com.ar",
         pathname: "/storage/**",
       }
     ],

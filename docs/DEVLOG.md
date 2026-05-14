@@ -2,6 +2,13 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 47: Nolita Project Rebrand and Home Direction
+1. [x] `docs/SPECS.md`: Document Nolita brand, development API URL, and home top/hero direction.
+2. [x] Environment and app config: Replace legacy brand development names, `planb.test`, and local database references with Nolita values.
+3. [x] Storefront chrome: Replace legacy visible branding with Nolita fallbacks.
+4. [x] `web/app/(store)/page.tsx` and navbar: Update home metadata, top bar, and hero composition to match the Nolita reference direction.
+5. [ ] Validation: Run focused checks for the storefront and search for remaining project-owned legacy brand references.
+
 ## Phase 46: Product Media Integrity
 1. [x] `docs/SPECS.md`: Document product media cleanup and unique media URL behavior.
 2. [x] `admin/backend/app/Http/Controllers/ProductController.php` and `ProductResource.php`: Use unique filenames, scoped media updates, model-aware product deletion, and skip missing media URLs.

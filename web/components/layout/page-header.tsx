@@ -11,7 +11,7 @@ export function PageHeader() {
   const isCatalog = pathname === "/catalog" || pathname === "/catalogo";
   const isSearch = pathname.startsWith("/search") || pathname.startsWith("/buscar");
   
-  let title = "Plan B";
+  let title = "Nolita";
   let subtitle = "";
 
   if (isHome || isCatalog) {

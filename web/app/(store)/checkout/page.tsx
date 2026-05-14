@@ -7,7 +7,7 @@ import CheckoutPageContent from "components/checkout/checkout-page-content";
 
 export const metadata = {
   title: "Checkout",
-  description: "Finaliza tu pedido en PlanB.",
+  description: "Finaliza tu pedido en Nolita.",
 };
 
 export default async function CheckoutPage() {

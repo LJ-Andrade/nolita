@@ -2,7 +2,7 @@ import { baseUrl } from "lib/utils";
 import { ReactNode } from "react";
 import "./globals.css";
 
-const SITE_NAME = process.env.SITE_NAME || "PlanB";
+const SITE_NAME = process.env.SITE_NAME || "Nolita";
 
 export const metadata = {
   metadataBase: new URL(baseUrl),

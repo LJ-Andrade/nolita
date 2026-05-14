@@ -1,4 +1,4 @@
-# Production Deployment - soyplanb.com.ar
+# Production Deployment - nolita.com.ar
 
 ## Architecture
 
@@ -14,7 +14,7 @@
       (static)     (Laravel API)   (Next.js)
                           │
                           ▼
-                    MySQL (soyplanbdb)
+                    MySQL (nolita)
 ```
 
 ## Ports
@@ -27,9 +27,9 @@
 
 ## Domains
 
-- **Frontend**: `https://soyplanb.com.ar`
-- **Admin Panel**: `https://soyplanb.com.ar/vadmin`
-- **API**: `https://soyplanb.com.ar/api`
+- **Frontend**: `https://nolita.com.ar`
+- **Admin Panel**: `https://nolita.com.ar/vadmin`
+- **API**: `https://nolita.com.ar/api`
 
 ## Nginx Configuration
 
@@ -45,8 +45,8 @@ Routes:
 ```nginx
 server {
   listen 8000;
-  server_name soyplanb.com.ar;
-  root /home/soyplanb/htdocs/soyplanb.com.ar/planb/admin/backend/public;
+  server_name nolita.com.ar;
+  root /home/nolita/htdocs/nolita.com.ar/nolita/admin/backend/public;
   index index.php;
   # ... (PHP-FPM configuration)
 }
@@ -58,16 +58,16 @@ server {
 The API is served by Nginx on port 8000 using PHP-FPM. Ensure the permissions for `storage` and `bootstrap/cache` are correctly set.
 
 ### Next.js (PM2)
-The storefront is managed by PM2 under the `soyplanb` user.
+The storefront is managed by PM2 under the `nolita` user.
 
 ```bash
-cd /home/soyplanb/htdocs/soyplanb.com.ar/planb/web
+cd /home/nolita/htdocs/nolita.com.ar/nolita/web
 # Build
 corepack pnpm build
 # Start/Restart
-pm2 restart planb-web
+pm2 restart nolita-web
 # If not started yet:
-pm2 start npm --name "planb-web" -- run start -- -p 3002
+pm2 start npm --name "nolita-web" -- run start -- -p 3002
 ```
 
 ## Admin Frontend
@@ -75,7 +75,7 @@ pm2 start npm --name "planb-web" -- run start -- -p 3002
 The admin frontend is a static Vite SPA. It must be built and then served by Nginx.
 
 ```bash
-cd /home/soyplanb/htdocs/soyplanb.com.ar/planb/admin/frontend
+cd /home/nolita/htdocs/nolita.com.ar/nolita/admin/frontend
 corepack pnpm build
 ```
 
@@ -84,10 +84,10 @@ corepack pnpm build
 ### Laravel (.env)
 - `APP_ENV=production`
 - `APP_DEBUG=false`
-- `APP_URL=https://soyplanb.com.ar`
+- `APP_URL=https://nolita.com.ar`
 
 ### Web Frontal (.env.production)
-- `NEXT_PUBLIC_VADMIN_API_URL=https://soyplanb.com.ar/api`
+- `NEXT_PUBLIC_VADMIN_API_URL=https://nolita.com.ar/api`
 - `NEXTJS_REVALIDATE_TOKEN=<shared-secret>`
 
 ### Storefront Cache Revalidation
@@ -105,11 +105,11 @@ Set these variables in `admin/backend/.env`, then clear cached Laravel config af
 Laravel requires a symbolic link for the public storage and specific folder permissions for the web server to access images.
 
 ```bash
-cd /home/soyplanb/htdocs/soyplanb.com.ar/planb/admin/backend
+cd /home/nolita/htdocs/nolita.com.ar/nolita/admin/backend
 php artisan storage:link
 
 # Permissions (Traversable by Nginx)
-chmod 755 /home/soyplanb /home/soyplanb/htdocs /home/soyplanb/htdocs/soyplanb.com.ar /home/soyplanb/htdocs/soyplanb.com.ar/planb
+chmod 755 /home/nolita /home/nolita/htdocs /home/nolita/htdocs/nolita.com.ar /home/nolita/htdocs/nolita.com.ar/nolita
 chmod -R 755 storage bootstrap/cache public
 ```
 
@@ -118,4 +118,4 @@ chmod -R 755 storage bootstrap/cache public
 - Ports 3000 and 3001 are occupied by other services (user studiovimana).
 - Next.js uses port 3002.
 - Laravel uses port 8000.
-- All technical assets (code, builds) are owned by the `soyplanb` user.
+- All technical assets (code, builds) are owned by the `nolita` user.

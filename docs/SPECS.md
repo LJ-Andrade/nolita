@@ -30,6 +30,9 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 5. **CORS:** Ensure CORS is configured properly in VADMIN to allow requests from the Web frontend.
 
 ### Storefront Home Sections
+- The storefront brand for this project is Nolita.
+- The home top bar must use a centered `NOLITA` wordmark, a compact retail/wholesale control on the right, and the cart action.
+- The home hero must follow Nolita's first visual direction: full-bleed image, soft overlay, lower-left seasonal eyebrow, and the headline "La Elegancia que no caduca".
 - Home product sections must reuse a shared product grid section component for consistent spacing, layout, favorites, and authenticated pricing behavior.
 - The featured products section appears above "Nuevos ingresos", has no title or "Ver todo" link, and displays every product marked as featured in VADMIN using the catalog API order.
 - "Nuevos ingresos" displays the first four published products returned by VADMIN using the catalog API order.
@@ -99,6 +102,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 > - **DO NOT USE Shopify**: All `lib/shopify` references and `SHOPIFY_*` environment variables are legacy/deprecated and will be removed.
 > - **Primary Provider**: Use `lib/vadmin` for all data fetching.
 > - **API URL**: Set via `NEXT_PUBLIC_VADMIN_API_URL`.
+> - **Nolita development API URL**: `https://nolita.test/api`.
 
 ### Architecture
 - **Web App:** Next.js Commerce in `/web` directory.
@@ -188,8 +192,8 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 > [!TIP]
 > For more details, refer to:
-> - [CRUD_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/CRUD_STANDARDS.md)
-> - [AUTH_UI_STANDARDS.md](file:///e:/Vimana/planb/planb/docs/standards/AUTH_UI_STANDARDS.md)
+> - [CRUD_STANDARDS.md](file:///e:/Vimana/nolita/nolita-repo/docs/standards/CRUD_STANDARDS.md)
+> - [AUTH_UI_STANDARDS.md](file:///e:/Vimana/nolita/nolita-repo/docs/standards/AUTH_UI_STANDARDS.md)
 
 ---
 

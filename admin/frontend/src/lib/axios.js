@@ -1,13 +1,12 @@
 import axios from 'axios';
 const ENVIRONMENTS = {
 	development: {
-		localhost: 'https://planb.test/api/',
-		'planb.test': 'https://planb.test/api/',
-		'192.168.56.1': 'https://planb.test/api/',
+		localhost: 'https://nolita.test/api/',
+		'nolita.test': 'https://nolita.test/api/',
+		'192.168.56.1': 'https://nolita.test/api/',
 	},
 	production: {
-		'planb.studiovimana.com.ar': 'https://planb.studiovimana.com.ar/api/',
-		'soyplanb.com.ar': 'https://soyplanb.com.ar/api/',
+		'nolita.studiovimana.com.ar': 'https://nolita.studiovimana.com.ar/api/',
 	},
 };
 

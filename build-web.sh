@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PM2_APP_NAME="${PM2_APP_NAME:-planb-web}"
+PM2_APP_NAME="${PM2_APP_NAME:-nolita-web}"
 EXPECTED_WEBHOOK_URL="${EXPECTED_WEBHOOK_URL:-http://127.0.0.1:3002/api/revalidate}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -127,8 +127,8 @@ backend_token="$(require_env "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN")"
 [ "$backend_webhook_url" = "$EXPECTED_WEBHOOK_URL" ] || fail "NEXTJS_REVALIDATE_WEBHOOK_URL must be $EXPECTED_WEBHOOK_URL"
 
 case "$web_api_url" in
-  https://soyplanb.com.ar/api) ;;
-  *) fail "NEXT_PUBLIC_VADMIN_API_URL must be https://soyplanb.com.ar/api" ;;
+  https://nolita.com.ar/api) ;;
+  *) fail "NEXT_PUBLIC_VADMIN_API_URL must be https://nolita.com.ar/api" ;;
 esac
 
 echo "Building web..."
