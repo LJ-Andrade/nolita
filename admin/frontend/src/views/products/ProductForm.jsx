@@ -491,8 +491,8 @@ export default function ProductForm() {
 		}
 
 		const request = id
-			? axiosClient.post(`productos/${id}`, formData)
-			: axiosClient.post("productos", formData);
+			? axiosClient.post(`products/${id}`, formData)
+			: axiosClient.post("products", formData);
 
 		request
 			.then(() => {
