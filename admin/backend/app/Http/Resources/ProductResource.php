@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductResource extends JsonResource
 {
@@ -32,8 +34,9 @@ class ProductResource extends JsonResource
             'sizes' => ProductSizeResource::collection($this->whenLoaded('sizes')),
             'colors' => ProductColorResource::collection($this->whenLoaded('colors')),
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
-            'cover_url' => $this->getFirstMediaUrl('cover'),
+            'cover_url' => $this->firstExistingMediaUrl('cover'),
             'gallery' => $this->loadMedia('gallery')
+                ->filter(fn (Media $media): bool => $this->mediaExists($media))
                 ->sortBy('order_column')
                 ->values()
                 ->map(function ($media) {
@@ -43,8 +46,9 @@ class ProductResource extends JsonResource
                         'order' => $media->order_column,
                     ];
                 }),
-            'document_url' => $this->getFirstMediaUrl('document'),
+            'document_url' => $this->firstExistingMediaUrl('document'),
             'color_images' => $this->loadMedia('color_images')
+                ->filter(fn (Media $media): bool => $this->mediaExists($media))
                 ->values()
                 ->map(function ($media) {
                     return [
@@ -56,5 +60,18 @@ class ProductResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    private function firstExistingMediaUrl(string $collection): ?string
+    {
+        $media = $this->getMedia($collection)
+            ->first(fn (Media $media): bool => $this->mediaExists($media));
+
+        return $media?->getUrl();
+    }
+
+    private function mediaExists(Media $media): bool
+    {
+        return Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
     }
 }

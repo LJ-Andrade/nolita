@@ -73,6 +73,13 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ### Admin Product Ordering
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
 
+### Product Media
+- Product cover, gallery, and color images are managed through Spatie Media Library on the public disk.
+- Product media filenames must be unique per upload so browsers and CDNs do not reuse stale images after product edits or database resets.
+- Deleting one product or bulk deleting products must delete the related media records and stored product media files through model-aware deletion.
+- Product gallery order updates must only affect media records owned by the product being updated.
+- Product data resets through the custom migrate command must delete product media records and the `storage/app/public/products` directory to prevent reused product IDs from inheriting stale images.
+
 ### Admin Order Management
 - The admin orders list must allow changing an order status directly from the status column, using the same inline dropdown interaction pattern as product status changes.
 - Inline order status changes must use the existing VADMIN admin order update endpoint and support only `pending`, `processing`, `completed`, and `cancelled`.

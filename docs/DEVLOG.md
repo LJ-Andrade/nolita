@@ -2,6 +2,12 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 46: Product Media Integrity
+1. [x] `docs/SPECS.md`: Document product media cleanup and unique media URL behavior.
+2. [x] `admin/backend/app/Http/Controllers/ProductController.php` and `ProductResource.php`: Use unique filenames, scoped media updates, model-aware product deletion, and skip missing media URLs.
+3. [x] `admin/backend/app/Console/Commands/CustomMigrate.php`: Clean product media files and records when resetting product data.
+4. [x] Validation: Run focused backend syntax and route checks.
+
 ## Phase 45: Consolidated Statistics Index Migrations
 1. [x] `docs/SPECS.md`: Document that sales statistics indexes live in base order migrations for fresh installs.
 2. [x] `admin/backend/database/migrations/2026_04_15_000000_create_orders_table.php`: Add the order status/date statistics index to the base table migration.

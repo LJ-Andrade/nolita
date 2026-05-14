@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CustomMigrate extends Command
 {
@@ -132,6 +134,7 @@ class CustomMigrate extends Command
         }
 
         if (in_array('3', $keysToProcess)) {
+            $this->cleanProductMedia();
             $this->truncateTable('product_product_size');
             $this->truncateTable('product_product_color');
             $this->truncateTable('product_product_tag');
@@ -175,6 +178,23 @@ class CustomMigrate extends Command
         if ($this->confirm('  ¿Seedear provinces y localities? (yes/no)')) {
             $this->call('db:seed', ['--class' => 'Database\\Seeders\\ProvTableSeeder']);
             $this->call('db:seed', ['--class' => 'Database\\Seeders\\LocTableSeeder']);
+        }
+    }
+
+    protected function cleanProductMedia(): void
+    {
+        try {
+            DB::table('media')
+                ->where('model_type', Product::class)
+                ->delete();
+
+            if (Storage::disk('public')->exists('products')) {
+                Storage::disk('public')->deleteDirectory('products');
+            }
+
+            $this->line('  ✓ Product media cleaned');
+        } catch (\Exception $e) {
+            $this->warn('  ⚠ Could not clean product media: ' . $e->getMessage());
         }
     }
 }

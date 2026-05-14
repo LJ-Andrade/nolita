@@ -172,7 +172,7 @@ class ProductController extends Controller
         if ($request->hasFile('cover')) {
             $extension = $request->file('cover')->getClientOriginalExtension();
             $product->addMediaFromRequest('cover')
-                ->usingFileName('cover.' . $extension)
+                ->usingFileName($this->mediaFileName('cover', $extension))
                 ->toMediaCollection('cover');
         } elseif ($request->has('remove_cover') && $request->input('remove_cover') === '1') {
             // Remove existing cover image
@@ -192,8 +192,7 @@ class ProductController extends Controller
             foreach ($galleryFiles as $index => $image) {
                 if ($image && $image->isValid()) {
                     $extension = $image->getClientOriginalExtension();
-                    $random = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 8);
-                    $filename = $product->id . '_' . $random . '.' . $extension;
+                    $filename = $this->mediaFileName('gallery', $extension);
 
                     // Determine order: use gallery_order mapping if available, otherwise use index
                     $originalName = $image->getClientOriginalName();
@@ -225,8 +224,7 @@ class ProductController extends Controller
                 $file = $request->file("color_images.{$index}.file");
                 if ($file && $file->isValid()) {
                     $extension = $file->getClientOriginalExtension();
-                    $random = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 8);
-                    $filename = $product->id . '_color_' . $colorId . '_' . $random . '.' . $extension;
+                    $filename = $this->mediaFileName('color-' . $colorId, $extension);
 
                     $product->addMedia($file)
                         ->usingFileName($filename)
@@ -376,7 +374,7 @@ class ProductController extends Controller
         if ($request->hasFile('cover')) {
             $extension = $request->file('cover')->getClientOriginalExtension();
             $product->addMediaFromRequest('cover')
-                ->usingFileName('cover.' . $extension)
+                ->usingFileName($this->mediaFileName('cover', $extension))
                 ->toMediaCollection('cover');
         } elseif ($request->has('remove_cover') && $request->input('remove_cover') === '1') {
             // Remove existing cover image
@@ -396,8 +394,7 @@ class ProductController extends Controller
             foreach ($galleryFiles as $index => $image) {
                 if ($image && $image->isValid()) {
                     $extension = $image->getClientOriginalExtension();
-                    $random = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 8);
-                    $filename = $product->id . '_' . $random . '.' . $extension;
+                    $filename = $this->mediaFileName('gallery', $extension);
 
                     // Determine order: use gallery_order mapping if available, otherwise use index
                     $originalName = $image->getClientOriginalName();
@@ -420,6 +417,9 @@ class ProductController extends Controller
                 // Update order_column directly in database
                 \DB::table('media')
                     ->where('id', $mediaIdInt)
+                    ->where('model_type', Product::class)
+                    ->where('model_id', $product->id)
+                    ->where('collection_name', 'gallery')
                     ->update(['order_column' => (int) $order]);
             }
         }
@@ -464,8 +464,7 @@ class ProductController extends Controller
                     }
 
                     $extension = $file->getClientOriginalExtension();
-                    $random = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 8);
-                    $filename = $product->id . '_color_' . $colorId . '_' . $random . '.' . $extension;
+                    $filename = $this->mediaFileName('color-' . $colorId, $extension);
 
                     $product->addMedia($file)
                         ->usingFileName($filename)
@@ -549,7 +548,9 @@ public function bulkDelete(Request $request)
         }
 
         $ids = $request->input('ids');
-        Product::whereIn('id', $ids)->delete();
+        Product::whereIn('id', $ids)
+            ->get()
+            ->each(fn (Product $product) => $product->delete());
 
         $this->revalidateCatalog();
 
@@ -599,5 +600,10 @@ public function bulkDelete(Request $request)
             StorefrontRevalidationService::PRODUCTS,
             StorefrontRevalidationService::COLLECTIONS,
         ]);
+    }
+
+    private function mediaFileName(string $prefix, string $extension): string
+    {
+        return Str::slug($prefix) . '-' . Str::uuid() . '.' . strtolower($extension);
     }
 }
