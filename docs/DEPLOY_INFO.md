@@ -91,16 +91,24 @@ corepack pnpm build
 - `APP_URL=https://nolita.com.ar`
 
 ### Web Frontal (.env.production)
-- `NEXT_PUBLIC_VADMIN_API_URL=https://nolita.com.ar/api`
+- `NEXT_PUBLIC_VADMIN_API_URL=<public-vadmin-api-url>`
 - `NEXTJS_REVALIDATE_TOKEN=<shared-secret>`
 
-`build-web.sh` creates `web/.env.production` when it is missing and seeds these defaults:
+`build-web.sh` creates `web/.env.production` when it is missing and seeds these safe defaults:
 
 ```bash
 COMPANY_NAME="Nolita"
 SITE_NAME="Nolita"
-NEXT_PUBLIC_VADMIN_API_URL="https://nolita.com.ar/api"
+NEXT_PUBLIC_VADMIN_API_URL=
 ```
+
+After the first run, edit `web/.env.production` and set `NEXT_PUBLIC_VADMIN_API_URL` to the public VADMIN API for the current environment, for example:
+
+```bash
+NEXT_PUBLIC_VADMIN_API_URL=https://nolita.com.ar/api
+```
+
+For online development or staging environments, use that environment's public API URL instead. The script does not hardcode one accepted domain.
 
 The script also generates or syncs `NEXTJS_REVALIDATE_TOKEN` between `web/.env.production` and `admin/backend/.env`.
 

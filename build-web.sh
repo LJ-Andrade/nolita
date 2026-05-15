@@ -3,7 +3,6 @@ set -euo pipefail
 
 PM2_APP_NAME="${PM2_APP_NAME:-nolita-web}"
 EXPECTED_WEBHOOK_URL="${EXPECTED_WEBHOOK_URL:-http://127.0.0.1:3002/api/revalidate}"
-EXPECTED_WEB_API_URL="${EXPECTED_WEB_API_URL:-https://nolita.com.ar/api}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$ROOT_DIR/web"
@@ -92,9 +91,9 @@ ensure_web_env_config() {
     echo "Added SITE_NAME to web env."
   fi
 
-  if [ -z "$(read_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")" ]; then
-    set_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL" "$EXPECTED_WEB_API_URL"
-    echo "Added NEXT_PUBLIC_VADMIN_API_URL to web env."
+  if ! grep -q -E "^NEXT_PUBLIC_VADMIN_API_URL=" "$WEB_ENV"; then
+    printf '\nNEXT_PUBLIC_VADMIN_API_URL=\n' >> "$WEB_ENV"
+    echo "Added NEXT_PUBLIC_VADMIN_API_URL placeholder to web env."
   fi
 }
 
@@ -164,18 +163,14 @@ require_command pm2
 ensure_web_env_config
 ensure_revalidation_config
 
-web_api_url="$(require_env "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")"
+web_api_url="$(read_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")"
+[ -n "$web_api_url" ] || fail "Set NEXT_PUBLIC_VADMIN_API_URL in $WEB_ENV, for example https://your-domain/api"
 web_token="$(require_env "$WEB_ENV" "NEXTJS_REVALIDATE_TOKEN")"
 backend_webhook_url="$(require_env "$BACKEND_ENV" "NEXTJS_REVALIDATE_WEBHOOK_URL")"
 backend_token="$(require_env "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN")"
 
 [ "$web_token" = "$backend_token" ] || fail "Revalidation tokens do not match between web and backend env files"
 [ "$backend_webhook_url" = "$EXPECTED_WEBHOOK_URL" ] || fail "NEXTJS_REVALIDATE_WEBHOOK_URL must be $EXPECTED_WEBHOOK_URL"
-
-case "$web_api_url" in
-  "$EXPECTED_WEB_API_URL") ;;
-  *) fail "NEXT_PUBLIC_VADMIN_API_URL must be $EXPECTED_WEB_API_URL" ;;
-esac
 
 echo "Building web..."
 cd "$WEB_DIR"

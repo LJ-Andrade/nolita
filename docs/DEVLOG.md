@@ -7,6 +7,8 @@ This document tracks execution steps. One task per logical unit.
 2. [x] `build-web.sh`: Use the storefront package lock that is present in the repository for production installs.
 3. [x] `docs/DEPLOY_INFO.md`: Document generated web env values and the package manager behavior.
 4. [x] Validation: Run shell syntax validation for the deploy script.
+5. [x] `build-web.sh`: Stop hardcoding one accepted VADMIN API URL and require explicit endpoint configuration.
+6. [x] `docs/DEPLOY_INFO.md`: Document environment-specific API URL configuration after env bootstrap.
 
 ## Phase 53: Storefront Footer and Brand Assets
 1. [x] `docs/SPECS.md`: Document footer layout, logo asset usage, and favicon behavior.
