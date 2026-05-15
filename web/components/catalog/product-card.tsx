@@ -7,9 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { EyeIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon } from "@heroicons/react/24/outline";
 import { toggleFavoriteAction } from "lib/vadmin/favorites-actions";
-import { AddSizeCurveButton } from "components/product/add-size-curve-button";
 import { ProductPrice } from "components/product/product-price";
 
 type ProductCardProps = {
@@ -17,9 +16,16 @@ type ProductCardProps = {
 	priority?: boolean;
 	isFavorited?: boolean;
 	isAuthenticated?: boolean;
+	showColors?: boolean;
 };
 
-export function ProductCard({ product, priority = false, isFavorited = false, isAuthenticated = false }: ProductCardProps) {
+export function ProductCard({
+	product,
+	priority = false,
+	isFavorited = false,
+	isAuthenticated = false,
+	showColors = true,
+}: ProductCardProps) {
 	const router = useRouter();
 	const defaultImageUrl =
 		product.featuredImage?.url ?? product.images?.[0]?.url ?? "";
@@ -113,29 +119,12 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 						className={`h-5 w-5 transition-colors ${favorited ? "fill-red-500 text-red-500" : "text-gray-500"}`}
 					/>
 				</button>
-
-				{/* Hover actions */}
-				<div
-					className="absolute inset-0 flex items-end justify-center gap-5 p-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-					style={{ background: "rgba(0,0,0,0.04)" }}
-				>
-					{isAuthenticated && (
-						<AddSizeCurveButton
-							product={product}
-							compact
-							className="flex h-14 min-w-0 flex-1 items-center justify-center rounded-[8px] bg-white px-5 text-sm font-semibold tracking-normal text-black shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-white disabled:opacity-50"
-						/>
-					)}
-					<span className="flex h-14 w-16 shrink-0 items-center justify-center rounded-[8px] bg-white text-black shadow-lg transition-transform hover:-translate-y-0.5">
-						<EyeIcon className="h-6 w-6" />
-					</span>
-				</div>
 			</Link>
 
 			{/* ── Info ───────────────────────────────────────────────────── */}
 			<div className="flex flex-col gap-1.5 p-3 pt-3">
 				{/* Color swatches — Moved above Title */}
-				{colors.length > 0 && (
+				{showColors && colors.length > 0 && (
 					<div className="mb-0.5 flex items-center gap-1.5">
 						{colors.map((color) => {
 							const hex = getColorHex(color);
@@ -191,12 +180,10 @@ export function ProductCard({ product, priority = false, isFavorited = false, is
 					{product.title}
 				</Link>
 
-				{isAuthenticated && (
-					<ProductPrice
-						product={product}
-						className="text-sm font-medium"
-					/>
-				)}
+				<ProductPrice
+					product={product}
+					className="text-sm font-medium"
+				/>
 			</div>
 		</article>
 	);

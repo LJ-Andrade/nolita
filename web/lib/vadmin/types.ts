@@ -54,6 +54,10 @@ export type Product = {
     maxVariantPrice: Money;
     minVariantPrice: Money;
   } | null;
+  priceMode?: "retail" | "wholesale";
+  salePrice?: string | null;
+  wholesalePrice?: string | null;
+  hideOnWholesale?: boolean;
   discount?: number;
   hasDiscount?: boolean;
   variants: ProductVariant[];
@@ -101,6 +105,10 @@ export type CartItem = {
       handle: string;
       title: string;
       stock?: number;
+      salePrice?: string | null;
+      retailPrice?: string | null;
+      wholesalePrice?: string | null;
+      hideOnWholesale?: boolean;
       featuredImage: Image;
       colorImages?: { color: string; url: string }[];
     };
@@ -117,6 +125,7 @@ export type Cart = {
   };
   lines: CartItem[];
   totalQuantity: number;
+  priceMode?: "retail" | "wholesale";
 };
 
 export type Menu = {

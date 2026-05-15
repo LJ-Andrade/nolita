@@ -1,6 +1,7 @@
 import { ProductGrid } from "components/catalog/product-grid";
 import { defaultSort, sorting } from "lib/constants";
 import { getProducts } from "lib/vadmin";
+import { getServerPriceMode } from "lib/price-mode";
 import { getFavorites } from "lib/vadmin/favorites";
 import { getSession } from "lib/vadmin/auth";
 
@@ -16,9 +17,10 @@ export default async function SearchPage(props: {
   const { sort, q: searchValue } = searchParams as { [key: string]: string };
   const { sortKey, reverse } =
     sorting.find((item) => item.slug === sort) || defaultSort;
+  const mode = await getServerPriceMode();
 
   const [products, session] = await Promise.all([
-    getProducts({ sortKey, reverse, query: searchValue }),
+    getProducts({ sortKey, reverse, query: searchValue, mode }),
     getSession(),
   ]);
 

@@ -2,16 +2,32 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import type { Collection } from "lib/vadmin/types";
 
-export function ActiveFilters() {
+const SORT_LABELS: Record<string, string> = {
+  featured: "Destacados",
+  newest: "Últimos Ingresos",
+  discount_desc: "Mayor Descuento",
+  price_asc: "Precio: Menor a Mayor",
+  price_desc: "Precio: Mayor a Menor",
+};
+
+type ActiveFiltersProps = {
+  categories?: Collection[];
+};
+
+export function ActiveFilters({ categories = [] }: ActiveFiltersProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   const category = searchParams.get("categoria") ?? searchParams.get("category");
   const sizes = searchParams.getAll("size");
+  const sort = searchParams.get("sort");
+  const categoryTitle =
+    categories.find((item) => item.handle === category)?.title ?? category;
 
-  const hasFilters = !!category || sizes.length > 0;
+  const hasFilters = !!category || sizes.length > 0 || !!sort;
 
   const removeFilter = useCallback(
     (key: string, value?: string) => {
@@ -44,10 +60,10 @@ export function ActiveFilters() {
   if (!hasFilters) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 py-3">
+    <div className="flex flex-wrap items-center gap-2 py-0">
       {category && (
         <FilterChip
-          label={`Categoría: ${category}`}
+          label={`Categoría: ${categoryTitle}`}
           onRemove={removeCategoryFilter}
         />
       )}
@@ -58,6 +74,12 @@ export function ActiveFilters() {
           onRemove={() => removeFilter("size", size)}
         />
       ))}
+      {sort && (
+        <FilterChip
+          label={`Orden: ${SORT_LABELS[sort] ?? sort}`}
+          onRemove={() => removeFilter("sort")}
+        />
+      )}
       <button
         onClick={clearAll}
         className="text-[11px] underline underline-offset-2 transition-opacity hover:opacity-60"
@@ -78,7 +100,7 @@ function FilterChip({
 }) {
   return (
     <span
-      className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium uppercase tracking-wide"
+      className="flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium uppercase leading-none tracking-wide"
       style={{
         border: "1px solid var(--pb-border)",
         color: "var(--pb-text)",

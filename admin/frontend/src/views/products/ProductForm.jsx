@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Save, X, Plus, Trash2, List, Wand2, Check, Image } from "lucide-react";
+import { Loader2, Save, X, Plus, Trash2, List, Wand2, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -47,10 +47,7 @@ export default function ProductForm() {
 	const [removeCover, setRemoveCover] = useState(false);
 	const [gallery, setGallery] = useState([]);
 	const [productName, setProductName] = useState("");
-	const [colorImageUrls, setColorImageUrls] = useState({});
-	const [pendingColorImages, setPendingColorImages] = useState({});
 	const [fillingFakeData, setFillingFakeData] = useState(false);
-	const [loadingColorImages, setLoadingColorImages] = useState(false);
 	const [bulkValues, setBulkValues] = useState({
 		stock: "",
 		minStock: "",
@@ -94,6 +91,7 @@ export default function ProductForm() {
 		status: z.enum(["draft", "published", "archived"]),
 		order: z.coerce.number().optional().default(0),
 		featured: z.boolean().default(false),
+		hide_on_wholesale: z.boolean().default(false),
 	});
 
 	const form = useForm({
@@ -117,6 +115,7 @@ export default function ProductForm() {
 			status: "draft",
 			order: 0,
 			featured: false,
+			hide_on_wholesale: false,
 		},
 	});
 	const variants = form.watch('variants') || [];
@@ -174,18 +173,11 @@ export default function ProductForm() {
 						status: data.data.status,
 						order: data.data.order || 0,
 						featured: data.data.featured || false,
+						hide_on_wholesale: data.data.hide_on_wholesale || false,
 					});
 					setCoverUrl(data.data.cover_url);
 					setGallery(data.data.gallery || []);
 					setProductName(data.data.name);
-
-					const initialColorUrls = {};
-					if (data.data.color_images) {
-						data.data.color_images.forEach(img => {
-							initialColorUrls[img.color_id] = img.image_url;
-						});
-					}
-					setColorImageUrls(initialColorUrls);
 
 					setFetching(false);
 				})
@@ -238,6 +230,7 @@ export default function ProductForm() {
 				color_ids: randomColors,
 				status: "published",
 				featured: true,
+				hide_on_wholesale: false,
 			});
 			setProductName(fakeName);
 
@@ -253,19 +246,6 @@ export default function ProductForm() {
 			if (g2) newGallery.push({ id: `new-${Date.now()}-2`, file: g2, preview: URL.createObjectURL(g2) });
 			setGallery(newGallery);
 
-			// Color Images
-			const newPendingColorImages = {};
-			const newColorImageUrls = {};
-			for (const cid of randomColors) {
-				const cFile = await fetchFakeImage(800, 800, `color_${cid}.jpg`);
-				if (cFile) {
-					newPendingColorImages[cid] = cFile;
-					newColorImageUrls[cid] = URL.createObjectURL(cFile);
-				}
-			}
-			setPendingColorImages(newPendingColorImages);
-			setColorImageUrls(newColorImageUrls);
-
 			// Generate Variants
 			setTimeout(() => {
 				generateVariants();
@@ -280,40 +260,6 @@ export default function ProductForm() {
 		}
 	};
 
-	const loadColorImagesFromPicsum = async () => {
-		const selectedColorIds = form.getValues('color_ids');
-		if (!selectedColorIds || selectedColorIds.length === 0) {
-			toast.warning("Selecciona al menos un color primero");
-			return;
-		}
-
-		setLoadingColorImages(true);
-		toast.info("Descargando imágenes por color...");
-
-		try {
-			const newPendingColorImages = { ...pendingColorImages };
-			const newColorImageUrls = { ...colorImageUrls };
-
-			for (const colorId of selectedColorIds) {
-				const cFile = await fetchFakeImage(800, 1000, `color_${colorId}.jpg`);
-				if (cFile) {
-					newPendingColorImages[colorId] = cFile;
-					newColorImageUrls[colorId] = URL.createObjectURL(cFile);
-				}
-			}
-
-			setPendingColorImages(newPendingColorImages);
-			setColorImageUrls(newColorImageUrls);
-			toast.success("Imágenes de color cargadas");
-		} catch (error) {
-			console.error(error);
-			toast.error("Error al cargar imágenes de color");
-		} finally {
-			setLoadingColorImages(false);
-		}
-	};
-
-
 	const handleCoverChange = (file) => {
 		setPendingCover(file);
 		if (file) {
@@ -322,19 +268,6 @@ export default function ProductForm() {
 		} else {
 			setCoverUrl(null);
 			setRemoveCover(true);
-		}
-	};
-
-	const handleColorImageChange = (colorId, file) => {
-		setPendingColorImages(prev => ({ ...prev, [colorId]: file || null }));
-		if (file) {
-			setColorImageUrls(prev => ({ ...prev, [colorId]: URL.createObjectURL(file) }));
-		} else {
-			setColorImageUrls(prev => {
-				const next = { ...prev };
-				delete next[colorId];
-				return next;
-			});
 		}
 	};
 
@@ -436,7 +369,7 @@ export default function ProductForm() {
 						}
 					});
 				});
-			} else if (key === 'featured') {
+			} else if (key === 'featured' || key === 'hide_on_wholesale') {
 				formData.append(key, values[key] ? '1' : '0');
 			} else if (typeof values[key] === 'boolean') {
 				formData.append(key, values[key] ? '1' : '0');
@@ -447,6 +380,9 @@ export default function ProductForm() {
 
 		if (!formData.has('featured')) {
 			formData.append('featured', '0');
+		}
+		if (!formData.has('hide_on_wholesale')) {
+			formData.append('hide_on_wholesale', '0');
 		}
 
 		if (pendingCover) {
@@ -473,18 +409,6 @@ export default function ProductForm() {
 			}
 		});
 		formData.append("gallery_order", JSON.stringify(galleryOrder));
-
-		// Send color images
-		let colorImageIndex = 0;
-		Object.entries(pendingColorImages).forEach(([colorId, file]) => {
-			if (file) {
-				formData.append(`color_images[${colorImageIndex}][color_id]`, colorId);
-				formData.append(`color_images[${colorImageIndex}][file]`, file);
-				colorImageIndex++;
-			} else if (file === null) {
-				formData.append('remove_color_images[]', colorId);
-			}
-		});
 
 		if (id) {
 			formData.append("_method", "PUT");
@@ -598,7 +522,7 @@ export default function ProductForm() {
 								/>
 							</div>
 
-							{/* Row 3: Visible prices - 3 columns */}
+							{/* Row 3: Prices */}
 							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 								<FormField
 									control={form.control}
@@ -619,7 +543,21 @@ export default function ProductForm() {
 									name="sale_price"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>{"Precio de Venta"}</FormLabel>
+											<FormLabel>{"Precio Minorista"}</FormLabel>
+											<FormControl>
+												<Input type="number" step="0.01" {...field} placeholder="0.00" />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="wholesale_price"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>{"Precio Mayorista"}</FormLabel>
 											<FormControl>
 												<Input type="number" step="0.01" {...field} placeholder="0.00" />
 											</FormControl>
@@ -641,11 +579,15 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
+							</div>
+
+							{/* Row 3b: Category | Wholesale visibility */}
+							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 								<FormField
 									control={form.control}
 									name="category_id"
 									render={({ field }) => (
-										<FormItem>
+										<FormItem className="md:col-span-3">
 											<FormLabel>{"Categoría"}</FormLabel>
 											<FormControl>
 												<select
@@ -665,9 +607,27 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
+
+								<FormField
+									control={form.control}
+									name="hide_on_wholesale"
+									render={({ field }) => (
+										<FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-8">
+											<FormControl>
+												<Checkbox
+													checked={field.value}
+													onCheckedChange={field.onChange}
+												/>
+											</FormControl>
+											<FormLabel className="font-normal">
+												{"Ocultar en mayorista"}
+											</FormLabel>
+										</FormItem>
+									)}
+								/>
 							</div>
 
-							{/* Row 3b: Stock | Min | Category */}
+							{/* Row 3c: Stock | Min */}
 							<div className="grid grid-cols-1 md:grid-cols-6 gap-4">
 								{!hasVariants && (
 									<FormField
@@ -700,31 +660,6 @@ export default function ProductForm() {
 										)}
 									/>
 								)}
-
-								<FormField
-									control={form.control}
-									name="category_id"
-									render={({ field }) => (
-										<FormItem className="hidden">
-											<FormLabel>{"Categoría"}</FormLabel>
-											<FormControl>
-												<select
-													className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-													{...field}
-													value={field.value || ''}
-												>
-													<option value="">{"Todas las Categorías"}</option>
-													{categories.map((cat) => (
-														<option key={cat.id} value={cat.id}>
-															{cat.name}
-														</option>
-													))}
-												</select>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
 							</div>
 
 
@@ -936,30 +871,6 @@ export default function ProductForm() {
 								)}
 							</div>
 
-							{form.watch('color_ids')?.length > 0 && (
-								<div className="border-t mt-4 pt-4">
-									<p className="text-sm font-medium mb-3 px-1">{"Imágenes por Color"}</p>
-									<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-1">
-										{form.watch('color_ids').map(colorId => {
-											const color = colors.find(c => c.id == colorId);
-											if (!color) return null;
-											return (
-												<div key={colorId} className="border rounded-md p-3 flex flex-col gap-3 bg-muted/5">
-													<div className="flex items-center gap-2">
-														<div className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: color.hex_color }} />
-														<span className="text-xs font-medium">{color.name}</span>
-													</div>
-													<ImageUpload
-														value={colorImageUrls[colorId] || null}
-														onChange={(file) => handleColorImageChange(colorId, file)}
-														onRemove={() => handleColorImageChange(colorId, null)}
-													/>
-												</div>
-											);
-										})}
-									</div>
-								</div>
-							)}
 						</CardContent>
 					</Card>
 
@@ -1070,6 +981,7 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
+
 							</div>
 						</CardContent>
 					</Card>
@@ -1080,12 +992,6 @@ export default function ProductForm() {
 							<Button type="button" variant="secondary" onClick={fillFakeData} disabled={loading || fillingFakeData}>
 								{fillingFakeData ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
 								Llenar Datos
-							</Button>
-						)}
-						{id && (
-							<Button type="button" variant="outline" onClick={loadColorImagesFromPicsum} disabled={loading || loadingColorImages}>
-								{loadingColorImages ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Image className="mr-2 h-4 w-4" />}
-								Cargar imágenes por color
 							</Button>
 						)}
 						<Button variant="outline" onClick={() => navigate('/productos')} type="button">

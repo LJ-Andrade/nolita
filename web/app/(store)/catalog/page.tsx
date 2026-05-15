@@ -1,11 +1,10 @@
 import { ActiveFilters } from "components/catalog/active-filters";
-import { FilterSidebar } from "components/catalog/filter-sidebar";
-import { MobileFilterDrawer } from "components/catalog/mobile-filter-drawer";
+import { EditorialFilterControls } from "components/catalog/editorial-filter-controls";
 import { ProductGrid } from "components/catalog/product-grid";
-import { SortBar } from "components/catalog/sort-bar";
 import { getCollections, getProducts } from "lib/vadmin";
 import { getFavorites } from "lib/vadmin/favorites";
 import { getSession } from "lib/vadmin/auth";
+import { getServerPriceMode } from "lib/price-mode";
 import type { Product } from "lib/vadmin/types";
 import { Suspense } from "react";
 
@@ -20,6 +19,8 @@ type SearchParams = {
 function sortProducts(products: Product[], sort: string): Product[] {
   const copy = [...products];
   switch (sort) {
+    case "featured":
+      return copy;
     case "price_asc":
       return copy.sort(
         (a, b) =>
@@ -34,6 +35,8 @@ function sortProducts(products: Product[], sort: string): Product[] {
       );
     case "name_asc":
       return copy.sort((a, b) => a.title.localeCompare(b.title));
+    case "discount_desc":
+      return copy.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
     case "newest":
     default:
       return copy.sort(
@@ -95,14 +98,15 @@ export default async function CatalogPage(props: {
       ? searchParams.size
       : [searchParams.size]
     : [];
-  const sort = searchParams.sort ?? "newest";
+  const sort = searchParams.sort ?? "featured";
   const query = searchParams.q;
+  const mode = await getServerPriceMode();
 
   const [allProducts, collections, session, categoryFilterProducts] = await Promise.all([
-    getProducts({ category, query }),
+    getProducts({ category, query, mode }),
     getCollections(),
     getSession(),
-    category ? getProducts({ query }) : Promise.resolve(null),
+    category ? getProducts({ query, mode }) : Promise.resolve(null),
   ]);
 
   const favorites = session ? await getFavorites() : [];
@@ -124,28 +128,31 @@ export default async function CatalogPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-4 py-8 lg:px-8">
-      <div className="flex gap-10 lg:gap-16">
-        <div
-          className="hidden w-56 shrink-0 lg:block"
-          style={{ borderRight: "1px solid var(--pb-border)" }}
-        >
+    <div className="bg-white pb-24">
+      <Suspense fallback={null}>
+        <EditorialFilterControls
+          categories={sidebarCategories}
+          sizes={allSizes}
+          total={sorted.length}
+        />
+      </Suspense>
+
+      <div className="mx-auto max-w-screen-2xl px-4 py-8 lg:px-8">
+        <div className="sticky top-[64px] z-30 flex flex-wrap items-center justify-between gap-3 border-b bg-white/90 py-3 backdrop-blur-md md:top-[76px]">
+          <p className="text-sm text-[#d85a3f]">
+            {sorted.length} {sorted.length === 1 ? "producto" : "productos"}
+          </p>
           <Suspense fallback={null}>
-            <FilterSidebar categories={sidebarCategories} sizes={allSizes} />
+            <ActiveFilters categories={sidebarCategories} />
           </Suspense>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <Suspense fallback={null}>
-            <SortBar
-              total={sorted.length}
-              filtersAction={<MobileFilterDrawer categories={sidebarCategories} sizes={allSizes} />}
-            />
-            <ActiveFilters />
-          </Suspense>
-          <div className="mt-6">
-            <ProductGrid products={sorted} favoriteIds={favoriteIds} isAuthenticated={isAuthenticated} />
-          </div>
+        <div className="mt-6">
+          <ProductGrid
+            products={sorted}
+            favoriteIds={favoriteIds}
+            isAuthenticated={isAuthenticated}
+          />
         </div>
       </div>
     </div>

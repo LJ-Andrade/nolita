@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, Fragment } from 'reac
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axiosClient from '@/lib/axios';
+import { getMediaUrl } from '@/lib/media-url';
 import { formatDate } from '@/lib/utils';
 import {
 	Table,
@@ -337,6 +338,7 @@ export default function ProductsList() {
 								</TableHead>
 								<TableHead>{"Categoría"}</TableHead>
 								<TableHead>{"Precio Minorista"}</TableHead>
+								<TableHead>{"Precio Mayorista"}</TableHead>
 								<TableHead>{"Estado"}</TableHead>
 								<TableHead className="cursor-pointer select-none w-[120px]" onClick={() => handleSort("featured")}>
 									<div className="flex items-center">
@@ -354,7 +356,7 @@ export default function ProductsList() {
 						<TableBody className={loading ? 'opacity-50 pointer-events-none' : ''}>
 							{loading && products.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={10} className="text-center">
+									<TableCell colSpan={11} className="text-center">
 										{"Cargando..."}
 									</TableCell>
 								</TableRow>
@@ -375,7 +377,7 @@ export default function ProductsList() {
 										<TableCell className="w-[60px]">{product.id}</TableCell>
 										<TableCell>
 											{product.cover_url ? (
-												<img src={product.cover_url} alt={product.name} className="h-10 w-10 object-cover rounded shadow-sm" />
+												<img src={getMediaUrl(product.cover_url)} alt={product.name} className="h-10 w-10 object-cover rounded shadow-sm" />
 											) : (
 												<div className="h-10 w-10 bg-muted flex items-center justify-center rounded">
 													<ImageIcon className="h-5 w-5 text-muted-foreground" />
@@ -386,6 +388,9 @@ export default function ProductsList() {
 										<TableCell>{product.category?.name}</TableCell>
 										<TableCell>
 											<div className="font-medium">{product.sale_price}</div>
+										</TableCell>
+										<TableCell>
+											<div className="font-medium">{product.wholesale_price}</div>
 										</TableCell>
 										<TableCell>
 											<DropdownMenu>

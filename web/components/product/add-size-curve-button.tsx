@@ -2,6 +2,8 @@
 
 import { addMultipleItems } from "components/cart/actions";
 import { useCart } from "components/cart/cart-context";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { isProductPurchasableInMode } from "lib/pricing";
 import type { Product } from "lib/vadmin/types";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -18,8 +20,11 @@ export function AddSizeCurveButton({
   compact = false,
 }: AddSizeCurveButtonProps) {
   const { addMultipleCartItems } = useCart();
+  const { priceMode } = usePriceMode();
   const [isPending, startTransition] = useTransition();
-  const availableVariants = product.variants?.filter((variant) => variant.availableForSale) || [];
+  const availableVariants = isProductPurchasableInMode(product, priceMode)
+    ? product.variants?.filter((variant) => variant.availableForSale) || []
+    : [];
 
   if (availableVariants.length === 0) return null;
 

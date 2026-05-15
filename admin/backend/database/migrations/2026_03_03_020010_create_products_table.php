@@ -31,6 +31,7 @@ return new class extends Migration
             $table->string('thumb')->nullable();
             $table->json('gallery')->nullable();
             $table->boolean('featured')->default(false);
+            $table->boolean('hide_on_wholesale')->default(false);
             $table->integer('order')->default(0);
             
             // Status and SEO

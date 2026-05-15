@@ -137,25 +137,48 @@ export async function vadminFetch<T>({
 }
 export function getVadminImageUrl(path: string | null | undefined): string {
   if (!path) return "";
-  if (path.startsWith("http")) return path;
-  
-  // Extract base domain from endpoint (e.g. http://localhost:8000/api -> http://localhost:8000)
-  const baseUrl = endpoint.replace("/api", "");
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  
-  return `${baseUrl}${cleanPath}`;
+  const parsedPath = path.startsWith("http") ? new URL(path).pathname : path;
+  const cleanPath = parsedPath.startsWith("/") ? parsedPath : `/${parsedPath}`;
+
+  if (cleanPath.startsWith("/storage/")) {
+    return `/vadmin-storage/${cleanPath.replace("/storage/", "")}`;
+  }
+
+  return cleanPath;
+}
+
+function normalizeProductImageUrls(product: Product): Product {
+  return {
+    ...product,
+    featuredImage: product.featuredImage
+      ? {
+          ...product.featuredImage,
+          url: getVadminImageUrl(product.featuredImage.url),
+        }
+      : product.featuredImage,
+    images: product.images?.map((image) => ({
+      ...image,
+      url: getVadminImageUrl(image.url),
+    })) ?? [],
+    colorImages: product.colorImages?.map((image) => ({
+      ...image,
+      url: getVadminImageUrl(image.url),
+    })),
+  };
 }
 
 // CATALOG
 export async function getProducts({
   category,
   featured,
+  mode,
   query,
   reverse,
   sortKey,
 }: {
   category?: string;
   featured?: boolean;
+  mode?: "retail" | "wholesale";
   query?: string;
   reverse?: boolean;
   sortKey?: string;
@@ -166,14 +189,14 @@ export async function getProducts({
 
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
-    params: { category, featured, search: query, reverse, sortKey },
+    params: { category, featured, mode, search: query, reverse, sortKey },
     tags: [TAGS.products],
   });
 
-  return res.body;
+  return res.body.map(normalizeProductImageUrls);
 }
 
-export async function getProduct(handle: string): Promise<Product | undefined> {
+export async function getProduct(handle: string, mode?: "retail" | "wholesale"): Promise<Product | undefined> {
   "use cache";
   cacheTag(TAGS.products);
   cacheLife("days");
@@ -181,9 +204,10 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   try {
     const res = await vadminFetch<Product>({
       path: `catalog/products/${handle}`,
+      params: { mode },
       tags: [TAGS.products],
     });
-    return res.body;
+    return normalizeProductImageUrls(res.body);
   } catch (e) {
     return undefined;
   }
@@ -242,10 +266,12 @@ export async function getCollection(handle: string): Promise<Collection | undefi
 
 export async function getCollectionProducts({
   collection,
+  mode,
   reverse,
   sortKey,
 }: {
   collection: string;
+  mode?: "retail" | "wholesale";
   reverse?: boolean;
   sortKey?: string;
 }): Promise<Product[]> {
@@ -255,11 +281,11 @@ export async function getCollectionProducts({
 
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
-    params: { category: collection, reverse, sortKey },
+    params: { category: collection, mode, reverse, sortKey },
     tags: [TAGS.products, TAGS.collections],
   });
 
-  return res.body;
+  return res.body.map(normalizeProductImageUrls);
 }
 
 export async function getMenu(handle: string): Promise<Menu[]> {

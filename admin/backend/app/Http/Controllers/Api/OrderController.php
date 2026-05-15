@@ -10,6 +10,9 @@ use App\Models\OrderItem;
 use App\Models\Coupon;
 use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
+use App\Models\ShopConfiguration;
+use App\Models\NotificationType;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -42,14 +45,15 @@ class OrderController extends Controller
 		$request->validate([
 			'product_variant_id' => 'required|exists:product_variants,id',
 			'quantity' => 'required|integer|min:1',
+			'price_mode' => ['nullable', Rule::in(['retail', 'wholesale'])],
 		]);
 
 		$variant = ProductVariant::with('product')->find($request->product_variant_id);
-		$unitPrice = $this->getVariantUnitPrice($variant);
+		$priceMode = $this->resolvePriceMode($request->input('price_mode'));
+		$unitPrice = $this->getVariantUnitPrice($variant, $priceMode);
 
-		// Stock check
-		if ($variant->stock < $request->quantity) {
-			return response()->json(['message' => 'Insufficient stock'], 400);
+		if ($unitPrice <= 0) {
+			return response()->json(['message' => 'Product is not available for this mode'], 422);
 		}
 
 		DB::beginTransaction();
@@ -63,8 +67,10 @@ class OrderController extends Controller
 				[
 					'total_amount' => 0,
 					'currency' => 'ARS',
+					'price_mode' => $priceMode,
 				]
 			);
+			$cart->update(['price_mode' => $priceMode]);
 
 			// Find or create item
 			/** @var \App\Models\OrderItem|null $item */
@@ -89,9 +95,6 @@ class OrderController extends Controller
 				]);
 			}
 
-			// Reserve stock (as requested: "reservando stock real")
-			$variant->decrement('stock', $request->quantity);
-
 			$this->updateCartTotal($cart);
 
 			DB::commit();
@@ -110,6 +113,7 @@ class OrderController extends Controller
 	{
 		$request->validate([
 			'quantity' => 'required|integer|min:1',
+			'price_mode' => ['nullable', Rule::in(['retail', 'wholesale'])],
 		]);
 
 		$item = OrderItem::with('variant.product')->findOrFail($itemId);
@@ -121,20 +125,11 @@ class OrderController extends Controller
 
 		DB::beginTransaction();
 		try {
-			$diff = $request->quantity - $item->quantity;
-
-			if ($diff > 0) {
-				// We need more stock
-				if ($item->variant->stock < $diff) {
-					return response()->json(['message' => 'Insufficient stock'], 400);
-				}
-				$item->variant->decrement('stock', $diff);
-			} elseif ($diff < 0) {
-				// We return stock
-				$item->variant->increment('stock', abs($diff));
+			$priceMode = $this->resolvePriceMode($request->input('price_mode', $cart->price_mode));
+			$unitPrice = $this->getVariantUnitPrice($item->variant, $priceMode);
+			if ($unitPrice <= 0) {
+				return response()->json(['message' => 'Product is not available for this mode'], 422);
 			}
-
-			$unitPrice = $this->getVariantUnitPrice($item->variant);
 			$item->update([
 				'quantity' => $request->quantity,
 				'unit_price' => $unitPrice,
@@ -142,6 +137,7 @@ class OrderController extends Controller
 			]);
 
 			$this->updateCartTotal($cart);
+			$cart->update(['price_mode' => $priceMode]);
 
 			DB::commit();
 
@@ -166,8 +162,6 @@ class OrderController extends Controller
 
 		DB::beginTransaction();
 		try {
-			// Return stock
-			$item->variant->increment('stock', $item->quantity);
 			$item->delete();
 
 			// If empty, delete cart (as requested)
@@ -206,11 +200,17 @@ class OrderController extends Controller
 	{
 		$validated = $request->validate([
 			'name' => ['required', 'string', 'max:255'],
-			'email' => ['required', 'email', 'max:255', Rule::unique('customers', 'email')->ignore($request->user()->id)],
+			'email' => ['required', 'email', 'max:255'],
 			'phone' => ['required', 'string', 'max:50'],
+			'whatsapp' => ['required', 'string', 'max:50'],
+			'cuit' => ['required', 'string', 'max:50'],
 			'address' => ['required', 'string', 'max:1000'],
 			'city' => ['nullable', 'string', 'max:255'],
 			'postal_code' => ['required', 'string', 'max:20'],
+			'price_mode' => ['nullable', Rule::in(['retail', 'wholesale'])],
+			'lines' => ['nullable', 'array'],
+			'lines.*.merchandiseId' => ['required_with:lines', 'integer', 'exists:product_variants,id'],
+			'lines.*.quantity' => ['required_with:lines', 'integer', 'min:1'],
 			'province_id' => ['required', 'integer', 'exists:provinces,id'],
 			'locality_id' => [
 				'required',
@@ -230,25 +230,47 @@ class OrderController extends Controller
 		$deliveryMethod = DeliveryMethod::findOrFail($validated['delivery_method_id']);
 		$paymentMethod = PaymentMethod::where('status', 'active')->findOrFail($validated['payment_method_id']);
 		$city = $validated['city'] ?: $locality->name;
+		$priceMode = $this->resolvePriceMode($validated['price_mode'] ?? null);
+		$customer = $request->user();
 
-		$cart = Order::where('customer_id', $request->user()->id)
-			->where('status', 'pending')
-			->with('items.variant.product')
-			->first();
+		$cart = $customer
+			? Order::where('customer_id', $customer->id)
+				->where('status', 'pending')
+				->with('items.variant.product')
+				->first()
+			: null;
 
-		if (!$cart) {
+		if (!$cart && empty($validated['lines'])) {
 			return response()->json(['message' => 'No active cart found'], 404);
 		}
 
-		if ($cart->items()->count() === 0) {
+		if ($cart && $cart->items()->count() === 0) {
 			return response()->json(['message' => 'Cannot checkout an empty cart'], 400);
 		}
 
 		$deliveryFee = (float) $deliveryMethod->fee;
 		$paymentFee = (float) $paymentMethod->fee;
-		$subtotal = $cart->items->reduce(function (float $total, OrderItem $item): float {
-			return $total + ($this->getVariantUnitPrice($item->variant) * (int) $item->quantity);
-		}, 0.0);
+		$checkoutLines = $cart
+			? $cart->items->map(fn (OrderItem $item): array => [
+				'variant_id' => (int) $item->product_variant_id,
+				'quantity' => (int) $item->quantity,
+			])->values()->all()
+			: collect($validated['lines'])->map(fn (array $line): array => [
+				'variant_id' => (int) $line['merchandiseId'],
+				'quantity' => (int) $line['quantity'],
+			])->values()->all();
+
+		$pricedLines = $this->buildPricedCheckoutLines($checkoutLines, $priceMode);
+		if (empty($pricedLines)) {
+			return response()->json(['message' => 'Cannot checkout an empty cart'], 400);
+		}
+
+		$subtotal = collect($pricedLines)->sum('subtotal');
+		$minimumError = $this->validateWholesaleMinimums($priceMode, $pricedLines, $subtotal);
+		if ($minimumError) {
+			return response()->json(['message' => $minimumError], 422);
+		}
+
 		$couponCode = trim((string) ($validated['coupon_code'] ?? ''));
 		$couponDiscountAmount = 0;
 		$appliedCouponCode = null;
@@ -264,38 +286,90 @@ class OrderController extends Controller
 			$appliedCouponCode = $coupon->code;
 		}
 
-		DB::transaction(function () use (
+		try {
+			$completedOrder = DB::transaction(function () use (
 			$cart,
-			$request,
+			$customer,
 			$validated,
 			$locality,
 			$deliveryMethod,
 			$paymentMethod,
 			$city,
+			$priceMode,
+			$pricedLines,
 			$subtotal,
 			$deliveryFee,
 			$paymentFee,
 			$couponDiscountAmount,
 			$appliedCouponCode
 		) {
-			foreach ($cart->items as $item) {
-				$unitPrice = $this->getVariantUnitPrice($item->variant);
-				$item->update([
-					'unit_price' => $unitPrice,
-					'subtotal' => $unitPrice * (int) $item->quantity,
-				]);
+			$order = $cart ?: Order::create([
+				'customer_id' => $customer?->id,
+				'status' => 'pending',
+				'total_amount' => 0,
+				'currency' => 'ARS',
+				'price_mode' => $priceMode,
+			]);
+
+			if (!$cart) {
+				foreach ($pricedLines as $line) {
+					$variant = $line['variant'];
+					$order->items()->create([
+						'product_id' => $variant->product_id,
+						'product_variant_id' => $variant->id,
+						'product_name' => $variant->product->name,
+						'quantity' => $line['quantity'],
+						'unit_price' => $line['unit_price'],
+						'subtotal' => $line['subtotal'],
+					]);
+				}
+			} else {
+				foreach ($order->items as $item) {
+					$line = collect($pricedLines)->firstWhere('variant_id', (int) $item->product_variant_id);
+					$item->update([
+						'unit_price' => $line['unit_price'],
+						'subtotal' => $line['subtotal'],
+					]);
+				}
 			}
 
-			$cart->update([
+			foreach ($pricedLines as $line) {
+				$variant = ProductVariant::whereKey($line['variant_id'])->lockForUpdate()->firstOrFail();
+				if ($variant->stock < $line['quantity']) {
+					throw new \RuntimeException("No hay stock suficiente para {$line['product_name']}");
+				}
+				$variant->decrement('stock', $line['quantity']);
+			}
+
+			$customerData = [
+				'name' => $validated['name'],
+				'email' => $validated['email'],
+				'phone' => $validated['phone'],
+				'whatsapp' => $validated['whatsapp'],
+				'cuit' => $validated['cuit'],
+				'address' => $validated['address'],
+				'city' => $city,
+				'postal_code' => $validated['postal_code'],
+				'province_id' => $validated['province_id'],
+				'province' => $locality->province?->name,
+				'locality_id' => $validated['locality_id'],
+				'locality' => $locality->name,
+			];
+
+			$order->update([
 				'status' => 'completed',
 				'total_amount' => max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee,
+				'price_mode' => $priceMode,
 				'payment_method' => (string) $validated['payment_method_id'],
 				'coupon_code' => $appliedCouponCode,
 				'coupon_discount_amount' => $couponDiscountAmount,
+				'customer_data' => $customerData,
 				'shipping_address' => [
 					'name' => $validated['name'],
 					'email' => $validated['email'],
 					'phone' => $validated['phone'],
+					'whatsapp' => $validated['whatsapp'],
+					'cuit' => $validated['cuit'],
 					'address' => $validated['address'],
 					'city' => $city,
 					'postal_code' => $validated['postal_code'],
@@ -311,6 +385,8 @@ class OrderController extends Controller
 					'name' => $validated['name'],
 					'email' => $validated['email'],
 					'phone' => $validated['phone'],
+					'whatsapp' => $validated['whatsapp'],
+					'cuit' => $validated['cuit'],
 					'address' => $validated['address'],
 					'city' => $city,
 					'postal_code' => $validated['postal_code'],
@@ -324,7 +400,8 @@ class OrderController extends Controller
 				],
 			]);
 
-			$request->user()->update([
+			if ($customer) {
+				$customer->update([
 				'name' => $validated['name'],
 				'email' => $validated['email'],
 				'phone' => $validated['phone'],
@@ -332,12 +409,19 @@ class OrderController extends Controller
 				'postal_code' => $validated['postal_code'],
 				'province_id' => $validated['province_id'],
 				'locality_id' => $validated['locality_id'],
-			]);
-		});
+				]);
+			}
+				return $order->fresh(['items']);
+			});
+		} catch (\RuntimeException $exception) {
+			return response()->json(['message' => $exception->getMessage()], 422);
+		}
+
+		$this->notifyOrderCreated($completedOrder);
 
 		return response()->json([
 			'message' => 'Order completed successfully',
-			'order' => $cart->fresh()
+			'order' => $completedOrder
 		]);
 	}
 
@@ -364,10 +448,68 @@ class OrderController extends Controller
 		]);
 	}
 
-	private function getVariantUnitPrice(?ProductVariant $variant): float
+	private function buildPricedCheckoutLines(array $lines, string $priceMode): array
+	{
+		$groupedLines = collect($lines)
+			->groupBy('variant_id')
+			->map(fn ($items, $variantId): array => [
+				'variant_id' => (int) $variantId,
+				'quantity' => collect($items)->sum('quantity'),
+			])
+			->values();
+
+		$variants = ProductVariant::with('product')
+			->whereIn('id', $groupedLines->pluck('variant_id'))
+			->get()
+			->keyBy('id');
+
+		return $groupedLines->map(function (array $line) use ($variants, $priceMode) {
+			$variant = $variants->get($line['variant_id']);
+			$unitPrice = $this->getVariantUnitPrice($variant, $priceMode);
+
+			if (!$variant || !$variant->product || $unitPrice <= 0) {
+				return null;
+			}
+
+			return [
+				'variant_id' => (int) $variant->id,
+				'variant' => $variant,
+				'product_name' => $variant->product->name,
+				'quantity' => (int) $line['quantity'],
+				'unit_price' => $unitPrice,
+				'subtotal' => round($unitPrice * (int) $line['quantity'], 2),
+			];
+		})->filter()->values()->all();
+	}
+
+	private function validateWholesaleMinimums(string $priceMode, array $pricedLines, float $subtotal): ?string
+	{
+		if ($priceMode !== 'wholesale') {
+			return null;
+		}
+
+		$config = ShopConfiguration::getCurrent();
+		$totalQuantity = collect($pricedLines)->sum('quantity');
+
+		if ($config->min_quantity > 0 && $totalQuantity < $config->min_quantity) {
+			return "La compra mayorista requiere minimo {$config->min_quantity} prendas.";
+		}
+
+		if ((float) $config->min_amount > 0 && $subtotal < (float) $config->min_amount) {
+			return 'La compra mayorista no alcanza el monto minimo.';
+		}
+
+		return null;
+	}
+
+	private function getVariantUnitPrice(?ProductVariant $variant, string $priceMode = 'retail'): float
 	{
 		if (!$variant || !$variant->product) {
 			return 0.0;
+		}
+
+		if ($priceMode === 'wholesale') {
+			return round((float) ($variant->product->wholesale_price ?? 0), 2);
 		}
 
 		$originalPrice = round((float) $variant->product->sale_price, 2);
@@ -380,14 +522,18 @@ class OrderController extends Controller
 		return round($originalPrice * (1 - ($discount / 100)), 2);
 	}
 
-	private function getVariantCompareAtPrice(?ProductVariant $variant): ?float
+	private function getVariantCompareAtPrice(?ProductVariant $variant, string $priceMode = 'retail'): ?float
 	{
 		if (!$variant || !$variant->product) {
 			return null;
 		}
 
+		if ($priceMode === 'wholesale') {
+			return null;
+		}
+
 		$originalPrice = round((float) $variant->product->sale_price, 2);
-		$unitPrice = $this->getVariantUnitPrice($variant);
+		$unitPrice = $this->getVariantUnitPrice($variant, $priceMode);
 
 		return $unitPrice < $originalPrice ? $originalPrice : null;
 	}
@@ -401,12 +547,38 @@ class OrderController extends Controller
 		return max(min((float) ($variant->product->discount ?? 0), 100), 0);
 	}
 
+	private function resolvePriceMode(?string $mode): string
+	{
+		return $mode === 'wholesale' ? 'wholesale' : 'retail';
+	}
+
+	private function notifyOrderCreated(Order $order): void
+	{
+		$type = NotificationType::where('key', 'order.created')->first();
+		if (!$type) {
+			return;
+		}
+
+		app(NotificationService::class)->sendToSubscribers(
+			$type,
+			'Nuevo pedido recibido',
+			'Se registro un nuevo pedido desde la tienda web.',
+			[
+				'order_id' => $order->id,
+				'price_mode' => $order->price_mode,
+				'is_guest' => $order->customer_id === null,
+				'total_amount' => $order->total_amount,
+			]
+		);
+	}
+
 	private function transformCart(Order $cart)
 	{
 		// Re-use logic for Next.js Commerce Cart interface
 		return [
 			'id' => (string) $cart->id,
 			'checkoutUrl' => '/checkout/' . $cart->id, // Placeholder
+			'priceMode' => $cart->price_mode ?? 'retail',
 			'cost' => [
 				'subtotalAmount' => [
 					'amount' => (string) $cart->total_amount,
@@ -425,8 +597,9 @@ class OrderController extends Controller
 				if (!$item->variant || !$item->variant->product) {
 					return null;
 				}
-				$compareAtPrice = $this->getVariantCompareAtPrice($item->variant);
-				$discount = $this->getVariantDiscountPercent($item->variant);
+				$priceMode = $item->order->price_mode ?? 'retail';
+				$compareAtPrice = $this->getVariantCompareAtPrice($item->variant, $priceMode);
+				$discount = $priceMode === 'retail' ? $this->getVariantDiscountPercent($item->variant) : 0;
 				$hasDiscount = $compareAtPrice !== null && $discount > 0;
 				return [
 					'id' => (string) $item->id,

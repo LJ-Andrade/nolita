@@ -9,6 +9,8 @@ import { useEffect, useState, useTransition } from "react";
 import { useCart } from "./cart-context";
 import LoadingDots from "components/loading-dots";
 import { toast } from "sonner";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { isProductPurchasableInMode, priceVariantForMode } from "lib/pricing";
 
 // ---------------------------------------------------------------------------
 // SubmitButton
@@ -128,6 +130,7 @@ function QuantitySelector({
 export function AddToCart({ product }: { product: Product }) {
 	const { variants } = product;
 	const { cart, addCartItem, updateCartItem } = useCart();
+	const { priceMode } = usePriceMode();
 	const searchParams = useSearchParams();
 	const [quantity, setQuantity] = useState<number>(1);
 	const [isPending, startTransition] = useTransition();
@@ -149,9 +152,11 @@ export function AddToCart({ product }: { product: Product }) {
 	const defaultVariantId = variants.length === 1 ? variants[0]?.id : undefined;
 	const selectedVariantId = variant?.id || defaultVariantId;
 	const finalVariant = variants.find((v) => v.id === selectedVariantId)!;
+	const pricedVariant = finalVariant ? priceVariantForMode(finalVariant, product, priceMode) : finalVariant;
+	const isPurchasableInMode = isProductPurchasableInMode(product, priceMode);
 
 	// Availability & stock limit
-	const isAvailable = variant ? variant.availableForSale : product.availableForSale;
+	const isAvailable = (variant ? variant.availableForSale : product.availableForSale) && isPurchasableInMode;
 	const stockLimit: number =
 		finalVariant?.quantityAvailable ?? (isAvailable ? 99 : 0);
 
@@ -175,7 +180,7 @@ export function AddToCart({ product }: { product: Product }) {
 			const existed = cart?.lines?.some(l => l.merchandise.id === selectedVariantId);
 
 			// Optimistic cart update
-			addCartItem(finalVariant, product, quantity);
+			addCartItem(pricedVariant, product, quantity);
 
 			const result = await addItem(null, selectedVariantId, quantity);
 			if (result) {

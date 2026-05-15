@@ -2,6 +2,26 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 50: Storefront Editorial Catalog Filters
+1. [x] `docs/SPECS.md`: Document the floating catalog filter and editorial sort behavior.
+2. [x] `web/app/(store)/catalog/page.tsx` and home: Replace the sidebar catalog layout with the editorial category, size, and sort controls.
+3. [x] `web/components/catalog/*`: Add reusable floating filter and dropdown controls while preserving URL-driven filtering.
+4. [x] Validation: Run focused storefront checks and inspect the catalog UI.
+
+## Phase 49: Admin Product Media and Wholesale UI Fixes
+1. [x] `admin/frontend/vite.config.js` and media helpers: Proxy `/storage` in development and normalize backend media URLs for admin image rendering.
+2. [x] `admin/frontend/src/views/products/*`: Show wholesale prices, move category and wholesale visibility controls, and hide color image upload/display surfaces.
+3. [x] `web/components/catalog/*` and home: Keep catalog color swatches available while hiding them on home product cards.
+4. [x] Validation: Run focused admin and storefront build checks.
+
+## Phase 48: Public Retail and Wholesale Checkout
+1. [x] `docs/SPECS.md`: Document guest checkout, retail/wholesale mode, catalog visibility, cart recalculation, and checkout stock rules.
+2. [x] `admin/backend/database/migrations/*`: Update base product and order migrations for `hide_on_wholesale`, nullable `customer_id`, `price_mode`, and `customer_data`.
+3. [x] `admin/backend/app/Models/*` and controllers: Support mode-aware product visibility, guest order creation, checkout validation, and stock reduction at completion.
+4. [x] `web/lib/vadmin/*` and cart context: Support public carts, mode-aware prices, and guest checkout payloads.
+5. [x] `web/components/layout/navbar/*`, catalog, cart, and checkout: Wire the real retail/wholesale switch and mode-specific restrictions.
+6. [x] Validation: Run focused backend syntax checks and storefront build/type checks.
+
 ## Phase 47: Nolita Project Rebrand and Home Direction
 1. [x] `docs/SPECS.md`: Document Nolita brand, development API URL, and home top/hero direction.
 2. [x] Environment and app config: Replace legacy brand development names, `planb.test`, and local database references with Nolita values.
@@ -413,3 +433,20 @@ Once SPECS are approved, the actionable checklist will be expanded.
 4. [x] `web/next.config.ts`: Redirect legacy English paths to Spanish storefront paths.
 5. [x] Update internal storefront links to Spanish routes.
 6. [x] Validate the web build.
+
+## Phase 34: Windows Local Network Setup Script
+1. [x] `docs/SPECS.md`: Document the Windows local network setup behavior.
+2. [x] `setup-windows-dev.ps1`: Add a root PowerShell script that writes admin/frontend and backend environment values for a selected LAN host.
+3. [x] `admin/frontend/src/lib/axios.js`: Prefer `VITE_API_URL` before hostname fallback mappings.
+4. [x] Validate script syntax and admin frontend lint/build as practical.
+
+## Phase 35: Herd API Setup Correction
+1. [x] `setup-windows-dev.ps1`: Default admin API configuration to the Herd URL and allow direct `-ApiUrl` overrides.
+2. [x] Regenerate local admin frontend env files for `https://nolita.test/api/`.
+3. [x] Validate script syntax and admin frontend build.
+
+## Phase 36: Admin LAN Proxy for Herd
+1. [x] `admin/frontend/vite.config.js`: Proxy `/api` requests from Vite dev server to the local Herd backend.
+2. [x] `admin/frontend/.env.local`: Use relative `/api/` base URL for dev server requests.
+3. [x] `setup-windows-dev.ps1`: Support generating proxy-based admin env files.
+4. [x] Validate admin frontend build and proxied API access.

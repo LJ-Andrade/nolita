@@ -17,8 +17,7 @@ import { redirectToCheckout } from "./actions";
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
-
-const VADMIN_API = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
+import { usePriceMode } from "components/price-mode/price-mode-context";
 
 type ShopConfig = {
   id: number;
@@ -30,27 +29,25 @@ type MerchandiseSearchParams = {
   [key: string]: string;
 };
 
-export default function CartModal() {
+export default function CartModal({
+  shopConfig,
+}: {
+  shopConfig: ShopConfig;
+}) {
   const { cart, updateCartItem, isOpen, setIsOpen } = useCart();
+  const { priceMode } = usePriceMode();
   const pathname = usePathname();
   const quantityRef = useRef(cart?.totalQuantity);
   const closeCart = () => setIsOpen(false);
-  const [shopConfig, setShopConfig] = useState<ShopConfig>({ id: 0, min_quantity: 0, min_amount: 0 });
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const isCheckoutPage =
     pathname?.startsWith("/checkout") ||
     pathname?.startsWith("/finalizar-compra");
 
-  useEffect(() => {
-    fetch(`${VADMIN_API}/public/shop-configuration`)
-      .then((res) => res.json())
-      .then((json) => setShopConfig(json.data))
-      .catch(() => {});
-  }, []);
-
-  const hasConditions = shopConfig.min_quantity > 0 || shopConfig.min_amount > 0;
-  const qtyMet = !shopConfig.min_quantity || (cart?.totalQuantity ?? 0) >= shopConfig.min_quantity;
-  const amountMet = !shopConfig.min_amount || Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
+  const isWholesale = priceMode === "wholesale";
+  const hasConditions = isWholesale && (shopConfig.min_quantity > 0 || shopConfig.min_amount > 0);
+  const qtyMet = !isWholesale || !shopConfig.min_quantity || (cart?.totalQuantity ?? 0) >= shopConfig.min_quantity;
+  const amountMet = !isWholesale || !shopConfig.min_amount || Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
   const canCheckout = qtyMet && amountMet;
 
   useEffect(() => {

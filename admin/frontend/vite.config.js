@@ -7,6 +7,7 @@ import { defineConfig } from "vite"
 // When running locally, this variable is not set and Vite uses its
 // default behavior (localhost), so no custom HMR config is needed.
 const hmrHost = process.env.VITE_HMR_HOST;
+const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'https://nolita.test';
 
 export default defineConfig({
 	base: '/vadmin/',
@@ -22,6 +23,18 @@ export default defineConfig({
 		hmr: hmrHost
 			? { host: hmrHost, protocol: "wss", clientPort: 443 }
 			: true, // default: connect to localhost (local dev)
+		proxy: {
+			'/api': {
+				target: apiProxyTarget,
+				changeOrigin: true,
+				secure: false,
+			},
+			'/storage': {
+				target: apiProxyTarget,
+				changeOrigin: true,
+				secure: false,
+			},
+		},
 	},
 	test: {
 		environment: 'jsdom',

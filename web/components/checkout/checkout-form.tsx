@@ -10,6 +10,8 @@ type Locality = { id: number; name: string; province_id: number };
 type CheckoutFormData = Partial<CustomerSession> & {
   city?: string | null;
   postal_code?: string | null;
+  whatsapp?: string | null;
+  cuit?: string | null;
 };
 
 function CheckoutCard({
@@ -243,7 +245,7 @@ export default function CheckoutForm({
       </CheckoutCard>
 
       <CheckoutCard title="Datos de contacto">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field id="name" label="Nombre y apellido">
             <input
               id="name"
@@ -274,6 +276,28 @@ export default function CheckoutForm({
               required
               className={fieldClassName}
               defaultValue={initialData?.phone || ""}
+            />
+          </Field>
+
+          <Field id="whatsapp" label="WhatsApp">
+            <input
+              id="whatsapp"
+              name="whatsapp"
+              type="tel"
+              required
+              className={fieldClassName}
+              defaultValue={initialData?.whatsapp || initialData?.phone || ""}
+            />
+          </Field>
+
+          <Field id="cuit" label="CUIT">
+            <input
+              id="cuit"
+              name="cuit"
+              type="text"
+              required
+              className={fieldClassName}
+              defaultValue={initialData?.cuit || ""}
             />
           </Field>
         </div>

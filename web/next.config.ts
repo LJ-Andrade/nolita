@@ -2,6 +2,8 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const appRoot = dirname(fileURLToPath(import.meta.url));
+const vadminApiEndpoint = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
+const vadminOrigin = new URL(vadminApiEndpoint).origin;
 
 export default {
   cacheComponents: true,
@@ -64,6 +66,14 @@ export default {
         source: "/categorias",
         destination: "/catalogo",
         permanent: false,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/vadmin-storage/:path*",
+        destination: `${vadminOrigin}/storage/:path*`,
       },
     ];
   },

@@ -22,6 +22,16 @@ For new or complex behavior, update this specification first, then track executi
 A new e-commerce project built with Next.js Commerce template. It resides in the `web` folder. 
 It communicates strictly via REST API with the existing VADMIN backend (Laravel).
 
+### Windows Local Network Setup
+- The repository root must include a Windows PowerShell setup script for development-machine deployments.
+- The script must accept an explicit LAN host/IP and generate the matching admin frontend API URL.
+- The script must support a direct API URL override and default to the Laravel Herd Nolita API at `https://nolita.test/api/`.
+- The script must write Vite local environment overrides for the admin frontend so both dev and production-mode builds can target the same VADMIN API.
+- The admin Vite dev server must support proxying `/api` to the Herd backend so LAN clients do not need to resolve or trust `nolita.test` directly.
+- The script must update the Laravel backend environment with `APP_URL`, `FRONTEND_URL`, and `SANCTUM_STATEFUL_DOMAINS` values that match the selected host.
+- The script must avoid hardcoding one developer machine IP as source truth; the selected host must come from a parameter or local IPv4 auto-detection.
+- The authenticated admin Axios client must prefer `VITE_API_URL` before hostname fallback mappings.
+
 ### Requirements
 1. **Authentication:** Uses customers from VADMIN. Registering creates a record in the `customers` table of VADMIN.
 2. **Products:** Products are created in VADMIN and queried via REST API by the Next.js e-commerce.
@@ -33,9 +43,10 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The storefront brand for this project is Nolita.
 - The home top bar must use a centered `NOLITA` wordmark, a compact retail/wholesale control on the right, and the cart action.
 - The home hero must follow Nolita's first visual direction: full-bleed image, soft overlay, lower-left seasonal eyebrow, and the headline "La Elegancia que no caduca".
-- Home product sections must reuse a shared product grid section component for consistent spacing, layout, favorites, and authenticated pricing behavior.
-- The featured products section appears above "Nuevos ingresos", has no title or "Ver todo" link, and displays every product marked as featured in VADMIN using the catalog API order.
-- "Nuevos ingresos" displays the first four published products returned by VADMIN using the catalog API order.
+- The home content after the hero must render the complete catalog grid using the same product cards as `/catalogo`.
+- The home catalog grid must render the same editorial floating category, size, and sort filters as `/catalogo`.
+- The home catalog grid must respect the active retail/wholesale storefront mode and VADMIN catalog visibility rules.
+- Catalog product grids must render four product cards per row on desktop viewports.
 - The home hero uses site content keys for responsive imagery:
   - `home_hero_banner`: required desktop/background image.
   - `home_hero_banner_mobile`: optional mobile image.
@@ -67,11 +78,16 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Legacy English routes must remain available through redirects for compatibility.
 
 ### Storefront Catalog Filters
-- Desktop catalog filters must remain visible as a left sidebar on large viewports.
-- Mobile catalog filters must be accessible from a visible "Filtros" control near the catalog sort/count bar.
-- The mobile filter control must open an overlay drawer that reuses the same category and size filter behavior as desktop.
-- Category and size filters must continue to update URL search params so filtered catalog URLs remain shareable.
-- Active filters and "Limpiar todo" behavior must stay consistent across desktop and mobile.
+- Catalog filters must render as a floating bottom control bar over the catalog experience on desktop and mobile.
+- The floating bar must expose category and size dropdowns plus a visible "Filtrar" action styled with the Nolita editorial visual direction.
+- The "Filtrar" action must open the catalog ordering dropdown, keeping sorting in the main floating filter control group instead of a separate product-control row.
+- The product grid header must show product count and active filter chips only; it must not duplicate size or sorting controls.
+- The product grid header may remain sticky below the storefront navbar so active filters stay visible during catalog scrolling.
+- Filter pills and dropdown panels may use soft rounded corners even when product cards and general storefront buttons remain square.
+- Category and size dropdowns must remain available without leaving the catalog page and must continue to update URL search params so filtered catalog URLs remain shareable.
+- The catalog page must show a top category navigation row using VADMIN categories that currently have published products.
+- The catalog sort control must render as an editorial dropdown on the right side of the product controls, with options for featured, newest, discount, and price ordering.
+- Active filters and "Limpiar todo" behavior must stay consistent across the floating filter controls and the catalog product grid.
 
 ### Admin Product Ordering
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
@@ -175,9 +191,9 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - **`--pb-radius`**: `12px` (Default border radius for interactive elements and media).
 
 ### 5.2 UI Rules
-1. **Buttons**: All buttons must have a consistent border radius defined by `--pb-radius`.
-2. **Images**: Product images and UI media should use `--pb-radius` for a cohesive look.
-3. **Cards**: Product cards and similar containers should align with the global radius.
+1. **Buttons**: Storefront buttons must use square corners.
+2. **Images**: Storefront product images and UI media should use square corners.
+3. **Cards**: Product cards and similar storefront containers should use square corners for a modern, angular look.
 
 ### 5.3 Layout Standards (Admin)
 1.  **Alignment**: All administrative views must be **LEFT-ALIGNED**. Do not center main content containers.
@@ -202,8 +218,27 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ### 6.1 Overview
 A multi-step checkout process implemented in the frontend to collect shipping and payment information before finalizing the order.
 
-### 6.2 Authenticated Pricing
-Storefront prices are private customer data. Product cards, product detail pages, cart-entry actions, and checkout totals must only expose prices to authenticated customers. Guests can browse product names, images, colors, sizes, and descriptions, but price labels must be hidden.
+### 6.2 Retail and Wholesale Storefront Modes
+The storefront supports public retail and wholesale modes for both guest and authenticated customers. Users can see prices, switch mode, add products to cart, and complete checkout without logging in.
+
+- `retail` mode uses `sale_price`.
+- `wholesale` mode uses `wholesale_price`.
+- A product is visible in the retail catalog only when `sale_price > 0`.
+- A product is visible in the wholesale catalog only when `wholesale_price > 0` and `hide_on_wholesale = false`.
+- `hide_on_wholesale` only hides products from the wholesale catalog. It must not remove an already-added cart line by itself.
+- When the user changes cart mode, cart lines must be recalculated using the new mode.
+- If a cart line's product has price `0` or missing for the new mode, that line must be removed from the cart.
+- If a product is hidden from wholesale by `hide_on_wholesale` but has `wholesale_price > 0`, an existing cart line remains in the cart and recalculates to wholesale price.
+- Wholesale minimum quantity and minimum amount restrictions apply only in `wholesale` mode.
+- Retail checkout must not be blocked by wholesale minimum restrictions.
+
+The catalog API product contract must expose enough pricing metadata for the storefront to render and recalculate mode-aware prices:
+
+- `salePrice`: current retail base price.
+- `wholesalePrice`: current wholesale base price, nullable or zero when unavailable.
+- `hideOnWholesale`: whether the product is hidden from the wholesale catalog.
+- `priceRange` and `compareAtPriceRange`: active response price range for the requested mode when a mode is provided.
+- `discount` and `hasDiscount`: discount metadata for retail `sale_price`.
 
 ### 6.3 Product Discounts
 VADMIN product `discount` is a percentage applied to `sale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator. Cart and checkout calculations must use the discounted final unit price.
@@ -219,19 +254,23 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 
 ### 6.2 Data Flow
 1. **Redirection**: The cart modal "Finalizar Pedido" redirects to `/checkout`.
-2. **Authentication**: Users must be authenticated to access the checkout.
+2. **Authentication**: Authentication is optional. Guest checkout must create an order without creating a customer.
 3. **Methods**: Shipping and payment methods are fetched from VADMIN.
-4. **Completion**: The `completeOrder` action sends collected data to `customer/cart/checkout`.
+4. **Completion**: The `completeOrder` action sends collected data, cart lines, and active price mode to VADMIN checkout.
 5. **Summary UI**: 
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.
 
 ### 6.3 Validation and Customer Persistence
-- Checkout requires name, email, phone, address, postal code, province, locality, delivery method, and payment method.
+- Checkout requires name, email, phone, WhatsApp, CUIT, address, postal code, province, locality, delivery method, and payment method.
 - The web checkout payload sends `province_id`, `locality_id`, and `city`; `city` is derived from the selected locality.
 - VADMIN accepts `province_id` and `locality_id`, verifies that the locality belongs to the selected province, and derives `city` from locality when needed.
-- Customer shipping/contact fields are updated only after the order is successfully completed.
+- Orders store the full submitted checkout form in `orders.customer_data` JSON for export and administrative review.
+- Authenticated checkout may associate `orders.customer_id` with the customer and update customer shipping/contact fields only after the order is successfully completed.
+- Guest checkout stores `customer_id = null`, persists `customer_data`, creates the order, and triggers the same admin notification flow as authenticated checkout.
+- Stock is reduced only when the order is completed, inside the checkout transaction. Adding products to cart must not reduce stock for guest or authenticated carts.
+- Checkout must fail with a clear message if stock is no longer available at completion time.
 
 ---
 

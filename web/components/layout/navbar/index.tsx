@@ -1,6 +1,7 @@
 import CartModal from "components/cart/modal";
 import CartTrigger from "components/cart/trigger";
-import { getMenu } from "lib/vadmin";
+import PriceModeSwitch from "components/price-mode/price-mode-switch";
+import { getMenu, getShopConfiguration } from "lib/vadmin";
 import { getSession } from "lib/vadmin/auth";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -11,6 +12,7 @@ const { SITE_NAME } = process.env;
 export async function Navbar() {
   const menu = await getMenu("next-js-frontend-header-menu");
   const session = await getSession();
+  const shopConfig = await getShopConfiguration();
 
   return (
     <header
@@ -36,24 +38,7 @@ export async function Navbar() {
 
         {/* Right: User + Cart */}
         <div className="flex items-center justify-end gap-5">
-          <div className="flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.24em]">
-            <Link href="/catalogo" className="text-black transition-opacity hover:opacity-60">
-              Retail
-            </Link>
-            <Link
-              href={session ? "/perfil" : "/ingreso"}
-              className="relative h-5 w-9 rounded-full bg-[#dbc4bd] transition-opacity hover:opacity-80"
-              aria-label="Wholesale access"
-            >
-              <span className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm" />
-            </Link>
-            <Link
-              href={session ? "/perfil" : "/ingreso"}
-              className="text-stone-brown/55 transition-colors hover:text-black"
-            >
-              Wholesale
-            </Link>
-          </div>
+          <PriceModeSwitch />
           <CartTrigger />
         </div>
       </nav>
@@ -73,7 +58,7 @@ export async function Navbar() {
         </Link>
         <CartTrigger />
       </div>
-      <CartModal />
+      <CartModal shopConfig={shopConfig} />
     </header>
   );
 }

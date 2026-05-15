@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { vadminFetch } from "./index";
+import { getVadminImageUrl, vadminFetch } from "./index";
 import { Cart } from "./types";
 import { TAGS } from "lib/constants";
 import { cacheTag } from "next/cache";
@@ -22,14 +22,40 @@ export async function getCart(): Promise<Cart | undefined> {
       cache: "no-store",
       silentStatuses: [401, 403, 404],
     });
-    return res.body;
+    return normalizeCartImageUrls(res.body);
   } catch (e) {
     return undefined;
   }
 }
 
+function normalizeCartImageUrls(cart: Cart): Cart {
+  return {
+    ...cart,
+    lines: cart.lines.map((line) => ({
+      ...line,
+      merchandise: {
+        ...line.merchandise,
+        product: {
+          ...line.merchandise.product,
+          featuredImage: line.merchandise.product.featuredImage
+            ? {
+                ...line.merchandise.product.featuredImage,
+                url: getVadminImageUrl(line.merchandise.product.featuredImage.url),
+              }
+            : line.merchandise.product.featuredImage,
+          colorImages: line.merchandise.product.colorImages?.map((image) => ({
+            ...image,
+            url: getVadminImageUrl(image.url),
+          })),
+        },
+      },
+    })),
+  };
+}
+
 export async function addToCart(
-  lines: { merchandiseId: string; quantity: number }[]
+  lines: { merchandiseId: string; quantity: number }[],
+  priceMode: "retail" | "wholesale" = "retail",
 ): Promise<Cart | undefined> {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) {
@@ -52,6 +78,7 @@ export async function addToCart(
       body: {
         product_variant_id: line.merchandiseId,
         quantity: line.quantity,
+        price_mode: priceMode,
       },
     });
     lastCart = res.body;
@@ -79,7 +106,8 @@ export async function removeFromCart(lineIds: string[]): Promise<Cart | undefine
 }
 
 export async function updateCart(
-  lines: { id: string; merchandiseId: string; quantity: number }[]
+  lines: { id: string; merchandiseId: string; quantity: number }[],
+  priceMode: "retail" | "wholesale" = "retail",
 ): Promise<Cart | undefined> {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return undefined;
@@ -94,6 +122,7 @@ export async function updateCart(
       },
       body: {
         quantity: line.quantity,
+        price_mode: priceMode,
       },
     });
     lastCart = res.body;
@@ -103,16 +132,15 @@ export async function updateCart(
 
 export async function checkout(data?: any): Promise<{ success: boolean; message: string }> {
   const token = (await cookies()).get("auth_token")?.value;
-  if (!token) return { success: false, message: "Not authenticated" };
 
   try {
     await vadminFetch({
-      path: "customer/cart/checkout",
+      path: token ? "customer/cart/checkout" : "checkout",
       method: "POST",
       redirectOnServerError: false,
-      headers: {
+      headers: token ? {
         Authorization: `Bearer ${token}`,
-      },
+      } : undefined,
       body: data,
     });
     return { success: true, message: "Checkout successful" };

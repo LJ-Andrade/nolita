@@ -105,6 +105,7 @@ class ProductController extends Controller
             'size_ids' => 'nullable|array',
             'size_ids.*' => 'exists:product_sizes,id',
             'featured' => 'nullable|boolean',
+            'hide_on_wholesale' => 'nullable|boolean',
             'order' => 'nullable|integer',
             'cover' => 'nullable|image|max:5120',
             'gallery' => 'nullable|array',
@@ -133,6 +134,7 @@ class ProductController extends Controller
 
         $data = $validator->validated();
         $data['featured'] = $request->boolean('featured');
+        $data['hide_on_wholesale'] = $request->boolean('hide_on_wholesale');
         $data['user_id'] = Auth::id() ?? 1;
 
         if (empty($data['slug'])) {
@@ -285,6 +287,7 @@ class ProductController extends Controller
             'size_ids' => 'nullable|array',
             'size_ids.*' => 'exists:product_sizes,id',
             'featured' => 'nullable|boolean',
+            'hide_on_wholesale' => 'nullable|boolean',
             'order' => 'nullable|integer',
             'cover' => 'nullable|image|max:5120',
             'gallery' => 'nullable|array',
@@ -315,6 +318,7 @@ class ProductController extends Controller
 
         $data = $validator->validated();
         $data['featured'] = $request->boolean('featured');
+        $data['hide_on_wholesale'] = $request->boolean('hide_on_wholesale');
 
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);

@@ -30,7 +30,7 @@
   --pb-card-hover-shadow: 0 8px 32px rgba(47, 41, 34, 0.15);
 
   /* Radius */
-  --pb-radius:         12px;
+  --pb-radius:         0px;
 
   /* Typography */
   --font-serif: 'Playfair Display', Georgia, serif;
@@ -69,15 +69,20 @@
   input[type="radio"],
   label {
     cursor: pointer;
-    border-radius: var(--pb-radius);
     isolation: isolate;
   }
 
-  img {
-    border-radius: var(--pb-radius);
-  }
-
   .no-radius {
+    border-radius: 0 !important;
+  }
+}
+
+@layer components {
+  .pb-card,
+  .pb-card a,
+  .pb-card button,
+  .pb-card img,
+  .pb-card-image {
     border-radius: 0 !important;
   }
 }
@@ -116,6 +121,14 @@ button {
 }
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes purchase-progress {
@@ -223,4 +236,20 @@ button {
   --confetti-y: -54px;
   --confetti-rotate: -70deg;
   animation-delay: 115ms;
+}
+
+button.catalog-filter-pill,
+.catalog-filter-pill {
+  border-radius: 9999px !important;
+  overflow: hidden;
+}
+
+.catalog-filter-menu {
+  border-radius: 18px !important;
+}
+
+button.catalog-size-chip,
+.catalog-size-chip {
+  border-radius: 12px !important;
+  overflow: hidden;
 }

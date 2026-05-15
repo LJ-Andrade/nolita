@@ -16,9 +16,11 @@ class Order extends Model
         'status',          // e.g. pending, completed, cancelled
         'total_amount',
         'currency',
+        'price_mode',
         'payment_method',
         'coupon_code',
         'coupon_discount_amount',
+        'customer_data',
         'shipping_address',
         'billing_address',
         'notes'
@@ -27,6 +29,7 @@ class Order extends Model
     protected $casts = [
         'total_amount' => 'decimal:2',
         'coupon_discount_amount' => 'decimal:2',
+        'customer_data' => 'array',
         'shipping_address' => 'array',
         'billing_address' => 'array',
     ];

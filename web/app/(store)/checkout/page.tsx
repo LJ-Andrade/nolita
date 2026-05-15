@@ -2,7 +2,6 @@ import { getCart } from "lib/vadmin/cart";
 import { getDeliveryMethods, getPaymentMethods } from "lib/vadmin/methods";
 import { getSession } from "lib/vadmin/auth";
 import { getProvinces, getLocalities, getShopConfiguration } from "lib/vadmin";
-import { redirect } from "next/navigation";
 import CheckoutPageContent from "components/checkout/checkout-page-content";
 
 export const metadata = {
@@ -12,10 +11,6 @@ export const metadata = {
 
 export default async function CheckoutPage() {
   const cart = await getCart();
-
-  if (!cart || cart.lines.length === 0) {
-    redirect("/");
-  }
 
   const [deliveryMethods, paymentMethods, session, provinces, localities, shopConfig] = await Promise.all([
     getDeliveryMethods(),
@@ -28,7 +23,17 @@ export default async function CheckoutPage() {
 
   return (
     <CheckoutPageContent
-      cart={cart}
+      cart={cart ?? {
+        id: undefined,
+        checkoutUrl: "",
+        totalQuantity: 0,
+        lines: [],
+        cost: {
+          subtotalAmount: { amount: "0", currencyCode: "ARS" },
+          totalAmount: { amount: "0", currencyCode: "ARS" },
+          totalTaxAmount: { amount: "0", currencyCode: "ARS" },
+        },
+      }}
       deliveryMethods={deliveryMethods}
       paymentMethods={paymentMethods}
       session={session}

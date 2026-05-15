@@ -22,13 +22,14 @@ export async function addItem(
   }
 
   const token = (await cookies()).get("auth_token")?.value;
+  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
   if (!token) {
-    redirect("/ingreso");
+    return;
   }
 
 
   try {
-    await addToCart([{ merchandiseId: selectedVariantId, quantity }]);
+    await addToCart([{ merchandiseId: selectedVariantId, quantity }], priceMode);
     updateTag(TAGS.cart);
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
@@ -45,13 +46,14 @@ export async function addMultipleItems(
   }
 
   const token = (await cookies()).get("auth_token")?.value;
+  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
   if (!token) {
-    redirect("/ingreso");
+    return;
   }
 
   try {
     const items = variantIds.map((id) => ({ merchandiseId: id, quantity: 1 }));
-    await addToCart(items);
+    await addToCart(items, priceMode);
     updateTag(TAGS.cart);
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
@@ -61,6 +63,7 @@ export async function addMultipleItems(
 
 export async function removeItem(prevState: any, merchandiseId: string) {
   try {
+    const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
     const cart = await getCart();
 
     if (!cart) {
@@ -91,6 +94,7 @@ export async function updateItemQuantity(
   }
 ) {
   const { merchandiseId, quantity } = payload;
+  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
 
   try {
     const cart = await getCart();
@@ -113,11 +117,11 @@ export async function updateItemQuantity(
             merchandiseId,
             quantity,
           },
-        ]);
+        ], priceMode);
       }
     } else if (quantity > 0) {
       // If the item doesn't exist in the cart and quantity > 0, add it
-      await addToCart([{ merchandiseId, quantity }]);
+      await addToCart([{ merchandiseId, quantity }], priceMode);
     }
 
     updateTag(TAGS.cart);

@@ -34,13 +34,7 @@ export function ProductDescription({
 
 				<div className="flex items-center gap-4">
 					<div className="text-2xl font-medium tracking-tight" style={{ color: "var(--pb-text)" }}>
-						{isAuthenticated ? (
-							<ProductPrice product={product} size="detail" />
-						) : (
-							<p className="text-sm font-medium uppercase tracking-[0.16em] text-neutral-400">
-								Ingresá para ver precios
-							</p>
-						)}
+						<ProductPrice product={product} size="detail" />
 					</div>
 				</div>
 			</div>
@@ -51,14 +45,12 @@ export function ProductDescription({
 
 			<div className="mb-8">
 				<AddToCart product={product} />
-				{isAuthenticated && (
-					<div className="mt-4">
-						<AddSizeCurveButton
-							product={product}
-							className="flex w-full items-center justify-center text-center text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
-						/>
-					</div>
-				)}
+				<div className="mt-4">
+					<AddSizeCurveButton
+						product={product}
+						className="flex w-full items-center justify-center text-center text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
+					/>
+				</div>
 			</div>
 
 

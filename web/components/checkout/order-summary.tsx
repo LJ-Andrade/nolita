@@ -36,6 +36,7 @@ export default function OrderSummary({
   shippingFee = 0,
   paymentFee = 0,
   shopConfig,
+  priceMode = "retail",
   qtyMet,
   amountMet,
 }: {
@@ -43,6 +44,7 @@ export default function OrderSummary({
   shippingFee?: number;
   paymentFee?: number;
   shopConfig: ShopConfiguration;
+  priceMode?: "retail" | "wholesale";
   qtyMet: boolean;
   amountMet: boolean;
 }) {
@@ -55,7 +57,7 @@ export default function OrderSummary({
   const subtotal = parseFloat(cart.cost.subtotalAmount.amount);
   const couponDiscount = calculateCouponDiscount(appliedCoupon, subtotal);
   const total = Math.max(subtotal - couponDiscount, 0) + shippingFee + paymentFee;
-  const hasConditions = shopConfig.min_quantity > 0 || shopConfig.min_amount > 0;
+  const hasConditions = priceMode === "wholesale" && (shopConfig.min_quantity > 0 || shopConfig.min_amount > 0);
   const normalizedCouponCode = couponCode.trim();
 
   const handleCouponChange = (value: string) => {

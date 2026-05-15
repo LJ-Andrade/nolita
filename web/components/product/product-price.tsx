@@ -1,4 +1,8 @@
+"use client";
+
 import { formatPriceAmount } from "components/price";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { getProductModePrice } from "lib/pricing";
 import type { Product } from "lib/vadmin/types";
 
 type ProductPriceProps = {
@@ -12,9 +16,14 @@ export function ProductPrice({
   className = "",
   size = "card",
 }: ProductPriceProps) {
-  const price = product.priceRange.minVariantPrice;
-  const compareAtPrice = product.compareAtPriceRange?.minVariantPrice;
+  const { priceMode } = usePriceMode();
+  const price = {
+    ...product.priceRange.minVariantPrice,
+    amount: getProductModePrice(product, priceMode),
+  };
+  const compareAtPrice = priceMode === "retail" ? product.compareAtPriceRange?.minVariantPrice : null;
   const hasDiscount =
+    priceMode === "retail" &&
     product.hasDiscount &&
     compareAtPrice &&
     Number(compareAtPrice.amount) > Number(price.amount);

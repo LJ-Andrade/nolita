@@ -13,6 +13,7 @@ import LoadingDots from "components/loading-dots";
 import PurchaseProcessingNotice from "components/checkout/purchase-processing-notice";
 import webTexts from "../../web-texts.json";
 import { useCart } from "components/cart/cart-context";
+import { usePriceMode } from "components/price-mode/price-mode-context";
 
 const checkoutTexts = webTexts.checkoutProcessingNotice;
 const MIN_PROCESSING_MS = 1000;
@@ -47,6 +48,7 @@ export default function CheckoutPageContent({
   shopConfig: ShopConfiguration;
 }) {
   const { cart: liveCart, clearCart, setIsOpen } = useCart();
+  const { priceMode } = usePriceMode();
   const currentCart = liveCart ?? cart;
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     status: "idle",
@@ -61,8 +63,9 @@ export default function CheckoutPageContent({
   );
   const [showCompletion, setShowCompletion] = useState(false);
 
-  const qtyMet = !shopConfig.min_quantity || currentCart.totalQuantity >= shopConfig.min_quantity;
-  const amountMet = !shopConfig.min_amount || parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
+  const isWholesale = priceMode === "wholesale";
+  const qtyMet = !isWholesale || !shopConfig.min_quantity || currentCart.totalQuantity >= shopConfig.min_quantity;
+  const amountMet = !isWholesale || !shopConfig.min_amount || parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
   const canCheckout = currentCart.totalQuantity > 0 && qtyMet && amountMet;
 
   const handleDeliveryChange = (methodId: string) => {
@@ -82,6 +85,11 @@ export default function CheckoutPageContent({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    formData.set("price_mode", priceMode);
+    currentCart.lines.forEach((line, index) => {
+      formData.set(`lines[${index}][merchandiseId]`, line.merchandise.id);
+      formData.set(`lines[${index}][quantity]`, String(line.quantity));
+    });
 
     startCheckoutTransition(async () => {
       const result = await completeOrder(checkoutState, formData);
@@ -158,6 +166,7 @@ export default function CheckoutPageContent({
               shippingFee={selectedDeliveryFee}
               paymentFee={selectedPaymentFee}
               shopConfig={shopConfig}
+              priceMode={priceMode}
               qtyMet={qtyMet}
               amountMet={amountMet}
             />

@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            // Assuming there is a customers table in VADMIN
-            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->string('status')->default('pending');
             $table->decimal('total_amount', 10, 2);
             $table->string('currency')->default('USD');
+            $table->string('price_mode')->default('retail');
             $table->string('payment_method')->nullable();
+            $table->json('customer_data')->nullable();
             $table->json('shipping_address')->nullable();
             $table->json('billing_address')->nullable();
             $table->text('notes')->nullable();

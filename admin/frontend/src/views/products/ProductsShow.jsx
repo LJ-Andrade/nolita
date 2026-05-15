@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ImageLightbox, useImageLightbox } from "@/components/ui/image-lightbox";
 import { PageHeader } from "@/components/page-header";
+import { getMediaUrl } from "@/lib/media-url";
 
 export default function ProductsShow() {
 	const { id } = useParams();
@@ -83,8 +84,8 @@ export default function ProductsShow() {
 	};
 
 	const allGalleryImages = [
-		...(product.cover_url ? [product.cover_url] : []),
-		...(product.gallery?.map((img) => img.url) || []),
+		...(product.cover_url ? [getMediaUrl(product.cover_url)] : []),
+		...(product.gallery?.map((img) => getMediaUrl(img.url)) || []),
 	];
 	const hasVariants = (product.variants?.length || 0) > 0;
 
@@ -157,14 +158,18 @@ export default function ProductsShow() {
 
 							<Separator />
 
-							<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+							<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 								<div>
 									<p className="text-sm text-muted-foreground">Precio de Costo</p>
 									<p className="font-semibold text-lg">{formatPrice(product.cost_price)}</p>
 								</div>
 								<div>
-									<p className="text-sm text-muted-foreground">Precio de Venta</p>
+									<p className="text-sm text-muted-foreground">Precio Minorista</p>
 									<p className="font-semibold text-lg text-primary">{formatPrice(product.sale_price)}</p>
+								</div>
+								<div>
+									<p className="text-sm text-muted-foreground">Precio Mayorista</p>
+									<p className="font-semibold text-lg text-primary">{formatPrice(product.wholesale_price)}</p>
 								</div>
 								<div>
 									<p className="text-sm text-muted-foreground">Descuento</p>
@@ -346,7 +351,7 @@ export default function ProductsShow() {
 								<div>
 									<p className="text-sm text-muted-foreground mb-2">Cover</p>
 									<img
-										src={product.cover_url}
+										src={getMediaUrl(product.cover_url)}
 										alt={product.name}
 										className="w-full h-64 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
 										onClick={() => openLightbox(allGalleryImages, 0)}
@@ -367,7 +372,7 @@ export default function ProductsShow() {
 										{product.gallery.map((img, index) => (
 											<img
 												key={img.id}
-												src={img.url}
+												src={getMediaUrl(img.url)}
 												alt=""
 												className="w-full h-24 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
 												onClick={() => openLightbox(allGalleryImages, index + 1)}
@@ -378,40 +383,6 @@ export default function ProductsShow() {
 							)}
 						</CardContent>
 					</Card>
-
-					{product.color_images && product.color_images.length > 0 && (
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Palette className="h-5 w-5" />
-									Imágenes por Color
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-3">
-								{product.color_images.map((ci) => {
-									const color = product.colors?.find((c) => c.id === ci.color_id);
-									return (
-										<div key={ci.id} className="flex items-center gap-3">
-											<div
-												className="w-8 h-8 rounded-full border-2 border-border shrink-0"
-												style={{
-													backgroundColor: color?.hex_color || getColorHex(color?.name),
-												}}
-												title={color?.name}
-											/>
-											<span className="text-sm font-medium min-w-[60px]">{color?.name || "-"}</span>
-											<img
-												src={ci.image_url}
-												alt={color?.name}
-												className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-												onClick={() => openLightbox([ci.image_url], 0)}
-											/>
-										</div>
-									);
-								})}
-							</CardContent>
-						</Card>
-					)}
 
 					<Card>
 						<CardContent className="pt-6">

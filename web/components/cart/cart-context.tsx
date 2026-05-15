@@ -13,6 +13,8 @@ import React, {
   useContext,
   useMemo,
 } from "react";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { priceVariantForMode } from "lib/pricing";
 
 type UpdateType = "plus" | "minus" | "delete";
 
@@ -150,6 +152,10 @@ function createOrUpdateCartItem(
         stock: remainingStock,
         featuredImage: product.featuredImage,
         colorImages: product.colorImages,
+        salePrice: product.salePrice,
+        retailPrice: product.priceRange.minVariantPrice.amount,
+        wholesalePrice: product.wholesalePrice,
+        hideOnWholesale: product.hideOnWholesale,
       },
     },
   };
@@ -290,12 +296,65 @@ export function CartProvider({
   cartPromise: Promise<Cart | undefined>;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { priceMode } = usePriceMode();
   const initialCart = use(cartPromise);
   const [cart, setCart] = React.useState<Cart | undefined>(initialCart);
 
   React.useEffect(() => {
-    setCart(initialCart);
+    if (initialCart) {
+      setCart(initialCart);
+      return;
+    }
+
+    const storedCart = window.localStorage.getItem("nolita_guest_cart");
+    setCart(storedCart ? JSON.parse(storedCart) : initialCart);
   }, [initialCart]);
+
+  React.useEffect(() => {
+    if (!cart || cart.id) return;
+    window.localStorage.setItem("nolita_guest_cart", JSON.stringify(cart));
+  }, [cart]);
+
+  React.useEffect(() => {
+    setCart((currentCart) => {
+      if (!currentCart) return currentCart;
+
+      const updatedLines = currentCart.lines
+        .map((item) => {
+          const product = item.merchandise.product as CartItem["merchandise"]["product"];
+          const unitAmount =
+            priceMode === "wholesale"
+              ? product.wholesalePrice ?? "0"
+              : product.retailPrice ?? String(Number(item.cost.totalAmount.amount) / item.quantity);
+          if (Number(unitAmount) <= 0) {
+            return null;
+          }
+          const totalAmount = calculateItemCost(item.quantity, unitAmount);
+
+          return {
+            ...item,
+            cost: {
+              ...item.cost,
+              totalAmount: {
+                ...item.cost.totalAmount,
+                amount: totalAmount,
+              },
+              compareAtTotalAmount: priceMode === "retail" ? item.cost.compareAtTotalAmount : null,
+            },
+            discount: priceMode === "retail" ? item.discount : 0,
+            hasDiscount: priceMode === "retail" ? item.hasDiscount : false,
+          };
+        })
+        .filter(Boolean) as CartItem[];
+
+      return {
+        ...currentCart,
+        priceMode,
+        lines: updatedLines,
+        ...updateCartTotals(updatedLines),
+      };
+    });
+  }, [priceMode]);
 
   const dispatchCartAction = (action: CartAction) => {
     setCart((currentCart) => cartReducer(currentCart, action));
@@ -313,9 +372,10 @@ export function CartProvider({
     product: Product,
     qty: number = 1,
   ) => {
+    const pricedVariant = priceVariantForMode(variant, product, priceMode);
     dispatchCartAction({
       type: "ADD_ITEM",
-      payload: { variant, product, qty },
+      payload: { variant: pricedVariant, product, qty },
     });
   };
 
@@ -323,13 +383,17 @@ export function CartProvider({
     variants: ProductVariant[],
     product: Product,
   ) => {
+    const pricedVariants = variants.map((variant) =>
+      priceVariantForMode(variant, product, priceMode),
+    );
     dispatchCartAction({
       type: "ADD_MULTIPLE_ITEMS",
-      payload: { variants, product },
+      payload: { variants: pricedVariants, product },
     });
   };
 
   const clearCart = () => {
+    window.localStorage.removeItem("nolita_guest_cart");
     dispatchCartAction({ type: "CLEAR_CART" });
   };
 

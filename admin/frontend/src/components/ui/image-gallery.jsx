@@ -4,6 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, horizontalList
 import { CSS } from "@dnd-kit/utilities";
 import { X, Plus, GripVertical, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getMediaUrl } from "@/lib/media-url";
 
 function SortableImage({ image, onRemove }) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -23,7 +24,7 @@ function SortableImage({ image, onRemove }) {
 			className="relative group aspect-square rounded-md overflow-hidden border bg-muted"
 		>
 			<img
-				src={image.url || image.preview}
+				src={getMediaUrl(image.url) || image.preview}
 				alt="Gallery image"
 				className="w-full h-full object-cover"
 			/>

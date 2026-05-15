@@ -16,6 +16,7 @@ class CatalogController extends Controller
 	 */
 	public function products(Request $request)
 	{
+		$mode = $this->resolvePriceMode($request->query('mode'));
 		$query = Product::where('status', 'published')
 			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'media']);
 
@@ -37,11 +38,18 @@ class CatalogController extends Controller
 			});
 		}
 
+		if ($mode === 'wholesale') {
+			$query->where('hide_on_wholesale', false)
+				->where('wholesale_price', '>', 0);
+		} else {
+			$query->where('sale_price', '>', 0);
+		}
+
 		$products = $query->orderBy('order')->get();
 
 		// Transform for Next.js Commerce expectation
-		$transformed = $products->map(function (Product $product) {
-			return $this->transformProduct($product);
+		$transformed = $products->map(function (Product $product) use ($mode) {
+			return $this->transformProduct($product, $mode);
 		});
 
 		return response()->json($transformed);
@@ -52,6 +60,7 @@ class CatalogController extends Controller
 	 */
 	public function product(string $slug)
 	{
+		$mode = $this->resolvePriceMode(request()->query('mode'));
 		$product = Product::where('status', 'published')
 			->where(function ($q) use ($slug) {
 				$q->where('slug', $slug)->orWhere('id', $slug);
@@ -59,7 +68,7 @@ class CatalogController extends Controller
 			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'media'])
 			->firstOrFail();
 
-		return response()->json($this->transformProduct($product));
+		return response()->json($this->transformProduct($product, $mode));
 	}
 
 	/**
@@ -81,12 +90,12 @@ class CatalogController extends Controller
 	/**
 	 * Helper to transform product to the format expected by the frontend.
 	 */
-	private function transformProduct(Product $product)
+	private function transformProduct(Product $product, string $mode = 'retail')
 	{
-		$originalPrice = $this->getOriginalPrice($product);
-		$finalPrice = $this->getFinalPrice($product);
-		$discount = $this->getDiscountPercent($product);
-		$hasDiscount = $discount > 0 && $finalPrice < $originalPrice;
+		$originalPrice = $this->getOriginalPrice($product, $mode);
+		$finalPrice = $this->getFinalPrice($product, $mode);
+		$discount = $mode === 'retail' ? $this->getDiscountPercent($product) : 0;
+		$hasDiscount = $mode === 'retail' && $discount > 0 && $finalPrice < $originalPrice;
 		$compareAtPrice = $hasDiscount ? [
 			'amount' => (string) $originalPrice,
 			'currencyCode' => '$',
@@ -112,6 +121,10 @@ class CatalogController extends Controller
 				'maxVariantPrice' => $compareAtPrice,
 				'minVariantPrice' => $compareAtPrice,
 			] : null,
+			'priceMode' => $mode,
+			'salePrice' => (string) round((float) $product->sale_price, 2),
+			'wholesalePrice' => $product->wholesale_price !== null ? (string) round((float) $product->wholesale_price, 2) : null,
+			'hideOnWholesale' => (bool) $product->hide_on_wholesale,
 			'discount' => $discount,
 			'hasDiscount' => $hasDiscount,
 			'variants' => $product->variants->map(function ($variant) use ($finalPricePayload, $compareAtPrice, $discount, $hasDiscount) {
@@ -151,8 +164,12 @@ class CatalogController extends Controller
 		];
 	}
 
-	private function getOriginalPrice(Product $product): float
+	private function getOriginalPrice(Product $product, string $mode = 'retail'): float
 	{
+		if ($mode === 'wholesale') {
+			return round((float) ($product->wholesale_price ?? 0), 2);
+		}
+
 		return round((float) $product->sale_price, 2);
 	}
 
@@ -161,9 +178,12 @@ class CatalogController extends Controller
 		return max(min((float) ($product->discount ?? 0), 100), 0);
 	}
 
-	private function getFinalPrice(Product $product): float
+	private function getFinalPrice(Product $product, string $mode = 'retail'): float
 	{
-		$originalPrice = $this->getOriginalPrice($product);
+		$originalPrice = $this->getOriginalPrice($product, $mode);
+		if ($mode === 'wholesale') {
+			return $originalPrice;
+		}
 		$discount = $this->getDiscountPercent($product);
 
 		if ($discount <= 0) {
@@ -171,6 +191,11 @@ class CatalogController extends Controller
 		}
 
 		return round($originalPrice * (1 - ($discount / 100)), 2);
+	}
+
+	private function resolvePriceMode(?string $mode): string
+	{
+		return $mode === 'wholesale' ? 'wholesale' : 'retail';
 	}
 
 	private function getProductOptions(Product $product)

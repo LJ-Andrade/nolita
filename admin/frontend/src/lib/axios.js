@@ -11,6 +11,11 @@ const ENVIRONMENTS = {
 };
 
 const getBaseURL = () => {
+	const envBaseURL = import.meta.env.VITE_API_URL;
+	if (envBaseURL) {
+		return envBaseURL.endsWith('/') ? envBaseURL : `${envBaseURL}/`;
+	}
+
 	const hostname = window.location.hostname;
 
 	for (const [env, hosts] of Object.entries(ENVIRONMENTS)) {

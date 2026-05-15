@@ -5,9 +5,10 @@ type ProductGridProps = {
   products: Product[];
   favoriteIds?: Set<string>;
   isAuthenticated?: boolean;
+  showColors?: boolean;
 };
 
-export function ProductGrid({ products, favoriteIds, isAuthenticated = false }: ProductGridProps) {
+export function ProductGrid({ products, favoriteIds, isAuthenticated = false, showColors = true }: ProductGridProps) {
   if (!products.length) {
     return (
       <div
@@ -37,7 +38,7 @@ export function ProductGrid({ products, favoriteIds, isAuthenticated = false }: 
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {products.map((product, i) => (
         <ProductCard
           key={product.id}
@@ -45,6 +46,7 @@ export function ProductGrid({ products, favoriteIds, isAuthenticated = false }: 
           priority={i < 6}
           isFavorited={favoriteIds?.has(product.id) ?? false}
           isAuthenticated={isAuthenticated}
+          showColors={showColors}
         />
       ))}
     </div>

@@ -25,6 +25,7 @@ class Product extends Model implements HasMedia
         'sale_price',
         'status',
         'featured',
+        'hide_on_wholesale',
         'order',
         'qr_url',
         'user_id',
@@ -42,6 +43,7 @@ class Product extends Model implements HasMedia
         'discount' => 'decimal:2',
         'order' => 'integer',
         'featured' => 'boolean',
+        'hide_on_wholesale' => 'boolean',
         'stock' => 'integer',
         'min_stock' => 'integer',
     ];

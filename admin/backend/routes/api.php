@@ -67,6 +67,7 @@ Route::get('/delivery-methods', [DeliveryMethodController::class, 'index']);
 Route::get('/provinces', [ProvinceController::class, 'index']);
 Route::get('/localities', [LocalityController::class, 'index']);
 Route::get('/delivery-methods/{deliveryMethod}', [DeliveryMethodController::class, 'show']);
+Route::post('/checkout', [App\Http\Controllers\Api\OrderController::class, 'checkout']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard']);

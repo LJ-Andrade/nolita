@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Camera, Loader2, Image as ImageIcon, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getMediaUrl } from '@/lib/media-url'
 
 const createImage = (url) =>
   new Promise((resolve, reject) => {
@@ -124,7 +125,7 @@ export function ImageUpload({
         {value ? (
           <>
             <img 
-              src={typeof value === 'string' ? value : URL.createObjectURL(value)} 
+              src={typeof value === 'string' ? getMediaUrl(value) : URL.createObjectURL(value)} 
               alt="Upload" 
               className="w-full h-full object-cover"
             />
