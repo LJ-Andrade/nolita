@@ -9,6 +9,7 @@ This document tracks execution steps. One task per logical unit.
 4. [x] Validation: Run shell syntax validation for the deploy script.
 5. [x] `build-web.sh`: Stop hardcoding one accepted VADMIN API URL and require explicit endpoint configuration.
 6. [x] `docs/DEPLOY_INFO.md`: Document environment-specific API URL configuration after env bootstrap.
+7. [x] `web/package.json` and lockfile: Remove Windows-only Lightning CSS package from direct dependencies for Debian deploys.
 
 ## Phase 53: Storefront Footer and Brand Assets
 1. [x] `docs/SPECS.md`: Document footer layout, logo asset usage, and favicon behavior.

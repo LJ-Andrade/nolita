@@ -125,6 +125,8 @@ Set these variables in `admin/backend/.env`, then clear cached Laravel config af
 ### Storefront Dependency Install
 The storefront currently commits `web/package-lock.json`, so `build-web.sh` uses `npm ci` for production installs.
 
+The production server is Debian/Linux. Do not add platform-specific Windows packages, such as `*-win32-*`, as direct dependencies in `web/package.json`; npm will reject them during Linux installs. Platform binaries required by Next.js, Tailwind, or Lightning CSS must remain transitive optional dependencies.
+
 If dependencies are installed manually with PNPM and the install stops with `ERR_PNPM_IGNORED_BUILDS` for `sharp`, approve the build script once:
 
 ```bash
