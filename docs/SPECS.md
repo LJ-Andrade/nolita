@@ -25,9 +25,9 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ### Windows Local Network Setup
 - The repository root must include a Windows PowerShell setup script for development-machine deployments.
 - The script must accept an explicit LAN host/IP and generate the matching admin frontend API URL.
-- The script must support a direct API URL override and default to the Laravel Herd Nolita API at `https://nolita.test/api/`.
+- The script must support a direct API URL override and default to the local VADMIN API configured for the project, `http://nolita.test/api/`.
 - The script must write Vite local environment overrides for the admin frontend so both dev and production-mode builds can target the same VADMIN API.
-- The admin Vite dev server must support proxying `/api` to the Herd backend so LAN clients do not need to resolve or trust `nolita.test` directly.
+- The admin Vite dev server must support proxying `/api` to the local HTTP VADMIN backend so LAN clients do not need custom local DNS or certificates.
 - The script must update the Laravel backend environment with `APP_URL`, `FRONTEND_URL`, and `SANCTUM_STATEFUL_DOMAINS` values that match the selected host.
 - The script must avoid hardcoding one developer machine IP as source truth; the selected host must come from a parameter or local IPv4 auto-detection.
 - The authenticated admin Axios client must prefer `VITE_API_URL` before hostname fallback mappings.
@@ -61,9 +61,12 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The catalog product contract must expose the product category slug and title so the storefront can request same-category related products.
 
 ### Storefront Footer
+- The storefront navbar and footer must use the Nolita logo image asset from `web/public/logo-black.png` instead of text-only branding.
+- The storefront favicon must use the Nolita favicon image asset from `web/public/favicon.png`.
 - The storefront footer must fetch product categories from VADMIN and render only existing category links that currently have published products.
 - Footer category links must use the same category order returned by the VADMIN catalog API.
 - Footer category links must point to the catalog filter URL, not legacy `/search/{category}` collection URLs.
+- The storefront footer must follow the Nolita editorial layout: brand block, shop links, information links, customer care links, newsletter row, and a compact legal/developer bottom row.
 
 ### Storefront Spanish Routes
 - Public storefront links must use Spanish route slugs:
@@ -79,6 +82,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 ### Storefront Catalog Filters
 - Catalog filters must render as a floating bottom control bar over the catalog experience on desktop and mobile.
+- The floating catalog filter bar must be hidden at the very top of the page and fade in progressively as the user scrolls down, so it does not interfere with the home hero.
 - The floating bar must expose category and size dropdowns plus a visible "Filtrar" action styled with the Nolita editorial visual direction.
 - The "Filtrar" action must open the catalog ordering dropdown, keeping sorting in the main floating filter control group instead of a separate product-control row.
 - The product grid header must show product count and active filter chips only; it must not duplicate size or sorting controls.
@@ -88,6 +92,12 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The catalog page must show a top category navigation row using VADMIN categories that currently have published products.
 - The catalog sort control must render as an editorial dropdown on the right side of the product controls, with options for featured, newest, discount, and price ordering.
 - Active filters and "Limpiar todo" behavior must stay consistent across the floating filter controls and the catalog product grid.
+
+### Storefront Product Cards and Cart Chrome
+- Product cards must not show a "Nuevo" badge.
+- Product cards must place the favorite heart action at the top-left of the product image.
+- The storefront navbar must expose the customer account action immediately to the left of the cart action on desktop and mobile.
+- The cart sidebar must use a black background with light text and controls that preserve readable contrast.
 
 ### Admin Product Ordering
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
@@ -118,7 +128,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 > - **DO NOT USE Shopify**: All `lib/shopify` references and `SHOPIFY_*` environment variables are legacy/deprecated and will be removed.
 > - **Primary Provider**: Use `lib/vadmin` for all data fetching.
 > - **API URL**: Set via `NEXT_PUBLIC_VADMIN_API_URL`.
-> - **Nolita development API URL**: `https://nolita.test/api`.
+> - **Nolita development API URL**: `http://nolita.test/api`.
 
 ### Architecture
 - **Web App:** Next.js Commerce in `/web` directory.

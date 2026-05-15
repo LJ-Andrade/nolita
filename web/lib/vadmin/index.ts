@@ -8,6 +8,7 @@ import {
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse, type NextRequest } from "next/server";
+import { VADMIN_API_ENDPOINT } from "./config";
 import { 
   Cart, 
   Collection, 
@@ -17,7 +18,6 @@ import {
   ShopConfiguration,
 } from "./types";
 
-const endpoint = process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
 const storefrontTags = [
   TAGS.products,
   TAGS.collections,
@@ -51,7 +51,7 @@ export async function vadminFetch<T>({
   redirectOnServerError?: boolean;
 }): Promise<{ status: number; body: T } | never> {
   try {
-    const url = new URL(`${endpoint}/${path}`);
+    const url = new URL(`${VADMIN_API_ENDPOINT}/${path}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) url.searchParams.append(key, String(value));

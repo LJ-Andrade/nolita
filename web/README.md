@@ -19,7 +19,7 @@ You must configure the following in your `.env` file:
 
 ```bash
 # Official Backend URL
-NEXT_PUBLIC_VADMIN_API_URL="http://localhost:8000/api"
+NEXT_PUBLIC_VADMIN_API_URL="http://nolita.test/api"
 
 # Site Settings
 SITE_NAME="Nolita"

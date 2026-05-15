@@ -9,10 +9,8 @@ import { useCart } from "components/cart/cart-context";
 import { EditItemQuantityButton } from "components/cart/edit-item-quantity-button";
 import { CheckIcon, ExclamationCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+import { vadminApiUrl } from "lib/vadmin/config";
 import { useState } from "react";
-
-const VADMIN_API =
-  process.env.NEXT_PUBLIC_VADMIN_API_URL || "http://localhost:8000/api";
 
 type AppliedCoupon = {
   code: string;
@@ -76,7 +74,7 @@ export default function OrderSummary({
     setCouponError("");
 
     try {
-      const response = await fetch(`${VADMIN_API}/catalog/coupons/validate`, {
+      const response = await fetch(vadminApiUrl("catalog/coupons/validate"), {
         method: "POST",
         headers: {
           Accept: "application/json",

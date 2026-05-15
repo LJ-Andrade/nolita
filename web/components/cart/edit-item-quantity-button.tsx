@@ -11,10 +11,12 @@ export function EditItemQuantityButton({
   item,
   type,
   optimisticUpdate,
+  tone = "dark",
 }: {
   item: CartItem;
   type: "plus" | "minus";
   optimisticUpdate: any;
+  tone?: "dark" | "light";
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -25,7 +27,8 @@ export function EditItemQuantityButton({
   const handleAction = async () => {
     if (isPlusDisabled) {
       toast.error("Stock insuficiente", {
-        description: "Has alcanzado el límite de unidades disponibles para este producto.",
+        description:
+          "Has alcanzado el límite de unidades disponibles para este producto.",
       });
       return;
     }
@@ -44,10 +47,14 @@ export function EditItemQuantityButton({
         const rollbackType = type === "plus" ? "minus" : "plus";
         optimisticUpdate(payload.merchandiseId, rollbackType);
       };
-      
+
       try {
         const result = await updateItemQuantity(null, payload);
-        if (result && (result.toLowerCase().includes("stock") || result.includes("Insufficient"))) {
+        if (
+          result &&
+          (result.toLowerCase().includes("stock") ||
+            result.includes("Insufficient"))
+        ) {
           rollback();
           toast.error("Stock insuficiente", {
             description: "No hay más unidades disponibles de este producto.",
@@ -70,11 +77,12 @@ export function EditItemQuantityButton({
       disabled={isPending || isPlusDisabled}
       aria-label={type === "plus" ? "Aumentar cantidad" : "Reducir cantidad"}
       className={clsx(
-        "ease flex h-full min-w-[36px] max-w-[36px] flex-none items-center justify-center rounded-full p-2 transition-all duration-200 hover:bg-bone",
+        "ease flex h-full min-w-[36px] max-w-[36px] flex-none items-center justify-center rounded-full p-2 transition-all duration-200",
+        tone === "light" ? "hover:bg-white/10" : "hover:bg-bone",
         {
           "ml-auto": type === "minus",
           "opacity-30 cursor-not-allowed": isPending || isPlusDisabled,
-        }
+        },
       )}
     >
       {type === "plus" ? (

@@ -1,7 +1,7 @@
 param(
     [string]$HostName,
-    [string]$ApiUrl = "https://nolita.test/api/",
-    [string]$ApiProxyTarget = "https://nolita.test",
+    [string]$ApiUrl = "http://nolita.test/api/",
+    [string]$ApiProxyTarget = "http://nolita.test",
     [switch]$UseViteProxy,
     [ValidateSet("http", "https")]
     [string]$ApiScheme = "http",

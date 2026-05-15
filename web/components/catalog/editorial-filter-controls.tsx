@@ -7,10 +7,20 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Collection } from "lib/vadmin/types";
 
-const SIZES_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Unico", "Único"];
+const SIZES_ORDER = [
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "XXXL",
+  "Unico",
+  "Único",
+];
 
 const SORT_OPTIONS = [
   { label: "Destacados", value: "featured" },
@@ -38,8 +48,10 @@ export function EditorialFilterControls({
   const pathname = usePathname();
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
+  const [scrollOpacity, setScrollOpacity] = useState(0);
 
-  const activeCategory = searchParams.get("categoria") ?? searchParams.get("category") ?? "";
+  const activeCategory =
+    searchParams.get("categoria") ?? searchParams.get("category") ?? "";
   const activeSizes = searchParams.getAll("size");
   const currentSort = (searchParams.get("sort") ?? "featured") as SortValue;
 
@@ -125,6 +137,34 @@ export function EditorialFilterControls({
     setOpenPanel((current) => (current === panel ? null : panel));
   }, []);
 
+  useEffect(() => {
+    let frame = 0;
+
+    const updateOpacity = () => {
+      frame = 0;
+      setScrollOpacity(Math.min(window.scrollY / 160, 1));
+    };
+
+    const requestUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateOpacity);
+    };
+
+    updateOpacity();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (scrollOpacity < 0.05) {
+      setOpenPanel(null);
+    }
+  }, [scrollOpacity]);
+
   return (
     <>
       <section
@@ -153,8 +193,19 @@ export function EditorialFilterControls({
 
       <div
         className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4"
+        style={{
+          opacity: scrollOpacity,
+          transform: `translateY(${(1 - scrollOpacity) * 10}px)`,
+        }}
       >
-        <div className="pointer-events-auto relative flex items-center justify-center gap-2 sm:gap-3">
+        <div
+          className={clsx(
+            "relative flex items-center justify-center gap-2 sm:gap-3",
+            scrollOpacity > 0.05
+              ? "pointer-events-auto"
+              : "pointer-events-none",
+          )}
+        >
           {openPanel === "category" && (
             <div
               className={clsx(

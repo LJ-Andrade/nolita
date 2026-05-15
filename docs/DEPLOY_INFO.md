@@ -61,12 +61,16 @@ The API is served by Nginx on port 8000 using PHP-FPM. Ensure the permissions fo
 The storefront is managed by PM2 under the `nolita` user.
 
 ```bash
+cd /home/nolita/htdocs/nolita.com.ar/nolita
+./build-web.sh
+```
+
+`build-web.sh` prepares the storefront production environment, installs dependencies from the committed web lockfile, builds Next.js, and restarts the PM2 app.
+
+If the PM2 app has not been created yet:
+
+```bash
 cd /home/nolita/htdocs/nolita.com.ar/nolita/web
-# Build
-corepack pnpm build
-# Start/Restart
-pm2 restart nolita-web
-# If not started yet:
 pm2 start npm --name "nolita-web" -- run start -- -p 3002
 ```
 
@@ -90,6 +94,16 @@ corepack pnpm build
 - `NEXT_PUBLIC_VADMIN_API_URL=https://nolita.com.ar/api`
 - `NEXTJS_REVALIDATE_TOKEN=<shared-secret>`
 
+`build-web.sh` creates `web/.env.production` when it is missing and seeds these defaults:
+
+```bash
+COMPANY_NAME="Nolita"
+SITE_NAME="Nolita"
+NEXT_PUBLIC_VADMIN_API_URL="https://nolita.com.ar/api"
+```
+
+The script also generates or syncs `NEXTJS_REVALIDATE_TOKEN` between `web/.env.production` and `admin/backend/.env`.
+
 ### Storefront Cache Revalidation
 Because Nginx proxies public `/api/*` requests to Laravel, VADMIN should call the Next.js revalidation route directly through the local PM2 port:
 
@@ -99,6 +113,18 @@ NEXTJS_REVALIDATE_TOKEN=<same-shared-secret-as-web>
 ```
 
 Set these variables in `admin/backend/.env`, then clear cached Laravel config after deploy.
+
+### Storefront Dependency Install
+The storefront currently commits `web/package-lock.json`, so `build-web.sh` uses `npm ci` for production installs.
+
+If dependencies are installed manually with PNPM and the install stops with `ERR_PNPM_IGNORED_BUILDS` for `sharp`, approve the build script once:
+
+```bash
+cd /home/nolita/htdocs/nolita.com.ar/nolita/web
+corepack pnpm approve-builds
+```
+
+Select `sharp`, confirm, then rerun `../build-web.sh`.
 
 ## Storage & Permissions
 

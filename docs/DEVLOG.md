@@ -2,6 +2,33 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 54: Web Deploy Bootstrap Hardening
+1. [x] `build-web.sh`: Create and seed `web/.env.production` when it is missing or incomplete.
+2. [x] `build-web.sh`: Use the storefront package lock that is present in the repository for production installs.
+3. [x] `docs/DEPLOY_INFO.md`: Document generated web env values and the package manager behavior.
+4. [x] Validation: Run shell syntax validation for the deploy script.
+
+## Phase 53: Storefront Footer and Brand Assets
+1. [x] `docs/SPECS.md`: Document footer layout, logo asset usage, and favicon behavior.
+2. [x] `web/components/layout/footer.tsx`: Replace the current footer with the Nolita editorial footer layout.
+3. [x] `web/components/layout/navbar/index.tsx`: Use the Nolita logo asset in the navbar.
+4. [x] `web/app/layout.tsx`: Point metadata icons to the Nolita favicon asset.
+5. [x] Validation: Run focused formatting or code checks without running a production build.
+
+## Phase 52: Storefront Chrome and Catalog Control Polish
+1. [x] `docs/SPECS.md`: Document product card, filter visibility, navbar account action, and dark cart sidebar behavior.
+2. [x] `web/components/catalog/product-card.tsx`: Remove the new badge and move the favorite action to the left side of the image.
+3. [x] `web/components/catalog/editorial-filter-controls.tsx`: Fade the floating filter controls in progressively after the user scrolls from the top.
+4. [x] `web/components/layout/navbar/index.tsx`: Restore the account action before the cart action.
+5. [x] `web/components/cart/modal.tsx`: Convert the cart sidebar to a black, light-content treatment.
+6. [x] Validation: Run focused storefront checks.
+
+## Phase 51: Portable HTTP Local Development
+1. [x] `docs/SPECS.md`: Document local development API defaults over HTTP instead of Herd HTTPS.
+2. [x] `web/package.json` and storefront env files: Remove forced local CA certificate usage and point development env to `http://nolita.test/api`.
+3. [x] `admin/frontend` config and env files: Keep API URLs environment-driven for local development.
+4. [x] Validation: Run focused storefront and admin frontend checks.
+
 ## Phase 50: Storefront Editorial Catalog Filters
 1. [x] `docs/SPECS.md`: Document the floating catalog filter and editorial sort behavior.
 2. [x] `web/app/(store)/catalog/page.tsx` and home: Replace the sidebar catalog layout with the editorial category, size, and sort controls.

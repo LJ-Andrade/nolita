@@ -1,7 +1,8 @@
+@import "./skins.css";
+
 /*
   ============================================
   MAIN STYLES ENTRY POINT
   ============================================
   All theme/skin configuration is now in skins.css
 */
-@import "./skins.css";

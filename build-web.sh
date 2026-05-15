@@ -3,6 +3,7 @@ set -euo pipefail
 
 PM2_APP_NAME="${PM2_APP_NAME:-nolita-web}"
 EXPECTED_WEBHOOK_URL="${EXPECTED_WEBHOOK_URL:-http://127.0.0.1:3002/api/revalidate}"
+EXPECTED_WEB_API_URL="${EXPECTED_WEB_API_URL:-https://nolita.com.ar/api}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$ROOT_DIR/web"
@@ -75,6 +76,28 @@ set_env_value() {
   fi
 }
 
+ensure_web_env_config() {
+  if [ ! -f "$WEB_ENV" ]; then
+    touch "$WEB_ENV"
+    echo "Created web production env file: $WEB_ENV"
+  fi
+
+  if [ -z "$(read_env_value "$WEB_ENV" "COMPANY_NAME")" ]; then
+    set_env_value "$WEB_ENV" "COMPANY_NAME" "Nolita"
+    echo "Added COMPANY_NAME to web env."
+  fi
+
+  if [ -z "$(read_env_value "$WEB_ENV" "SITE_NAME")" ]; then
+    set_env_value "$WEB_ENV" "SITE_NAME" "Nolita"
+    echo "Added SITE_NAME to web env."
+  fi
+
+  if [ -z "$(read_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")" ]; then
+    set_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL" "$EXPECTED_WEB_API_URL"
+    echo "Added NEXT_PUBLIC_VADMIN_API_URL to web env."
+  fi
+}
+
 ensure_revalidation_config() {
   local web_token
   local backend_token
@@ -106,16 +129,39 @@ ensure_revalidation_config() {
   fi
 }
 
+install_web_dependencies() {
+  if [ -f "$WEB_DIR/package-lock.json" ]; then
+    require_command npm
+    npm ci
+    return
+  fi
+
+  if [ -f "$WEB_DIR/pnpm-lock.yaml" ]; then
+    require_command corepack
+    corepack pnpm --version >/dev/null 2>&1 || fail "pnpm is not available through corepack"
+    corepack pnpm install --frozen-lockfile
+    return
+  fi
+
+  fail "Missing web lockfile: expected package-lock.json or pnpm-lock.yaml"
+}
+
+build_web() {
+  if [ -f "$WEB_DIR/package-lock.json" ]; then
+    npm run build
+    return
+  fi
+
+  corepack pnpm build
+}
+
 echo "Checking web production build..."
 
 require_file "$WEB_DIR/package.json"
-require_file "$WEB_ENV"
 require_file "$BACKEND_ENV"
-require_command corepack
 require_command pm2
 
-corepack pnpm --version >/dev/null 2>&1 || fail "pnpm is not available through corepack"
-
+ensure_web_env_config
 ensure_revalidation_config
 
 web_api_url="$(require_env "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")"
@@ -127,17 +173,14 @@ backend_token="$(require_env "$BACKEND_ENV" "NEXTJS_REVALIDATE_TOKEN")"
 [ "$backend_webhook_url" = "$EXPECTED_WEBHOOK_URL" ] || fail "NEXTJS_REVALIDATE_WEBHOOK_URL must be $EXPECTED_WEBHOOK_URL"
 
 case "$web_api_url" in
-  https://nolita.com.ar/api) ;;
-  *) fail "NEXT_PUBLIC_VADMIN_API_URL must be https://nolita.com.ar/api" ;;
+  "$EXPECTED_WEB_API_URL") ;;
+  *) fail "NEXT_PUBLIC_VADMIN_API_URL must be $EXPECTED_WEB_API_URL" ;;
 esac
 
 echo "Building web..."
 cd "$WEB_DIR"
-if ! corepack pnpm install --frozen-lockfile; then
-  echo "pnpm lockfile is outdated. Updating install state with --no-frozen-lockfile..."
-  corepack pnpm install --no-frozen-lockfile
-fi
-corepack pnpm build
+install_web_dependencies
+build_web
 
 echo "Restarting PM2 app: $PM2_APP_NAME"
 pm2 restart "$PM2_APP_NAME"

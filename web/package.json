@@ -1,9 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "dev": "set \"NODE_EXTRA_CA_CERTS=%USERPROFILE%\\.config\\herd\\config\\valet\\CA\\LaravelValetCASelfSigned.crt\" && next dev --turbopack",
-    "build": "set \"NODE_EXTRA_CA_CERTS=%USERPROFILE%\\.config\\herd\\config\\valet\\CA\\LaravelValetCASelfSigned.crt\" && next build",
-    "start": "set \"NODE_EXTRA_CA_CERTS=%USERPROFILE%\\.config\\herd\\config\\valet\\CA\\LaravelValetCASelfSigned.crt\" && next start",
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "test": "npm run prettier:check"

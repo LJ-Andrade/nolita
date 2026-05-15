@@ -1,9 +1,9 @@
 import axios from 'axios';
 const ENVIRONMENTS = {
 	development: {
-		localhost: 'https://nolita.test/api/',
-		'nolita.test': 'https://nolita.test/api/',
-		'192.168.56.1': 'https://nolita.test/api/',
+		localhost: 'http://nolita.test/api/',
+		'nolita.test': 'http://nolita.test/api/',
+		'192.168.56.1': 'http://nolita.test/api/',
 	},
 	production: {
 		'nolita.studiovimana.com.ar': 'https://nolita.studiovimana.com.ar/api/',

@@ -3,16 +3,16 @@
   SKIN CONFIGURATION - Admin Theme Customizer
   ============================================
   
-  EDITABLE VARIABLES - Cambia estos valores para personalizar el tema.
-  Los valores están separados por tema (light/dark).
+  EDITABLE VARIABLES - Change these values to customize the theme.
+  Values are separated by theme (light/dark).
 */
 
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
 
 @source "../index.html", "./src/**/*.{js,ts,jsx,tsx}";
 
 @custom-variant dark (&:is(.dark *));
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
 
 @theme {
   --font-sans: "Google Sans", ui-sans-serif, system-ui, sans-serif;

@@ -35,7 +35,7 @@ export default function UserMenu({ customer }: { customer: any }) {
     return (
       <Link
         href="/ingreso"
-        className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-black transition-colors hover:bg-neutral-50 shadow-sm"
+        className="flex h-10 w-10 items-center justify-center rounded-[12px] text-black transition-colors hover:bg-black/5"
       >
         <UserIcon />
       </Link>
@@ -45,7 +45,7 @@ export default function UserMenu({ customer }: { customer: any }) {
   // Prevent hydration mismatch by not rendering Menu until mounted
   if (!mounted) {
     return (
-      <div className="relative flex h-10 w-10 items-center justify-center rounded-[12px] bg-white shadow-sm">
+      <div className="relative flex h-10 w-10 items-center justify-center rounded-[12px]">
         <UserIcon />
       </div>
     );
@@ -64,7 +64,7 @@ export default function UserMenu({ customer }: { customer: any }) {
     <>
       <Menu as="div" className="relative">
         <div>
-          <MenuButton className="relative flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 overflow-hidden hover:bg-neutral-50 transition-colors shadow-sm">
+          <MenuButton className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-[12px] text-sm transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
             <span className="sr-only">Open user menu</span>
             {customer.avatar_url ? (
               <img
