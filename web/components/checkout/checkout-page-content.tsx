@@ -1,10 +1,15 @@
 "use client";
 
-import { FormEvent, useEffect, useState, useTransition } from "react";
+import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
 import OrderSummary from "./order-summary";
-import { Cart, DeliveryMethod, PaymentMethod, ShopConfiguration } from "lib/vadmin/types";
+import {
+  Cart,
+  DeliveryMethod,
+  PaymentMethod,
+  ShopConfiguration,
+} from "lib/vadmin/types";
 import {
   completeOrder,
   type CheckoutState,
@@ -14,16 +19,23 @@ import PurchaseProcessingNotice from "components/checkout/purchase-processing-no
 import webTexts from "../../web-texts.json";
 import { useCart } from "components/cart/cart-context";
 import { usePriceMode } from "components/price-mode/price-mode-context";
+import { useRouter } from "next/navigation";
 
 const checkoutTexts = webTexts.checkoutProcessingNotice;
 const MIN_PROCESSING_MS = 1000;
 
-function SubmitButton({ pending, disabled }: { pending: boolean; disabled?: boolean }) {
+function SubmitButton({
+  pending,
+  disabled,
+}: {
+  pending: boolean;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="submit"
       disabled={pending || disabled}
-      className="mt-8 flex w-full items-center justify-center rounded-[12px] bg-graphite py-4 text-xs font-bold uppercase tracking-[0.2em] text-parchment transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      className="mt-8 flex w-full items-center justify-center bg-graphite py-4 text-xs font-bold uppercase tracking-[0.2em] text-parchment transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? <LoadingDots className="bg-parchment" /> : "Confirmar Pedido"}
     </button>
@@ -49,6 +61,7 @@ export default function CheckoutPageContent({
 }) {
   const { cart: liveCart, clearCart, setIsOpen } = useCart();
   const { priceMode } = usePriceMode();
+  const router = useRouter();
   const currentCart = liveCart ?? cart;
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({
     status: "idle",
@@ -56,16 +69,23 @@ export default function CheckoutPageContent({
   });
   const [isCheckoutPending, startCheckoutTransition] = useTransition();
   const [selectedDeliveryFee, setSelectedDeliveryFee] = useState(
-    parseFloat(deliveryMethods[0]?.fee || "0")
+    parseFloat(deliveryMethods[0]?.fee || "0"),
   );
   const [selectedPaymentFee, setSelectedPaymentFee] = useState(
-    parseFloat(paymentMethods[0]?.fee || "0")
+    parseFloat(paymentMethods[0]?.fee || "0"),
   );
   const [showCompletion, setShowCompletion] = useState(false);
+  const previousCartQuantity = useRef(currentCart.totalQuantity);
 
   const isWholesale = priceMode === "wholesale";
-  const qtyMet = !isWholesale || !shopConfig.min_quantity || currentCart.totalQuantity >= shopConfig.min_quantity;
-  const amountMet = !isWholesale || !shopConfig.min_amount || parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
+  const qtyMet =
+    !isWholesale ||
+    !shopConfig.min_quantity ||
+    currentCart.totalQuantity >= shopConfig.min_quantity;
+  const amountMet =
+    !isWholesale ||
+    !shopConfig.min_amount ||
+    parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
   const canCheckout = currentCart.totalQuantity > 0 && qtyMet && amountMet;
 
   const handleDeliveryChange = (methodId: string) => {
@@ -102,6 +122,22 @@ export default function CheckoutPageContent({
   };
 
   const isCheckoutProcessing = checkoutState.status === "success";
+
+  useEffect(() => {
+    const previousQuantity = previousCartQuantity.current;
+    previousCartQuantity.current = currentCart.totalQuantity;
+
+    if (
+      isCheckoutProcessing ||
+      previousQuantity <= 0 ||
+      currentCart.totalQuantity > 0
+    ) {
+      return;
+    }
+
+    setIsOpen(false);
+    router.replace("/");
+  }, [currentCart.totalQuantity, isCheckoutProcessing, router, setIsOpen]);
 
   useEffect(() => {
     if (checkoutState.status === "error" && checkoutState.message) {
@@ -147,7 +183,6 @@ export default function CheckoutPageContent({
           onSubmit={handleSubmit}
           className="grid grid-cols-1 gap-12 lg:grid-cols-12"
         >
-
           <div className="space-y-6 lg:col-span-8">
             <CheckoutForm
               initialData={session}

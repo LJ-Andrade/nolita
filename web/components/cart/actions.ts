@@ -12,6 +12,14 @@ import { updateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+function isAuthFailure(error: any) {
+  return (
+    error?.status === 401 ||
+    error?.status === 403 ||
+    error?.message?.toLowerCase() === "unauthenticated."
+  );
+}
+
 export async function addItem(
   prevState: any,
   selectedVariantId: string | undefined,
@@ -33,6 +41,7 @@ export async function addItem(
     updateTag(TAGS.cart);
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
+    if (isAuthFailure(e)) return;
     return e.message || "Error al agregar el producto al carrito";
   }
 }
@@ -57,6 +66,7 @@ export async function addMultipleItems(
     updateTag(TAGS.cart);
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
+    if (isAuthFailure(e)) return;
     return e.message || "Error al agregar los productos al carrito";
   }
 }
@@ -82,6 +92,7 @@ export async function removeItem(prevState: any, merchandiseId: string) {
     }
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
+    if (isAuthFailure(e)) return;
     return "Error removing item from cart";
   }
 }
@@ -127,6 +138,7 @@ export async function updateItemQuantity(
     updateTag(TAGS.cart);
   } catch (e: any) {
     if (e.message === "NEXT_REDIRECT" || (e.digest && e.digest.startsWith("NEXT_REDIRECT"))) throw e;
+    if (isAuthFailure(e)) return;
     return e.message || "Error al actualizar la cantidad";
   }
 }

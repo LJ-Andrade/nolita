@@ -2,6 +2,11 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 55: Checkout Empty Cart Redirect
+1. [x] `docs/SPECS.md`: Document that checkout redirects home when the cart becomes empty.
+2. [x] `web/components/checkout/checkout-page-content.tsx`: Redirect checkout users home after the last cart item is removed.
+3. [x] Validation: Run focused storefront build/type checks.
+
 ## Phase 54: Web Deploy Bootstrap Hardening
 1. [x] `build-web.sh`: Create and seed `web/.env.production` when it is missing or incomplete.
 2. [x] `build-web.sh`: Use the storefront package lock that is present in the repository for production installs.

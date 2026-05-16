@@ -24,6 +24,15 @@ export function DeleteItemButton({
 
   const handleRemove = () => {
     startTransition(async () => {
+      if (!item.id) {
+        onRemoveStart?.(merchandiseId);
+        toast.success(`${itemName} eliminado`);
+        window.setTimeout(() => {
+          optimisticUpdate(merchandiseId, "delete");
+        }, 260);
+        return;
+      }
+
       const result = await removeItem(null, merchandiseId);
       if (result) {
         toast.error(result);
@@ -44,7 +53,7 @@ export function DeleteItemButton({
       disabled={isPending}
       aria-label="Remove cart item"
       className={clsx(
-        "flex h-[24px] w-[24px] items-center justify-center rounded-full disabled:opacity-50",
+        "flex h-[24px] w-[24px] items-center justify-center disabled:opacity-50",
         tone === "light" ? "bg-white text-black" : "bg-graphite text-parchment",
       )}
     >

@@ -22,7 +22,7 @@ function CheckoutCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[12px] border border-bone bg-parchment/40 p-5 md:p-6">
+    <section className="border border-bone bg-parchment/40 p-5 md:p-6">
       <h2 className="mb-5 font-serif text-xl font-medium">{title}</h2>
       {children}
     </section>
@@ -52,7 +52,7 @@ function Field({
 }
 
 const fieldClassName =
-  "rounded-[12px] border border-bone bg-parchment px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-graphite disabled:opacity-50";
+  "border border-bone bg-parchment px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-graphite disabled:opacity-50";
 
 export default function CheckoutForm({
   initialData = {},
@@ -72,19 +72,27 @@ export default function CheckoutForm({
   onPaymentChange?: (methodId: string) => void;
 }) {
   const [selectedProvince, setSelectedProvince] = useState(
-    initialData?.province_id ? String(initialData.province_id) : ""
+    initialData?.province_id ? String(initialData.province_id) : "",
   );
   const [selectedLocality, setSelectedLocality] = useState(
-    initialData?.locality_id ? String(initialData.locality_id) : ""
+    initialData?.locality_id ? String(initialData.locality_id) : "",
   );
-  const [selectedDelivery, setSelectedDelivery] = useState(deliveryMethods[0]?.id ?? "");
-  const [selectedPayment, setSelectedPayment] = useState(paymentMethods[0]?.id ?? "");
+  const [selectedDelivery, setSelectedDelivery] = useState(
+    deliveryMethods[0]?.id ?? "",
+  );
+  const [selectedPayment, setSelectedPayment] = useState(
+    paymentMethods[0]?.id ?? "",
+  );
 
   const provinceLocalities = selectedProvince
-    ? localities.filter((locality) => locality.province_id === Number(selectedProvince))
+    ? localities.filter(
+        (locality) => locality.province_id === Number(selectedProvince),
+      )
     : [];
   const selectedLocalityName =
-    provinceLocalities.find((locality) => String(locality.id) === selectedLocality)?.name ?? "";
+    provinceLocalities.find(
+      (locality) => String(locality.id) === selectedLocality,
+    )?.name ?? "";
 
   const handleProvinceChange = (provinceId: string) => {
     setSelectedProvince(provinceId);
@@ -108,7 +116,7 @@ export default function CheckoutForm({
           {paymentMethods.map((method) => (
             <label
               key={method.id}
-              className={`flex cursor-pointer items-center gap-3 rounded-[12px] border p-4 transition-all ${
+              className={`flex cursor-pointer items-center gap-3 border p-4 transition-all ${
                 selectedPayment === method.id
                   ? "border-graphite bg-graphite/5 ring-1 ring-graphite"
                   : "border-bone bg-parchment hover:bg-bone/20"
@@ -147,7 +155,7 @@ export default function CheckoutForm({
             {deliveryMethods.map((method) => (
               <label
                 key={method.id}
-                className={`flex cursor-pointer items-center justify-between gap-3 rounded-[12px] border p-4 transition-all ${
+                className={`flex cursor-pointer items-center justify-between gap-3 border p-4 transition-all ${
                   selectedDelivery === method.id
                     ? "border-graphite bg-graphite/5 ring-1 ring-graphite"
                     : "border-bone bg-parchment hover:bg-bone/20"
@@ -163,9 +171,13 @@ export default function CheckoutForm({
                     className="h-4 w-4 shrink-0 text-graphite focus:ring-graphite"
                   />
                   <span className="min-w-0">
-                    <span className="block text-sm font-bold">{method.name}</span>
+                    <span className="block text-sm font-bold">
+                      {method.name}
+                    </span>
                     {method.description && (
-                      <span className="block text-xs text-stone-brown">{method.description}</span>
+                      <span className="block text-xs text-stone-brown">
+                        {method.description}
+                      </span>
                     )}
                   </span>
                 </span>
@@ -238,7 +250,11 @@ export default function CheckoutForm({
                 ))}
               </select>
               <input type="hidden" name="city" value={selectedLocalityName} />
-              <input type="hidden" name="locality_name" value={selectedLocalityName} />
+              <input
+                type="hidden"
+                name="locality_name"
+                value={selectedLocalityName}
+              />
             </Field>
           </div>
         </div>

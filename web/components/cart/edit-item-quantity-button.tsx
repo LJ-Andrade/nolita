@@ -43,6 +43,8 @@ export function EditItemQuantityButton({
       // Optimistic update
       optimisticUpdate(payload.merchandiseId, type);
 
+      if (!item.id) return;
+
       const rollback = () => {
         const rollbackType = type === "plus" ? "minus" : "plus";
         optimisticUpdate(payload.merchandiseId, rollbackType);
@@ -77,7 +79,7 @@ export function EditItemQuantityButton({
       disabled={isPending || isPlusDisabled}
       aria-label={type === "plus" ? "Aumentar cantidad" : "Reducir cantidad"}
       className={clsx(
-        "ease flex h-full min-w-[36px] max-w-[36px] flex-none items-center justify-center rounded-full p-2 transition-all duration-200",
+        "ease flex h-full min-w-[36px] max-w-[36px] flex-none items-center justify-center p-2 transition-all duration-200",
         tone === "light" ? "hover:bg-white/10" : "hover:bg-bone",
         {
           "ml-auto": type === "minus",

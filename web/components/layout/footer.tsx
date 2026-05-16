@@ -61,12 +61,6 @@ export default async function Footer() {
   const categorySplitIndex = Math.ceil(categoryLinks.length / 2);
   const primaryCategoryLinks = categoryLinks.slice(0, categorySplitIndex);
   const secondaryCategoryLinks = categoryLinks.slice(categorySplitIndex);
-  const shopLinks = [
-    { label: "Novedades", href: "/catalogo?sort=newest" },
-    { label: "Ofertas", href: "/catalogo?sort=discount_desc" },
-    { label: "Mayoristas", href: "/registro" },
-    { label: "Ingresar", href: "/ingreso" },
-  ];
   const customerCareLinks = [
     { label: "Envíos y devoluciones", href: "/shipping-returns" },
     { label: "Preguntas frecuentes", href: "/faq" },
@@ -126,9 +120,8 @@ export default async function Footer() {
             </div>
           </div>
 
-          <FooterColumn title="Tienda" links={shopLinks} />
           <FooterColumn title="Categorías" links={primaryCategoryLinks} />
-          <FooterColumn title="Categorías" links={secondaryCategoryLinks} />
+          <FooterColumn title="" links={secondaryCategoryLinks} />
           <FooterColumn title="Atención al cliente" links={customerCareLinks} />
         </div>
 
@@ -201,7 +194,7 @@ function FooterColumn({
   return (
     <div>
       <h3 className="text-[11px] font-bold uppercase tracking-[0.34em] text-black">
-        {title}
+        {title || "\u00a0"}
       </h3>
       <ul className="mt-8 flex flex-col gap-5 text-sm text-[#6f6052]">
         {links.map((link) => (

@@ -103,7 +103,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
               <button
                 aria-label="Cerrar carrito"
                 onClick={closeCart}
-                className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-white/15 bg-white/5 text-white transition-colors hover:bg-white/10"
+                className="flex h-10 w-10 items-center justify-center border border-white/15 bg-white/5 text-white transition-colors hover:bg-white/10"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -111,7 +111,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
 
             {!cart || cart.lines.length === 0 ? (
               <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden px-6">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
+                <div className="mb-6 flex h-20 w-20 items-center justify-center bg-white/10">
                   <ShoppingCartIcon className="h-10 w-10 text-white/60" />
                 </div>
                 <p className="text-center text-xl font-medium font-serif">
@@ -122,7 +122,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                 </p>
                 <button
                   onClick={closeCart}
-                  className="mt-8 rounded-[12px] border border-white/25 px-8 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
+                  className="mt-8 border border-white/25 px-8 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
                 >
                   Seguir Comprando
                 </button>
@@ -193,7 +193,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                               />
                             </div>
                             <div className="flex flex-1 flex-row">
-                              <div className="relative h-24 w-24 flex-none overflow-hidden rounded-[12px] bg-white/10">
+                              <div className="relative h-24 w-24 flex-none overflow-hidden bg-white/10">
                                 <Image
                                   className="h-full w-full object-cover"
                                   width={96}
@@ -233,7 +233,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                  <div className="flex h-8 items-center rounded-[12px] border border-white/15 text-white">
+                                  <div className="flex h-8 items-center border border-white/15 text-white">
                                     <EditItemQuantityButton
                                       item={item}
                                       type="minus"
@@ -269,7 +269,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                                     />
                                     {item.hasDiscount &&
                                       Number(item.discount ?? 0) > 0 && (
-                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                        <span className="bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                                           -{Math.round(Number(item.discount))}%
                                         </span>
                                       )}
@@ -289,7 +289,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                       {shopConfig.min_quantity > 0 && (
                         <div
                           className={clsx(
-                            "flex items-center gap-2 rounded-[8px] px-3 py-2",
+                            "flex items-center gap-2 px-3 py-2",
                             qtyMet
                               ? "text-emerald-700 bg-emerald-50/60"
                               : "text-amber-700 bg-amber-50/60",
@@ -309,7 +309,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                       {shopConfig.min_amount > 0 && (
                         <div
                           className={clsx(
-                            "flex items-center gap-2 rounded-[8px] px-3 py-2",
+                            "flex items-center gap-2 px-3 py-2",
                             amountMet
                               ? "text-emerald-700 bg-emerald-50/60"
                               : "text-amber-700 bg-amber-50/60",
@@ -378,7 +378,7 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
 
   return (
     <button
-      className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-white py-4 text-xs font-bold uppercase tracking-[0.2em] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-2 bg-white py-4 text-xs font-bold uppercase tracking-[0.2em] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       type="submit"
       disabled={disabled || pending}
     >

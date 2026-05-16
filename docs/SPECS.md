@@ -271,6 +271,7 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.
+   - Redirects to the home page when the cart becomes empty while the user is on checkout, whether the last item is removed from the checkout summary or the cart sidebar.
 
 ### 6.3 Validation and Customer Persistence
 - Checkout requires name, email, phone, WhatsApp, CUIT, address, postal code, province, locality, delivery method, and payment method.
