@@ -140,12 +140,12 @@ export function ProductCard({
                         setCurrentImage(defaultImageUrl);
                       }
                     }}
-                    className={`h-3.5 w-3.5 cursor-pointer rounded-full transition-transform hover:scale-125 ${
+                    className={`h-4 w-4 cursor-pointer shrink-0 transition-transform hover:scale-125 ${
                       currentImage === colorImage?.url && colorImage?.url
                         ? "ring-2 ring-offset-1 ring-black scale-125"
                         : "ring-1 ring-offset-1 ring-gray-200"
                     }`}
-                    style={{ backgroundColor: hex }}
+                    style={{ backgroundColor: hex, borderRadius: "50%" }}
                   />
                 );
               })}
