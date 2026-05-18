@@ -145,7 +145,7 @@ export function ProductCard({
                         ? "ring-2 ring-offset-1 ring-black scale-125"
                         : "ring-1 ring-offset-1 ring-gray-200"
                     }`}
-                    style={{ backgroundColor: hex, borderRadius: "50%" }}
+                    style={{ backgroundColor: hex }}
                   />
                 );
               })}

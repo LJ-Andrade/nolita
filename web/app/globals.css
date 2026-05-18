@@ -80,11 +80,8 @@
 
 @layer components {
   .pb-card,
-  .pb-card a,
-  .pb-card button,
-  .pb-card img,
-  .pb-card-image {
-    border-radius: 0 !important;
+  .pb-card a {
+    border-radius: 0;
   }
 }
 
