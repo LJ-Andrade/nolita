@@ -70,7 +70,9 @@ export default function UserMenu({ customer }: { customer: any }) {
               <img
                 alt={customer.name}
                 src={customer.avatar_url}
-                className="h-full w-full object-cover"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-cover"
               />
             ) : (
               <UserIcon />
