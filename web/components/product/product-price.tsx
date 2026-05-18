@@ -53,8 +53,8 @@ export function ProductPrice({
         {formatPriceAmount(price.amount)}
       </span>
       {discount > 0 && (
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
-          -{discount}%
+        <span className="rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tracking-wide" style={{ backgroundColor: "var(--pb-accent)", color: "var(--pb-badge-text)" }}>
+          %{discount}
         </span>
       )}
     </div>

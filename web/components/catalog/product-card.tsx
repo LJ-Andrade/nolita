@@ -106,66 +106,66 @@ export function ProductCard({
       </Link>
 
       {/* ── Info ───────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-1.5 p-3 pt-3">
-        {/* Color swatches — Moved above Title */}
-        {showColors && colors.length > 0 && (
-          <div className="mb-0.5 flex items-center gap-1.5">
-            {colors.map((color) => {
-              const hex = getColorHex(color);
-              const colorImage = product.colorImages?.find(
-                (ci) => ci.color.toLowerCase() === color.toLowerCase(),
-              );
+      <div className="flex flex-col gap-1 pt-2 px-0.5">
+        {/* Title row: name left, color swatches right */}
+        <div className="flex items-start justify-between gap-2">
+          <Link
+            href={`/producto/${product.handle}`}
+            className="line-clamp-2 text-sm leading-snug transition-opacity hover:opacity-70"
+            style={{ fontFamily: "var(--font-sans)", color: "var(--pb-text)" }}
+          >
+            {product.title}
+          </Link>
 
-              return (
+          {showColors && colors.length > 0 && (
+            <div className="flex shrink-0 items-center gap-1 mt-0.5">
+              {colors.map((color) => {
+                const hex = getColorHex(color);
+                const colorImage = product.colorImages?.find(
+                  (ci) => ci.color.toLowerCase() === color.toLowerCase(),
+                );
+
+                return (
+                  <button
+                    key={color}
+                    title={color}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (colorImage?.url) {
+                        setCurrentImage(colorImage.url);
+                      } else {
+                        setCurrentImage(defaultImageUrl);
+                      }
+                    }}
+                    className={`h-3.5 w-3.5 cursor-pointer rounded-full border border-white ring-1 transition-transform hover:scale-125 ${
+                      currentImage === colorImage?.url && colorImage?.url
+                        ? "ring-black scale-125"
+                        : "ring-gray-300"
+                    }`}
+                    style={{ backgroundColor: hex }}
+                  />
+                );
+              })}
+
+              {currentImage !== defaultImageUrl && (
                 <button
-                  key={color}
-                  title={color}
                   type="button"
+                  title="Restablecer vista"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (colorImage?.url) {
-                      setCurrentImage(colorImage.url);
-                    } else {
-                      setCurrentImage(defaultImageUrl);
-                    }
+                    setCurrentImage(defaultImageUrl);
                   }}
-                  className={`h-4 w-4 cursor-pointer rounded-full border border-white ring-1 transition-transform hover:scale-125 ${
-                    currentImage === colorImage?.url && colorImage?.url
-                      ? "ring-black scale-125"
-                      : "ring-gray-300"
-                  }`}
-                  style={{ backgroundColor: hex }}
-                />
-              );
-            })}
+                  className="flex h-3.5 w-3.5 cursor-pointer items-center justify-center rounded-full bg-black/5 text-[7px] text-black/40 transition-colors hover:bg-black/10 hover:text-black/60"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
-            {/* Reset button */}
-            {currentImage !== defaultImageUrl && (
-              <button
-                type="button"
-                title="Restablecer vista"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentImage(defaultImageUrl);
-                }}
-                className="ml-0.5 flex h-4 w-4 cursor-pointer items-center justify-center rounded-full bg-black/5 text-[8px] text-black/40 transition-colors hover:bg-black/10 hover:text-black/60"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Product name — Serif */}
-        <Link
-          href={`/producto/${product.handle}`}
-          className="line-clamp-2 text-sm font-medium leading-snug transition-opacity hover:opacity-70"
-          style={{ fontFamily: "var(--font-serif)", color: "var(--pb-text)" }}
-        >
-          {product.title}
-        </Link>
-
-        <ProductPrice product={product} className="text-sm font-medium" />
+        <ProductPrice product={product} className="text-sm" />
       </div>
     </article>
   );
