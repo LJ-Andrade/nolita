@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, startTransition, useContext, useMemo, useState } from "react";
 
 export type PriceMode = "retail" | "wholesale";
 
@@ -30,7 +30,7 @@ export function PriceModeProvider({
     setPriceModeState(mode);
     window.localStorage.setItem("nolita_price_mode", mode);
     document.cookie = `nolita_price_mode=${mode}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
+    startTransition(() => { router.refresh(); });
   };
 
   const value = useMemo(() => ({ priceMode, setPriceMode }), [priceMode]);

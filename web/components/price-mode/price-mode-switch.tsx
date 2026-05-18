@@ -8,12 +8,12 @@ export default function PriceModeSwitch() {
   const isWholesale = priceMode === "wholesale";
 
   return (
-    <div className="flex items-center rounded-full border border-gray-200 p-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]">
+    <div className="flex items-center border border-gray-200 p-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]">
       <button
         type="button"
         onClick={() => setPriceMode("retail")}
         className={clsx(
-          "rounded-full px-3.5 py-1.5 transition-all",
+          "px-3.5 py-1.5 transition-all",
           !isWholesale
             ? "bg-[#D4006A] text-white shadow-sm"
             : "text-stone-brown hover:text-black"
@@ -25,7 +25,7 @@ export default function PriceModeSwitch() {
         type="button"
         onClick={() => setPriceMode("wholesale")}
         className={clsx(
-          "rounded-full px-3.5 py-1.5 transition-all",
+          "px-3.5 py-1.5 transition-all",
           isWholesale
             ? "bg-[#D4006A] text-white shadow-sm"
             : "text-stone-brown hover:text-black"
