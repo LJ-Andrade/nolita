@@ -140,7 +140,7 @@ export function ProductCard({
                         setCurrentImage(defaultImageUrl);
                       }
                     }}
-                    className={`h-4 w-4 cursor-pointer shrink-0 transition-transform hover:scale-125 ${
+                    className={`h-4 w-4 cursor-pointer shrink-0 rounded-full transition-transform hover:scale-125 ${
                       currentImage === colorImage?.url && colorImage?.url
                         ? "ring-2 ring-offset-1 ring-black scale-125"
                         : "ring-1 ring-offset-1 ring-gray-200"
