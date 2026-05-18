@@ -21,6 +21,7 @@ export type ProductOption = {
   id: string;
   name: string;
   values: string[];
+  hexValues?: string[];
 };
 
 export type ProductVariant = {
@@ -70,7 +71,7 @@ export type Product = {
   } | null;
   tags: string[];
   updatedAt: string;
-  colorImages?: { color: string; url: string }[];
+  colorImages?: { color: string; hex?: string; url: string }[];
 };
 
 export type Collection = {
@@ -110,7 +111,7 @@ export type CartItem = {
       wholesalePrice?: string | null;
       hideOnWholesale?: boolean;
       featuredImage: Image;
-      colorImages?: { color: string; url: string }[];
+      colorImages?: { color: string; hex?: string; url: string }[];
     };
   };
 };

@@ -36,12 +36,14 @@ export function ProductCard({
 
   const imageAlt = product.featuredImage?.altText ?? product.title;
 
-  // Extract unique color swatches from variants
-  const colors =
-    product.options.find((o) => o.name === "Color")?.values.slice(0, 5) ?? [];
+  const colorOption = product.options.find((o) => o.name === "Color");
+  const colors = colorOption?.values.slice(0, 5) ?? [];
+  const hexValues = colorOption?.hexValues ?? [];
 
-  const getColorHex = (name: string): string =>
-    COLOR_MAP[name.toLowerCase()] ?? "#CCCCCC";
+  const getColorHex = (name: string, index: number): string => {
+    if (hexValues[index]) return hexValues[index];
+    return COLOR_MAP[name.toLowerCase()] ?? "#CCCCCC";
+  };
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -96,11 +98,11 @@ export function ProductCard({
         <button
           type="button"
           onClick={handleFavoriteToggle}
-          className="absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all hover:bg-white hover:scale-110"
+          className="absolute left-2.5 top-2.5 z-10 transition-transform hover:scale-110"
           aria-label={favorited ? "Quitar de favoritos" : "Agregar a favoritos"}
         >
           <HeartIcon
-            className={`h-5 w-5 transition-colors ${favorited ? "fill-red-500 text-red-500" : "text-gray-500"}`}
+            className={`h-5 w-5 drop-shadow-sm transition-colors ${favorited ? "fill-red-500 text-red-500" : "text-white"}`}
           />
         </button>
       </Link>
@@ -119,11 +121,11 @@ export function ProductCard({
 
           {showColors && colors.length > 0 && (
             <div className="flex shrink-0 items-center gap-1 mt-0.5">
-              {colors.map((color) => {
-                const hex = getColorHex(color);
+              {colors.map((color, i) => {
                 const colorImage = product.colorImages?.find(
                   (ci) => ci.color.toLowerCase() === color.toLowerCase(),
                 );
+                const hex = colorImage?.hex ?? getColorHex(color, i);
 
                 return (
                   <button

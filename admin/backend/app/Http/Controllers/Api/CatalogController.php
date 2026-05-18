@@ -158,6 +158,7 @@ class CatalogController extends Controller
 					return null;
 				return [
 					'color' => $color->name,
+					'hex' => $color->hex_color,
 					'url' => $media->getFullUrl(),
 				];
 			})->filter()->values()->toArray(),
@@ -208,6 +209,7 @@ class CatalogController extends Controller
 				'id' => 'color',
 				'name' => 'Color',
 				'values' => $colors->pluck('name')->toArray(),
+				'hexValues' => $colors->pluck('hex_color')->toArray(),
 			];
 		}
 
