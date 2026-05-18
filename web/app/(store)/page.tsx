@@ -131,6 +131,14 @@ export default async function HomePage(props: {
 
 	return (
 		<>
+			{/* ── Announcement Bar ─────────────────────────────────────────── */}
+			<div
+				className="flex h-10 items-center justify-center px-6 text-center text-[10px] font-medium uppercase tracking-[0.28em]"
+				style={{ backgroundColor: "var(--pb-announce-bg)", color: "var(--pb-announce-text)" }}
+			>
+				{heroBarText}
+			</div>
+
 			{/* ── Hero ─────────────────────────────────────────────────────── */}
 			<section
 				className="relative flex min-h-[calc(100svh-76px)] overflow-hidden bg-[#eee8e3]"
@@ -182,9 +190,6 @@ export default async function HomePage(props: {
 					</div>
 				</div>
 
-				<div className="absolute bottom-0 left-0 right-0 z-20 flex h-12 items-center justify-center bg-[#f7f4f0]/95 px-6 text-center text-[10px] font-medium uppercase tracking-[0.28em] text-stone-brown">
-					{heroBarText}
-				</div>
 			</section>
 
 			<Suspense fallback={null}>
