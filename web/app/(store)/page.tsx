@@ -210,7 +210,7 @@ export default async function HomePage(props: {
 						products={sortedProducts}
 						favoriteIds={favoriteIds}
 						isAuthenticated={Boolean(session)}
-						showColors={false}
+						showColors={true}
 					/>
 				</div>
 			</section>
