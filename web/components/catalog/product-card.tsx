@@ -140,10 +140,10 @@ export function ProductCard({
                         setCurrentImage(defaultImageUrl);
                       }
                     }}
-                    className={`h-3.5 w-3.5 cursor-pointer rounded-full border border-white ring-1 transition-transform hover:scale-125 ${
+                    className={`h-3.5 w-3.5 cursor-pointer rounded-full transition-transform hover:scale-125 ${
                       currentImage === colorImage?.url && colorImage?.url
-                        ? "ring-black scale-125"
-                        : "ring-gray-300"
+                        ? "ring-2 ring-offset-1 ring-black scale-125"
+                        : "ring-1 ring-offset-1 ring-gray-200"
                     }`}
                     style={{ backgroundColor: hex }}
                   />
