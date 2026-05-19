@@ -11,6 +11,8 @@ import { ImageUpload } from "@/components/ui/image-upload";
 
 const HERO_DESKTOP_KEY = 'home_hero_banner';
 const HERO_MOBILE_KEY = 'home_hero_banner_mobile';
+const ANNOUNCEMENT_RETAIL_KEY = 'home_top_text_retail';
+const ANNOUNCEMENT_WHOLESALE_KEY = 'home_top_text_wholesale';
 
 const getFullUrl = (path) => {
     if (!path) return "";
@@ -75,7 +77,8 @@ export default function ContentSettings() {
     }, []);
 
     const hasChanges = () => {
-        if (settings['home_top_text']?.value !== originalSettings['home_top_text']?.value) return true;
+        if (settings[ANNOUNCEMENT_RETAIL_KEY]?.value !== originalSettings[ANNOUNCEMENT_RETAIL_KEY]?.value) return true;
+        if (settings[ANNOUNCEMENT_WHOLESALE_KEY]?.value !== originalSettings[ANNOUNCEMENT_WHOLESALE_KEY]?.value) return true;
         if (hasImageChanged(heroImage, HERO_DESKTOP_KEY)) return true;
         if (hasImageChanged(heroMobileImage, HERO_MOBILE_KEY)) return true;
         return false;
@@ -113,8 +116,14 @@ export default function ContentSettings() {
             // 2. Bulk update content
             const contents = [
                 {
-                    key: 'home_top_text',
-                    value: settings['home_top_text']?.value || '',
+                    key: ANNOUNCEMENT_RETAIL_KEY,
+                    value: settings[ANNOUNCEMENT_RETAIL_KEY]?.value || '',
+                    section: 'home',
+                    type: 'text'
+                },
+                {
+                    key: ANNOUNCEMENT_WHOLESALE_KEY,
+                    value: settings[ANNOUNCEMENT_WHOLESALE_KEY]?.value || '',
                     section: 'home',
                     type: 'text'
                 },
@@ -218,13 +227,23 @@ export default function ContentSettings() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="home_top_text">{"Texto a mostrar"}</Label>
+                            <Label htmlFor={ANNOUNCEMENT_RETAIL_KEY}>{"Texto minorista"}</Label>
                             <Input
-                                id="home_top_text"
+                                id={ANNOUNCEMENT_RETAIL_KEY}
                                 type="text"
-                                value={settings.home_top_text?.value || ''}
-                                onChange={(e) => updateSetting('home_top_text', e.target.value)}
-                                placeholder="Ej: ¡Envío gratis en compras superiores a $50.000!"
+                                value={settings[ANNOUNCEMENT_RETAIL_KEY]?.value || ''}
+                                onChange={(e) => updateSetting(ANNOUNCEMENT_RETAIL_KEY, e.target.value)}
+                                placeholder="Ej: Envíos bonificados en compras minoristas seleccionadas"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor={ANNOUNCEMENT_WHOLESALE_KEY}>{"Texto mayorista"}</Label>
+                            <Input
+                                id={ANNOUNCEMENT_WHOLESALE_KEY}
+                                type="text"
+                                value={settings[ANNOUNCEMENT_WHOLESALE_KEY]?.value || ''}
+                                onChange={(e) => updateSetting(ANNOUNCEMENT_WHOLESALE_KEY, e.target.value)}
+                                placeholder="Ej: Envíos bonificados en pedidos mayoristas"
                             />
                         </div>
                     </CardContent>

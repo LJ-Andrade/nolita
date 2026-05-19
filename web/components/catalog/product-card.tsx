@@ -81,7 +81,7 @@ export function ProductCard({
       {/* ── Image ──────────────────────────────────────────────────── */}
       <Link
         href={`/producto/${product.handle}`}
-        className="relative block overflow-hidden rounded-[12px] isolate"
+        className="relative isolate block overflow-hidden"
         style={{
           aspectRatio: "4/5",
           backgroundColor: "var(--pb-surface)",

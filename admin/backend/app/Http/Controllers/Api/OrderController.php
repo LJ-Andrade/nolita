@@ -231,7 +231,7 @@ class OrderController extends Controller
 		$paymentMethod = PaymentMethod::where('status', 'active')->findOrFail($validated['payment_method_id']);
 		$city = $validated['city'] ?: $locality->name;
 		$priceMode = $this->resolvePriceMode($validated['price_mode'] ?? null);
-		$customer = $request->user();
+		$customer = auth('customer')->user() ?: $request->user();
 
 		$cart = $customer
 			? Order::where('customer_id', $customer->id)
@@ -488,7 +488,7 @@ class OrderController extends Controller
 			return null;
 		}
 
-		$config = ShopConfiguration::getCurrent();
+		$config = ShopConfiguration::getConfig();
 		$totalQuantity = collect($pricedLines)->sum('quantity');
 
 		if ($config->min_quantity > 0 && $totalQuantity < $config->min_quantity) {

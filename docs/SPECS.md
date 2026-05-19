@@ -49,14 +49,21 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 - The storefront brand for this project is Nolita.
 - The home top bar must use a centered `NOLITA` wordmark, a compact retail/wholesale control on the right, and the cart action.
-- The home hero must follow Nolita's first visual direction: full-bleed image, soft overlay, lower-left seasonal eyebrow, and the headline "La Elegancia que no caduca".
+- The home top navigation must place the Nolita logo on the left.
+- The home hero must render only the configured imagery, without text over the image.
 - The home content after the hero must render the complete catalog grid using the same product cards as `/catalogo`.
 - The home catalog grid must render the same editorial floating category, size, and sort filters as `/catalogo`.
+- The category controls immediately below the home hero must show only VADMIN listed categories, ordered by their `order` value, and must not render an all-categories option.
 - The home catalog grid must respect the active retail/wholesale storefront mode and VADMIN catalog visibility rules.
 - Catalog product grids must render four product cards per row on desktop viewports.
 - The home hero uses site content keys for responsive imagery:
   - `home_hero_banner`: required desktop/background image.
   - `home_hero_banner_mobile`: optional mobile image.
+- The announcement bar above the home hero must use mode-specific VADMIN site content:
+  - `home_top_text_retail`: text shown in retail mode.
+  - `home_top_text_wholesale`: text shown in wholesale mode.
+- The announcement bar text must update immediately when the storefront retail/wholesale control changes mode.
+- `home_top_text` is a legacy fallback only and must not be the primary admin editing target.
 - When `home_hero_banner_mobile` is present, the storefront must render it on small viewports and switch to `home_hero_banner` on medium and larger viewports.
 - When `home_hero_banner_mobile` is missing, the storefront must fall back to the desktop hero image on all viewport sizes.
 - The admin content editor must show desktop and mobile hero uploads in the same row on large screens, with the mobile upload in a narrower column, and stack them on smaller admin viewports.
@@ -96,12 +103,13 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 - Catalog filters must render as a floating bottom control bar over the catalog experience on desktop and mobile.
 - The floating catalog filter bar must be hidden at the very top of the page and fade in progressively as the user scrolls down, so it does not interfere with the home hero.
-- The floating bar must expose category and size dropdowns plus a visible "Filtrar" action styled with the Nolita editorial visual direction.
-- The "Filtrar" action must open the catalog ordering dropdown, keeping sorting in the main floating filter control group instead of a separate product-control row.
-- The product grid header must show product count and active filter chips only; it must not duplicate size or sorting controls.
+- When the footer enters the viewport, the floating catalog filter bar must move upward and remain above the footer instead of covering footer content.
+- The floating bar must expose category, color, and size dropdowns styled with the Nolita editorial visual direction.
+- The "Filtrar" action must live on the right side of the sticky product grid header, render without a leading icon, and open the catalog ordering dropdown.
+- The product grid header must show product count, active filter chips, and the right-aligned "Filtrar" action; it must not duplicate category, color, or size controls.
 - The product grid header may remain sticky below the storefront navbar so active filters stay visible during catalog scrolling.
 - Filter pills and dropdown panels may use soft rounded corners even when product cards and general storefront buttons remain square.
-- Category and size dropdowns must remain available without leaving the catalog page and must continue to update URL search params so filtered catalog URLs remain shareable.
+- Category, color, and size dropdowns must remain available without leaving the catalog page and must continue to update URL search params so filtered catalog URLs remain shareable.
 - The catalog page must show a top category navigation row using VADMIN categories that currently have published products.
 - The catalog sort control must render as an editorial dropdown on the right side of the product controls, with options for featured, newest, discount, and price ordering.
 - Active filters and "Limpiar todo" behavior must stay consistent across the floating filter controls and the catalog product grid.
@@ -112,6 +120,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Product cards must place the favorite heart action at the top-left of the product image.
 - The storefront navbar must expose the customer account action immediately to the left of the cart action on desktop and mobile.
 - The cart sidebar must use a black background with light text and controls that preserve readable contrast.
+- The cart summary must hide the discounts row when the current cart discount total is zero.
 
 ### Admin Product Ordering
 
@@ -302,6 +311,8 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 2. **Authentication**: Authentication is optional. Guest checkout must create an order without creating a customer.
 3. **Methods**: Shipping and payment methods are fetched from VADMIN.
 4. **Completion**: The `completeOrder` action sends collected data, cart lines, and active price mode to VADMIN checkout.
+5. **API Routing**: The storefront posts to the public VADMIN `POST /api/checkout` endpoint for both guests and authenticated customers. When an `auth_token` cookie is present, the storefront forwards it as a Bearer header so VADMIN can associate the order with the customer via the Sanctum `customer` guard. A missing or expired token must not block checkout; the order is persisted as a guest order in that case.
+6. **Customer Resolution (Backend)**: `OrderController::checkout` must resolve the customer via `auth('customer')->user()` so the public route can still link orders to authenticated customers when a valid Bearer token is sent.
 5. **Summary UI**:
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.

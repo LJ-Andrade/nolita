@@ -46,6 +46,12 @@ const orderStatuses = [
 	{ value: 'cancelled', label: 'Cancelada' },
 ];
 
+const paymentStatuses = [
+	{ value: 'unpaid', label: 'Sin abonar' },
+	{ value: 'processing', label: 'En proceso' },
+	{ value: 'paid', label: 'Pagado' },
+];
+
 export default function OrdersList() {
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -56,6 +62,7 @@ export default function OrdersList() {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [exportingFormat, setExportingFormat] = useState(null);
 	const [updatingStatusId, setUpdatingStatusId] = useState(null);
+	const [updatingPaymentStatusId, setUpdatingPaymentStatusId] = useState(null);
 
 	const {
 		selectedIds,
@@ -188,6 +195,28 @@ export default function OrdersList() {
 		}
 	};
 
+	const handlePaymentStatusChange = async (order, newStatus) => {
+		if (order.payment_status === newStatus || updatingPaymentStatusId === order.id) return;
+
+		const previousOrders = orders;
+		setUpdatingPaymentStatusId(order.id);
+		setOrders((currentOrders) => currentOrders.map((currentOrder) => (
+			currentOrder.id === order.id
+				? { ...currentOrder, payment_status: newStatus }
+				: currentOrder
+		)));
+
+		try {
+			await axiosClient.put(`admin/orders/${order.id}`, { payment_status: newStatus });
+			toast.success('Estado de pago actualizado correctamente');
+		} catch (error) {
+			setOrders(previousOrders);
+			toast.error('Error al actualizar el estado de pago');
+		} finally {
+			setUpdatingPaymentStatusId(null);
+		}
+	};
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [orderToDelete, setOrderToDelete] = useState(null);
 
@@ -219,6 +248,41 @@ export default function OrdersList() {
 			default:
 				return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Pendiente</Badge>;
 		}
+	};
+
+	const getPaymentStatusBadge = (status) => {
+		switch (status) {
+			case 'paid':
+				return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3" /> Pagado</Badge>;
+			case 'processing':
+				return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><RefreshCw className="mr-1 h-3 w-3" /> En proceso</Badge>;
+			default:
+				return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Sin abonar</Badge>;
+		}
+	};
+
+	const renderPaymentStatusDropdown = (order) => {
+		const isUpdating = updatingPaymentStatusId === order.id;
+		return (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button variant="ghost" className="h-8 w-full justify-start px-2 cursor-pointer" disabled={isUpdating}>
+						{getPaymentStatusBadge(order.payment_status)}
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start">
+					{paymentStatuses.map((s) => (
+						<DropdownMenuItem
+							key={s.value}
+							disabled={isUpdating || order.payment_status === s.value}
+							onClick={() => handlePaymentStatusChange(order, s.value)}
+						>
+							{s.label}
+						</DropdownMenuItem>
+					))}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		);
 	};
 
 	const renderStatusDropdown = (order) => {
@@ -310,6 +374,7 @@ export default function OrdersList() {
 								<TableHead>Cliente</TableHead>
 								<TableHead>Fecha</TableHead>
 								<TableHead>Estado</TableHead>
+								<TableHead>Pago</TableHead>
 								<TableHead className="text-right">Total</TableHead>
 								<TableHead className="text-right w-[150px]">Acciones</TableHead>
 							</TableRow>
@@ -317,12 +382,12 @@ export default function OrdersList() {
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
 							{loading && orders.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={7} className="text-center">Cargando...</TableCell>
+									<TableCell colSpan={8} className="text-center">Cargando...</TableCell>
 								</TableRow>
 							)}
 							{!loading && orders.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+									<TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
 										No se encontraron órdenes.
 									</TableCell>
 								</TableRow>
@@ -337,8 +402,8 @@ export default function OrdersList() {
 									</TableCell>
 									<TableCell>
 										<div className="flex flex-col">
-											<span className="font-medium">{order.customer?.name || 'Invitado'}</span>
-											<span className="text-xs text-muted-foreground">{order.customer?.email}</span>
+											<span className="font-medium">{order.customer?.name || order.customer_data?.name || 'Invitado'}</span>
+											<span className="text-xs text-muted-foreground">{order.customer?.email || order.customer_data?.email}</span>
 										</div>
 									</TableCell>
 									<TableCell>
@@ -346,6 +411,9 @@ export default function OrdersList() {
 									</TableCell>
 									<TableCell>
 										{renderStatusDropdown(order)}
+									</TableCell>
+									<TableCell>
+										{renderPaymentStatusDropdown(order)}
 									</TableCell>
 									<TableCell className="text-right font-medium">
 										${parseFloat(order.total_amount).toFixed(2)} {order.currency}

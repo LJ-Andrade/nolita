@@ -38,13 +38,18 @@ export function Gallery({
           {images.map((image, index) => {
             const isActive = index === imageIndex;
             return (
-              <li key={image.src} className="h-20 w-20 shrink-0 lg:h-24 lg:w-24">
+              <li
+                key={image.src}
+                className="h-20 w-20 shrink-0 lg:h-24 lg:w-24"
+              >
                 <button
                   onClick={() => updateImage(index.toString())}
                   aria-label="Select product image"
                   className={clsx(
-                    "relative h-full w-full overflow-hidden rounded-[12px] border-2 transition-all duration-200",
-                    isActive ? "border-black dark:border-white" : "border-transparent opacity-60 hover:opacity-100"
+                    "relative h-full w-full overflow-hidden border-2 transition-all duration-200",
+                    isActive
+                      ? "border-black dark:border-white"
+                      : "border-transparent opacity-60 hover:opacity-100",
                   )}
                 >
                   <Image
@@ -62,7 +67,7 @@ export function Gallery({
       )}
 
       {/* Main Image */}
-      <div className="relative aspect-[4/5] w-full flex-1 overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 isolate">
+      <div className="relative isolate aspect-[4/5] w-full flex-1 overflow-hidden border border-neutral-200 bg-neutral-50">
         {images[imageIndex] && (
           <Image
             className="h-full w-full object-cover transition-all duration-500"

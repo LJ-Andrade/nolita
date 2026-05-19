@@ -13,7 +13,8 @@ class Order extends Model
 
     protected $fillable = [
         'customer_id',
-        'status',          // e.g. pending, completed, cancelled
+        'status',
+        'payment_status',
         'total_amount',
         'currency',
         'price_mode',

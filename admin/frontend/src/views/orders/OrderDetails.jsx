@@ -22,7 +22,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   FileDown,
   Package,
-  MapPin,
   CreditCard,
   User,
   Clock,
@@ -30,7 +29,6 @@ import {
   XCircle,
   RefreshCw,
   ReceiptText,
-  Truck,
   MessageSquareText,
   Tag,
 } from 'lucide-react';
@@ -73,37 +71,18 @@ function getStatusBadge(status) {
   }
 }
 
-function getPaymentLabel(paymentMethod) {
-  if (!paymentMethod) return emptyValue;
-
-  const labels = {
-    cash: "Efectivo",
-    transfer: "Transferencia",
-    credit_card: "Tarjeta de crédito",
-    debit_card: "Tarjeta de débito",
-    mercadopago: "Mercado Pago",
-  };
-
-  return labels[paymentMethod] || paymentMethod;
+function getPaymentStatusBadge(status) {
+  switch (status) {
+    case 'paid':
+      return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3" /> Pagado</Badge>;
+    case 'processing':
+      return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><RefreshCw className="mr-1 h-3 w-3" /> En proceso</Badge>;
+    default:
+      return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Sin abonar</Badge>;
+  }
 }
 
-function getCurrencyLabel(currency) {
-  if (!currency || currency === "ARS" || currency === "$") return "$";
 
-  return currency;
-}
-
-function getAddressLines(address) {
-  if (!address) return [];
-
-  return [
-    address.name,
-    address.email,
-    address.phone,
-    address.address,
-    [address.locality || address.city, address.province, address.postal_code].filter(Boolean).join(", "),
-  ].filter(Boolean);
-}
 
 function DetailRow({ label, value }) {
   return (
@@ -120,7 +99,9 @@ export default function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
   const [exportingFormat, setExportingFormat] = useState(null);
 
   useEffect(() => {
@@ -132,6 +113,7 @@ export default function OrderDetails() {
       const response = await axiosClient.get(`admin/orders/${id}`);
       setOrder(response.data);
       setSelectedStatus(response.data.status || "pending");
+      setSelectedPaymentStatus(response.data.payment_status || "unpaid");
     } catch (error) {
       toast.error('Error al cargar la orden');
       navigate('/pedidos');
@@ -151,6 +133,20 @@ export default function OrderDetails() {
       toast.error('Error al actualizar el estado');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const updatePaymentStatus = async (newStatus) => {
+    setUpdatingPayment(true);
+    try {
+      await axiosClient.put(`admin/orders/${id}`, { payment_status: newStatus });
+      toast.success('Estado de pago actualizado correctamente');
+      setOrder({ ...order, payment_status: newStatus });
+      setSelectedPaymentStatus(newStatus);
+    } catch (error) {
+      toast.error('Error al actualizar el estado de pago');
+    } finally {
+      setUpdatingPayment(false);
     }
   };
 
@@ -194,10 +190,6 @@ export default function OrderDetails() {
   const discount = Number.parseFloat(order.coupon_discount_amount || 0);
   const deliveryFee = Number.parseFloat(order.shipping_address?.delivery_fee || 0);
   const paymentFee = Number.parseFloat(order.billing_address?.payment_fee || 0);
-  const shippingLines = getAddressLines(order.shipping_address);
-  const billingLines = getAddressLines(order.billing_address);
-  const deliveryMethod = order.shipping_address?.delivery_method_name || order.shipping_address?.delivery_method_id;
-  const paymentMethod = order.billing_address?.payment_method_name || order.payment_method;
 
   return (
     <div className="space-y-6">
@@ -207,7 +199,7 @@ export default function OrderDetails() {
             { label: 'PEDIDOS', href: '/pedidos' },
             { label: `Orden #${order.id}` },
           ]}
-          actions={getStatusBadge(order.status)}
+          actions={<div className="flex items-center gap-2">{getStatusBadge(order.status)}{getPaymentStatusBadge(order.payment_status)}</div>}
         />
         <p className="text-sm text-muted-foreground -mt-3">
           Creada {formatDateTime(order.created_at)} · Actualizada {formatDateTime(order.updated_at)}
@@ -336,82 +328,61 @@ export default function OrderDetails() {
             onStatusChange={setSelectedStatus}
             onUpdateStatus={updateStatus}
             updating={updating}
+            selectedPaymentStatus={selectedPaymentStatus}
+            onPaymentStatusChange={setSelectedPaymentStatus}
+            onUpdatePaymentStatus={updatePaymentStatus}
+            updatingPayment={updatingPayment}
           />
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" /> Cliente
+                <User className="h-5 w-5" /> Datos del Cliente
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <p className="font-medium">{order.customer?.name || order.shipping_address?.name || 'Usuario invitado'}</p>
-              <p className="text-sm text-muted-foreground">{order.customer?.email || order.shipping_address?.email || emptyValue}</p>
-              <p className="text-sm text-muted-foreground">{order.customer?.phone || order.shipping_address?.phone || emptyValue}</p>
+              {(() => {
+                const cd = order.customer_data || {};
+                const name = order.customer?.name || cd.name;
+                const email = order.customer?.email || cd.email;
+                const phone = order.customer?.phone || cd.phone;
+                return (
+                  <>
+                    <DetailRow label="Nombre" value={name} />
+                    <DetailRow label="Email" value={email} />
+                    <DetailRow label="Teléfono" value={phone} />
+                    {cd.whatsapp && <DetailRow label="WhatsApp" value={cd.whatsapp} />}
+                    {cd.cuit && <DetailRow label="CUIT" value={cd.cuit} />}
+                    {cd.address && (
+                      <>
+                        <Separator className="my-2" />
+                        <DetailRow label="Dirección" value={cd.address} />
+                        <DetailRow label="Localidad" value={cd.locality || cd.city} />
+                        <DetailRow label="Provincia" value={cd.province} />
+                        <DetailRow label="Código postal" value={cd.postal_code} />
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" /> Pago
+                <CreditCard className="h-5 w-5" /> Pago y Entrega
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <DetailRow label="Método" value={getPaymentLabel(paymentMethod)} />
-              <DetailRow label="Moneda" value={getCurrencyLabel(order.currency)} />
-              <DetailRow label="Recargo" value={formatMoney(paymentFee)} />
+              <DetailRow label="Método de pago" value={order.billing_address?.payment_method_name || order.payment_method || emptyValue} />
+              <DetailRow label="Recargo pago" value={formatMoney(order.billing_address?.payment_fee)} />
               {order.coupon_code && (
                 <DetailRow label="Cupón aplicado" value={<span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" /> {order.coupon_code}</span>} />
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" /> Entrega
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              <DetailRow label="Método" value={deliveryMethod || emptyValue} />
-              <DetailRow label="Localidad" value={order.shipping_address?.locality || order.shipping_address?.city || emptyValue} />
-              <DetailRow label="Provincia" value={order.shipping_address?.province || emptyValue} />
-              <DetailRow label="Código postal" value={order.shipping_address?.postal_code || emptyValue} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" /> Dirección de envío
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {shippingLines.length ? (
-                <div className="space-y-1 text-sm">
-                  {shippingLines.map((line, index) => <p key={`shipping-${index}-${line}`}>{line}</p>)}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Sin dirección especificada</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" /> Facturación
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {billingLines.length ? (
-                <div className="space-y-1 text-sm">
-                  {billingLines.map((line, index) => <p key={`billing-${index}-${line}`}>{line}</p>)}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Sin datos de facturación</p>
-              )}
+              <Separator className="my-2" />
+              <DetailRow label="Método de entrega" value={order.shipping_address?.delivery_method_name || order.shipping_address?.delivery_method_id || emptyValue} />
+              <DetailRow label="Costo de envío" value={formatMoney(order.shipping_address?.delivery_fee)} />
             </CardContent>
           </Card>
         </div>

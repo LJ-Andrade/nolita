@@ -1,7 +1,9 @@
 import { ActiveFilters } from "components/catalog/active-filters";
+import { CatalogFilterAction } from "components/catalog/catalog-filter-action";
 import { EditorialFilterControls } from "components/catalog/editorial-filter-controls";
 import { ProductCount } from "components/catalog/product-count";
 import { ProductGrid } from "components/catalog/product-grid";
+import { AnnouncementBarClient } from "components/layout/announcement-bar-client";
 import {
   getCollections,
   getProducts,
@@ -11,6 +13,8 @@ import {
 import { getSession } from "lib/vadmin/auth";
 import { getFavorites } from "lib/vadmin/favorites";
 import type { Product } from "lib/vadmin/types";
+import { COLOR_MAP } from "lib/constants";
+import { getServerPriceMode } from "lib/price-mode";
 import { Suspense } from "react";
 
 export const metadata = {
@@ -22,6 +26,7 @@ export const metadata = {
 type SearchParams = {
   category?: string;
   categoria?: string;
+  color?: string | string[];
   size?: string | string[];
   sort?: string;
 };
@@ -55,16 +60,39 @@ function sortProducts(products: Product[], sort: string): Product[] {
   }
 }
 
-function filterProducts(products: Product[], sizes: string[]): Product[] {
-  if (sizes.length === 0) {
+function filterProducts(
+  products: Product[],
+  sizes: string[],
+  colors: string[],
+): Product[] {
+  if (sizes.length === 0 && colors.length === 0) {
     return products;
   }
 
-  return products.filter((product) =>
-    product.options
-      .find((option) => option.name === "Talle")
-      ?.values.some((value) => sizes.includes(value)),
-  );
+  return products.filter((product) => {
+    const hasSize =
+      sizes.length === 0 ||
+      product.variants.some(
+        (variant) =>
+          variant.availableForSale &&
+          variant.selectedOptions.some(
+            (option) => option.name === "Talle" && sizes.includes(option.value),
+          ),
+      );
+    const hasColor =
+      colors.length === 0 ||
+      product.variants.some(
+        (variant) =>
+          variant.availableForSale &&
+          variant.selectedOptions.some(
+            (option) =>
+              option.name.toLowerCase() === "color" &&
+              colors.includes(option.value),
+          ),
+      );
+
+    return hasSize && hasColor;
+  });
 }
 
 function hasAvailableVariant(product: Product) {
@@ -93,6 +121,48 @@ function getAvailableProductSizes(products: Product[]) {
   return Array.from(sizes);
 }
 
+function getAvailableProductColors(products: Product[]) {
+  const colors = new Map<string, string | undefined>();
+
+  products.forEach((product) => {
+    const colorOption = product.options.find(
+      (option) => option.name.toLowerCase() === "color",
+    );
+
+    product.variants.forEach((variant) => {
+      if (!variant.availableForSale) {
+        return;
+      }
+
+      const color = variant.selectedOptions.find(
+        (option) => option.name.toLowerCase() === "color",
+      )?.value;
+
+      if (!color || colors.has(color)) {
+        return;
+      }
+
+      const optionIndex = colorOption?.values.findIndex(
+        (value) => value.toLowerCase() === color.toLowerCase(),
+      );
+      const optionHex =
+        optionIndex !== undefined && optionIndex >= 0
+          ? colorOption?.hexValues?.[optionIndex]
+          : undefined;
+      const imageHex = product.colorImages?.find(
+        (image) => image.color.toLowerCase() === color.toLowerCase(),
+      )?.hex;
+
+      colors.set(
+        color,
+        imageHex ?? optionHex ?? COLOR_MAP[color.toLowerCase()],
+      );
+    });
+  });
+
+  return Array.from(colors, ([name, hex]) => ({ name, hex }));
+}
+
 export default async function HomePage(props: {
   searchParams: Promise<SearchParams>;
 }) {
@@ -103,20 +173,34 @@ export default async function HomePage(props: {
       ? searchParams.size
       : [searchParams.size]
     : [];
+  const colors = searchParams.color
+    ? Array.isArray(searchParams.color)
+      ? searchParams.color
+      : [searchParams.color]
+    : [];
   const sort = searchParams.sort ?? "featured";
-  const [products, collections, content, session, categoryFilterProducts] =
-    await Promise.all([
-      getProducts({ category }),
-      getCollections(),
-      getSiteContent("home"),
-      getSession(),
-      category ? getProducts() : Promise.resolve(null),
-    ]);
+  const mode = await getServerPriceMode();
+  const [
+    products,
+    collections,
+    featuredCollections,
+    content,
+    session,
+    categoryFilterProducts,
+  ] = await Promise.all([
+    getProducts({ category, mode }),
+    getCollections(),
+    getCollections({ listed: true }),
+    getSiteContent("home"),
+    getSession(),
+    category ? getProducts({ mode }) : Promise.resolve(null),
+  ]);
 
   const favorites = session ? await getFavorites() : [];
   const favoriteIds = new Set(favorites.map((product) => product.id));
   const allSizes = getAvailableProductSizes(products);
-  const filteredProducts = filterProducts(products, sizes);
+  const allColors = getAvailableProductColors(products);
+  const filteredProducts = filterProducts(products, sizes, colors);
   const sortedProducts = sortProducts(filteredProducts, sort);
   const categoryProductHandles = new Set(
     (categoryFilterProducts ?? products)
@@ -128,6 +212,9 @@ export default async function HomePage(props: {
     (collection) =>
       collection.handle && categoryProductHandles.has(collection.handle),
   );
+  const featuredFilterCategories = featuredCollections.filter(
+    (collection) => collection.handle,
+  );
   const heroImage = getVadminImageUrl(
     content.home_hero_banner || "/storage/web/hero_1.jpg",
   );
@@ -136,22 +223,14 @@ export default async function HomePage(props: {
       content.home_hero_banner ||
       "/storage/web/hero_1.jpg",
   );
-  const heroBarText =
-    content.home_top_text ||
-    "Envios bonificados en pedidos mayoristas · Nueva coleccion disponible";
-
   return (
     <>
       {/* ── Announcement Bar ─────────────────────────────────────────── */}
-      <div
-        className="flex h-10 items-center justify-center px-6 text-center text-[10px] font-medium uppercase tracking-[0.28em]"
-        style={{
-          backgroundColor: "var(--pb-announce-bg)",
-          color: "var(--pb-announce-text)",
-        }}
-      >
-        {heroBarText}
-      </div>
+      <AnnouncementBarClient
+        retailText={content.home_top_text_retail}
+        wholesaleText={content.home_top_text_wholesale}
+        fallbackText={content.home_top_text}
+      />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="relative flex min-h-[calc(100svh-76px)] overflow-hidden bg-[#eee8e3]">
@@ -170,8 +249,6 @@ export default async function HomePage(props: {
                 backgroundImage: `url(${heroImage || heroMobileImage})`,
               }}
             />
-            <div className="absolute inset-0 bg-[#f4eee9]/20" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/36 via-black/10 to-white/12" />
           </>
         ) : (
           <div
@@ -181,41 +258,30 @@ export default async function HomePage(props: {
             }}
           />
         )}
-
-        <div className="relative z-10 flex w-full items-end px-6 pb-24 pt-20 md:px-28 md:pb-28">
-          <div className="max-w-2xl">
-            <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.42em] text-[#f3deaf]">
-              SS 2026 Collection
-            </p>
-            <h1
-              className="text-6xl font-normal leading-[0.98] text-white md:text-8xl"
-              style={{
-                fontFamily: "var(--font-serif)",
-              }}
-            >
-              La Elegancia
-              <br />
-              <em className="font-normal italic">que no caduca</em>
-            </h1>
-          </div>
-        </div>
       </section>
 
       <Suspense fallback={null}>
         <EditorialFilterControls
-          categories={filterCategories}
+          categories={featuredFilterCategories}
+          colors={allColors}
           sizes={allSizes}
           total={sortedProducts.length}
+          showAllCategoryNav={false}
         />
       </Suspense>
 
-      <section className="bg-white px-4 py-10 pb-24 lg:px-8 lg:py-14">
+      <section className="bg-white px-4 pb-40 pt-10 lg:px-8 lg:pb-48 lg:pt-14">
         <div className="mx-auto max-w-screen-2xl">
           <div className="sticky top-[64px] z-30 mb-6 flex flex-wrap items-center justify-between gap-3 border-b bg-white/90 py-3 backdrop-blur-md md:top-[76px]">
             <ProductCount products={sortedProducts} />
-            <Suspense fallback={null}>
-              <ActiveFilters categories={filterCategories} />
-            </Suspense>
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
+              <Suspense fallback={null}>
+                <ActiveFilters categories={filterCategories} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <CatalogFilterAction />
+              </Suspense>
+            </div>
           </div>
           <ProductGrid
             products={sortedProducts}

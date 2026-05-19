@@ -2,6 +2,45 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 60: Guest Checkout Hardening
+
+1. [x] `docs/SPECS.md`: Document unified public checkout routing and customer guard resolution.
+2. [x] `web/lib/vadmin/cart.ts`: Always POST to public `/checkout`; forward Bearer when available. Refresh stale `getCart` comment.
+3. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Resolve customer via `auth('customer')->user()` so authenticated customers are still linked when posting to the public route.
+4. [ ] Validation: Manual end-to-end test as guest (add to cart → checkout → verify `orders.customer_data` persisted, `customer_id` null) and as authenticated customer (verify `customer_id` populated).
+
+## Phase 59: Storefront Filter Footer Clearance
+
+1. [x] `docs/SPECS.md`: Document footer-aware floating filters and iconless "Filtrar" action.
+2. [x] `web/components/catalog/catalog-filter-action.tsx`: Remove the leading icon from the "Filtrar" action.
+3. [x] `web/components/catalog/editorial-filter-controls.tsx`: Move the floating category/color/size controls above the footer when it enters the viewport.
+4. [x] Validation: Run focused storefront checks.
+
+## Phase 58: Storefront Catalog Color Filters
+
+1. [x] `docs/SPECS.md`: Document the color filter and moved "Filtrar" action behavior.
+2. [x] `web/app/(store)/page.tsx`: Read color URL params, filter products by available color variants, and pass color options to controls.
+3. [x] `web/components/catalog/editorial-filter-controls.tsx`: Replace the floating "Filtrar" pill with a color dropdown between category and size.
+4. [x] `web/components/catalog/*`: Move the sort/filter action to the sticky product grid header and include color chips in active filters.
+5. [x] Validation: Run focused storefront checks.
+
+## Phase 57: Storefront Home and Cart Polish
+
+1. [x] `docs/SPECS.md`: Document hero image-only behavior, listed home categories, left logo, and zero-discount cart summary behavior.
+2. [x] `web/app/(store)/page.tsx`: Remove hero overlay text and use ordered listed categories below the hero.
+3. [x] `web/components/cart/modal.tsx`: Hide the discounts row when total discounts are zero.
+4. [x] `web/components/layout/navbar/index.tsx`: Move the logo to the left in the top navigation.
+5. [x] Validation: Run focused storefront build.
+
+## Phase 56: Mode-Aware Announcement Bar
+
+1. [x] `docs/SPECS.md`: Document retail and wholesale announcement site content keys.
+2. [x] `admin/backend/database/seeders/SiteContentSeeder.php`: Seed mode-specific home announcement records for development resets.
+3. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Edit retail and wholesale announcement text separately.
+4. [x] `web/app/(store)/page.tsx` and `web/components/layout/announcement-bar.tsx`: Render announcement text from the active storefront mode with legacy fallback.
+5. [x] Validation: Run focused backend syntax and storefront/admin frontend checks.
+6. [x] `web/components/layout/announcement-bar-client.tsx`: Update the announcement text immediately when the retail/wholesale mode changes.
+
 ## Phase 55: Checkout Empty Cart Redirect
 
 1. [x] `docs/SPECS.md`: Document that checkout redirects home when the cart becomes empty.
@@ -68,7 +107,7 @@ This document tracks execution steps. One task per logical unit.
 ## Phase 47: Nolita Project Rebrand and Home Direction
 
 1. [x] `docs/SPECS.md`: Document Nolita brand, development API URL, and home top/hero direction.
-2. [x] Environment and app config: Replace legacy brand development names, `planb.test`, and local database references with Nolita values.
+2. [x] Environment and app config: Replace legacy brand development names, `nolita.test`, and local database references with Nolita values.
 3. [x] Storefront chrome: Replace legacy visible branding with Nolita fallbacks.
 4. [x] `web/app/(store)/page.tsx` and navbar: Update home metadata, top bar, and hero composition to match the Nolita reference direction.
 5. [ ] Validation: Run focused checks for the storefront and search for remaining project-owned legacy brand references.

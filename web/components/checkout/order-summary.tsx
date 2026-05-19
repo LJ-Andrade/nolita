@@ -161,6 +161,7 @@ export default function OrderSummary({
                   <DeleteItemButton
                     item={item}
                     optimisticUpdate={updateCartItem}
+                    tone="checkout"
                     onRemoveStart={(id) =>
                       setRemovingItems((current) => new Set(current).add(id))
                     }

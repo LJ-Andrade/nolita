@@ -29,12 +29,11 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processing,completed,cancelled',
+            'status' => 'sometimes|string|in:pending,processing,completed,cancelled',
+            'payment_status' => 'sometimes|string|in:unpaid,processing,paid',
         ]);
 
-        $order->update([
-            'status' => $request->status,
-        ]);
+        $order->update($request->only('status', 'payment_status'));
 
         return response()->json($order);
     }

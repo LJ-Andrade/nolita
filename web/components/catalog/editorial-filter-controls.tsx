@@ -1,11 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import {
-  AdjustmentsHorizontalIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Collection } from "lib/vadmin/types";
@@ -22,38 +18,39 @@ const SIZES_ORDER = [
   "Único",
 ];
 
-const SORT_OPTIONS = [
-  { label: "Destacados", value: "featured" },
-  { label: "Últimos Ingresos", value: "newest" },
-  { label: "Mayor Descuento", value: "discount_desc" },
-  { label: "Precio: Menor a Mayor", value: "price_asc" },
-  { label: "Precio: Mayor a Menor", value: "price_desc" },
-] as const;
+type ColorFilterOption = {
+  name: string;
+  hex?: string;
+};
 
-type SortValue = (typeof SORT_OPTIONS)[number]["value"];
-type OpenPanel = "category" | "sizes" | "filter" | null;
+type OpenPanel = "category" | "colors" | "sizes" | null;
 
 type EditorialFilterControlsProps = {
   categories: Collection[];
+  colors: ColorFilterOption[];
   sizes: string[];
   total: number;
+  showAllCategoryNav?: boolean;
 };
 
 export function EditorialFilterControls({
   categories,
+  colors,
   sizes,
   total,
+  showAllCategoryNav = true,
 }: EditorialFilterControlsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [scrollOpacity, setScrollOpacity] = useState(0);
+  const [footerOffset, setFooterOffset] = useState(0);
 
   const activeCategory =
     searchParams.get("categoria") ?? searchParams.get("category") ?? "";
+  const activeColors = searchParams.getAll("color");
   const activeSizes = searchParams.getAll("size");
-  const currentSort = (searchParams.get("sort") ?? "featured") as SortValue;
 
   const sortedSizes = useMemo(
     () =>
@@ -67,6 +64,10 @@ export function EditorialFilterControls({
         return aIndex - bIndex;
       }),
     [sizes],
+  );
+  const sortedColors = useMemo(
+    () => [...colors].sort((a, b) => a.name.localeCompare(b.name)),
+    [colors],
   );
 
   const activeCategoryTitle =
@@ -117,18 +118,21 @@ export function EditorialFilterControls({
     [pushParams, searchParams],
   );
 
-  const setSort = useCallback(
-    (value: SortValue) => {
+  const toggleColor = useCallback(
+    (color: string) => {
       const params = new URLSearchParams(searchParams.toString());
+      const current = params.getAll("color");
 
-      if (value === "featured") {
-        params.delete("sort");
-      } else {
-        params.set("sort", value);
+      params.delete("color");
+      current
+        .filter((value) => value !== color)
+        .forEach((value) => params.append("color", value));
+
+      if (!current.includes(color)) {
+        params.append("color", color);
       }
 
       pushParams(params);
-      setOpenPanel(null);
     },
     [pushParams, searchParams],
   );
@@ -165,6 +169,41 @@ export function EditorialFilterControls({
     }
   }, [scrollOpacity]);
 
+  useEffect(() => {
+    let frame = 0;
+
+    const updateFooterOffset = () => {
+      frame = 0;
+      const footer = document.querySelector("footer");
+
+      if (!footer) {
+        setFooterOffset(0);
+        return;
+      }
+
+      const { top } = footer.getBoundingClientRect();
+      const visibleFooterHeight = Math.max(0, window.innerHeight - top);
+      setFooterOffset(
+        Math.min(visibleFooterHeight, Math.max(0, window.innerHeight - 104)),
+      );
+    };
+
+    const requestUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateFooterOffset);
+    };
+
+    updateFooterOffset();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
     <>
       <section
@@ -174,11 +213,13 @@ export function EditorialFilterControls({
       >
         <div className="no-scrollbar mx-auto flex w-full max-w-screen-2xl items-center justify-start overflow-x-auto px-4 py-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-center lg:px-8">
           <div className="flex min-w-max items-center gap-8">
-            <CategoryNavButton
-              active={!activeCategory}
-              label="Todos"
-              onClick={() => setCategory("")}
-            />
+            {showAllCategoryNav && (
+              <CategoryNavButton
+                active={!activeCategory}
+                label="Todos"
+                onClick={() => setCategory("")}
+              />
+            )}
             {categories.map((category) => (
               <CategoryNavButton
                 key={category.handle}
@@ -194,6 +235,7 @@ export function EditorialFilterControls({
       <div
         className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4"
         style={{
+          bottom: `calc(1.5rem + ${footerOffset}px)`,
           opacity: scrollOpacity,
           transform: `translateY(${(1 - scrollOpacity) * 10}px)`,
         }}
@@ -209,7 +251,7 @@ export function EditorialFilterControls({
           {openPanel === "category" && (
             <div
               className={clsx(
-                "absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[14rem]",
+                "absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[10rem]",
                 "bottom-[4.5rem]",
               )}
               style={{ borderRadius: 18 }}
@@ -227,6 +269,42 @@ export function EditorialFilterControls({
                   onClick={() => setCategory(category.handle)}
                 />
               ))}
+            </div>
+          )}
+
+          {openPanel === "colors" && (
+            <div
+              className={clsx(
+                "absolute left-1/2 grid w-[232px] -translate-x-1/2 grid-cols-1 gap-1 bg-white p-2 shadow-2xl ring-1 ring-black/5 sm:w-[260px] sm:grid-cols-2",
+                "bottom-[4.5rem]",
+              )}
+              style={{ borderRadius: 18 }}
+            >
+              {sortedColors.map((color) => {
+                const active = activeColors.includes(color.name);
+
+                return (
+                  <button
+                    key={color.name}
+                    type="button"
+                    onClick={() => toggleColor(color.name)}
+                    className={clsx(
+                      "flex h-11 items-center gap-3 px-3 text-left text-xs font-medium uppercase tracking-[0.12em] outline-none transition-colors",
+                      active
+                        ? "bg-[#fbf7f4] text-[#d85a3f]"
+                        : "text-[var(--pb-text)] hover:bg-[#fbf7f4]",
+                    )}
+                    style={{ borderRadius: 12 }}
+                    aria-pressed={active}
+                  >
+                    <span
+                      className="h-4 w-4 shrink-0 rounded-full ring-1 ring-black/10"
+                      style={{ backgroundColor: color.hex ?? "#CCCCCC" }}
+                    />
+                    <span className="truncate">{color.name}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -265,51 +343,21 @@ export function EditorialFilterControls({
             </div>
           )}
 
-          {openPanel === "filter" && (
-            <div
-              className={clsx(
-                "absolute right-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5",
-                "bottom-[4.5rem]",
-              )}
-              style={{ borderRadius: 18 }}
-            >
-              <p className="px-6 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-black/45">
-                Ordenar por
-              </p>
-              {SORT_OPTIONS.map((option) => (
-                <DropdownButton
-                  key={option.value}
-                  active={currentSort === option.value}
-                  label={option.label}
-                  onClick={() => setSort(option.value)}
-                />
-              ))}
-            </div>
-          )}
-
           <PillButton
             active={openPanel === "category"}
-            label={activeCategory ? activeCategoryTitle : "Categoría"}
+            label={activeCategory ? activeCategoryTitle : "Categorías"}
             onClick={() => togglePanel("category")}
+          />
+          <PillButton
+            active={openPanel === "colors"}
+            label="Colores"
+            onClick={() => togglePanel("colors")}
           />
           <PillButton
             active={openPanel === "sizes"}
             label="Talles"
             onClick={() => togglePanel("sizes")}
           />
-          <button
-            type="button"
-            onClick={() => togglePanel("filter")}
-            className="catalog-filter-pill flex h-10 min-w-[104px] items-center justify-center gap-2 border border-[#d85a3f] bg-white/70 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#d85a3f] backdrop-blur-md outline-none transition-colors hover:bg-white sm:min-w-[132px] sm:px-5 sm:text-xs sm:tracking-[0.18em]"
-            style={{
-              borderRadius: 9999,
-              overflow: "hidden",
-            }}
-            aria-expanded={openPanel === "filter"}
-          >
-            <AdjustmentsHorizontalIcon className="h-4 w-4" />
-            Filtrar
-          </button>
         </div>
       </div>
 

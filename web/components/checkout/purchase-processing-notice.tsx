@@ -35,41 +35,60 @@ export default function PurchaseProcessingNotice({
   return (
     <div className="w-full max-w-md bg-transparent p-6">
       <div className="flex min-h-36 flex-col items-center justify-center gap-5 text-center">
-        <div className="transition-all duration-500 ease-out">
-          <HtmlText
-            as="h2"
-            html={isComplete ? completeTitle : processingTitle}
-            className="font-serif text-2xl font-medium text-graphite"
+        <HtmlText
+          as="h2"
+          html={isComplete ? completeTitle : processingTitle}
+          className="font-serif text-2xl font-medium text-graphite transition-all duration-500 ease-out"
+        />
+
+        <div
+          className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-stone-300 ${
+            isComplete
+              ? "animate-purchase-check-pop shadow-[0_18px_38px_-16px_rgba(0,219,115,0.6)]"
+              : ""
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className="animate-purchase-liquid-fill absolute inset-x-0 bottom-0"
+          >
+            <svg
+              aria-hidden="true"
+              className="animate-purchase-liquid-wave-a absolute -top-[6px] left-0 h-3 w-[200%]"
+              viewBox="0 0 120 10"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,5 Q15,0 30,5 T60,5 T90,5 T120,5 L120,10 L0,10 Z"
+                fill="#00db73"
+              />
+            </svg>
+            <svg
+              aria-hidden="true"
+              className="animate-purchase-liquid-wave-b absolute -top-[4px] left-0 h-3 w-[200%] opacity-60"
+              viewBox="0 0 120 10"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0,5 Q15,10 30,5 T60,5 T90,5 T120,5 L120,10 L0,10 Z"
+                fill="#00db73"
+              />
+            </svg>
+          </span>
+          <CheckIcon
+            className="relative z-10 h-10 w-10 text-white"
+            aria-hidden="true"
           />
-          {isComplete && (
-            <HtmlText
-              as="p"
-              html={completeMessage}
-              className="mt-2 text-sm font-thin text-stone-brown"
-            />
-          )}
         </div>
 
-        {isComplete ? (
-          <div className="relative flex h-24 w-24 items-center justify-center">
-            <span className="purchase-confetti purchase-confetti-1" />
-            <span className="purchase-confetti purchase-confetti-2" />
-            <span className="purchase-confetti purchase-confetti-3" />
-            <span className="purchase-confetti purchase-confetti-4" />
-            <span className="purchase-confetti purchase-confetti-5" />
-            <span className="purchase-confetti purchase-confetti-6" />
-            <span className="purchase-confetti purchase-confetti-7" />
-            <span className="purchase-confetti purchase-confetti-8" />
+        <HtmlText
+          as="p"
+          html={completeMessage}
+          className={`text-sm font-thin text-stone-brown transition-opacity duration-500 ${
+            isComplete ? "opacity-100" : "opacity-0"
+          }`}
+        />
 
-            <span className="animate-purchase-check-bounce relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-white shadow-[0_18px_38px_-16px_rgba(22,163,74,0.95)]">
-              <CheckIcon className="h-8 w-8" aria-hidden="true" />
-            </span>
-          </div>
-        ) : (
-          <div className="h-2 w-full overflow-hidden rounded-full bg-bone transition-opacity duration-300">
-            <div className="h-full rounded-full bg-graphite animate-purchase-progress" />
-          </div>
-        )}
       </div>
     </div>
   );

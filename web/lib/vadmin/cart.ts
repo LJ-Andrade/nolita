@@ -5,9 +5,9 @@ import { TAGS } from "lib/constants";
 import { cacheTag } from "next/cache";
 
 /**
- * Get current cart.
- * In VADMIN, this requires authentication for now as we use Customers.
- * Later we can add guest support with a specific Cart ID.
+ * Get current cart from VADMIN for authenticated customers.
+ * Guests do not have a server-side cart — their cart lives in localStorage
+ * (see CartProvider) and is sent inline at checkout.
  */
 export async function getCart(): Promise<Cart | undefined> {
   const token = (await cookies()).get("auth_token")?.value;
@@ -135,12 +135,14 @@ export async function checkout(data?: any): Promise<{ success: boolean; message:
 
   try {
     await vadminFetch({
-      path: token ? "customer/cart/checkout" : "checkout",
+      path: "checkout",
       method: "POST",
       redirectOnServerError: false,
-      headers: token ? {
-        Authorization: `Bearer ${token}`,
-      } : undefined,
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
       body: data,
     });
     return { success: true, message: "Checkout successful" };

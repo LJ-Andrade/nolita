@@ -25,11 +25,9 @@ export async function Navbar() {
       className="sticky top-0 z-50 w-full"
     >
       {/* ── Desktop Navbar ─────────────────────────────────────────────── */}
-      <nav className="mx-auto hidden h-[76px] max-w-screen-2xl items-center px-8 md:grid md:grid-cols-3">
-        <div aria-hidden="true" />
-
-        {/* Center: Logo */}
-        <div className="flex justify-center">
+      <nav className="mx-auto hidden h-[76px] max-w-screen-2xl items-center justify-between px-8 md:flex">
+        {/* Left: Logo */}
+        <div className="flex items-center">
           <Link
             href="/"
             prefetch={true}
@@ -59,9 +57,6 @@ export async function Navbar() {
 
       {/* ── Mobile Navbar ──────────────────────────────────────────────── */}
       <div className="flex h-[64px] items-center justify-between bg-white px-4 md:hidden">
-        <Suspense fallback={null}>
-          <MobileMenu menu={menu} customer={session} />
-        </Suspense>
         <Link
           href="/"
           prefetch={true}
@@ -78,6 +73,9 @@ export async function Navbar() {
           />
         </Link>
         <div className="flex items-center gap-2">
+          <Suspense fallback={null}>
+            <MobileMenu menu={menu} customer={session} />
+          </Suspense>
           <Suspense fallback={null}>
             <UserMenu customer={session} />
           </Suspense>

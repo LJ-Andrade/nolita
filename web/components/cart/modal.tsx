@@ -48,8 +48,27 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
 
   const isWholesale = priceMode === "wholesale";
   const totalQty = cart?.totalQuantity ?? 0;
+  const totalAmount = Number(cart?.cost?.subtotalAmount?.amount || 0);
   const itemsNeeded = Math.max(0, shopConfig.min_quantity - totalQty);
-  const showPromoBanner = shopConfig.min_quantity > 0 && itemsNeeded > 0;
+  const amountNeeded = Math.max(0, shopConfig.min_amount - totalAmount);
+  const showQtyMissing =
+    isWholesale && shopConfig.min_quantity > 0 && itemsNeeded > 0;
+  const showAmountMissing =
+    isWholesale && shopConfig.min_amount > 0 && amountNeeded > 0;
+  const showPromoBanner = showQtyMissing || showAmountMissing;
+
+  const missingParts: string[] = [];
+  if (showQtyMissing) {
+    missingParts.push(
+      `${itemsNeeded} prenda${itemsNeeded !== 1 ? "s" : ""}`,
+    );
+  }
+  if (showAmountMissing) {
+    missingParts.push(
+      `$${amountNeeded.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`,
+    );
+  }
+  const missingText = missingParts.join(" y ");
 
   const qtyMet =
     !isWholesale ||
@@ -58,7 +77,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
   const amountMet =
     !isWholesale ||
     !shopConfig.min_amount ||
-    Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
+    totalAmount >= shopConfig.min_amount;
   const canCheckout = qtyMet && amountMet;
 
   const totalDiscount =
@@ -72,6 +91,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
       }
       return acc;
     }, 0) ?? 0;
+  const showDiscountTotal = totalDiscount > 0;
 
   useEffect(() => {
     if (
@@ -148,8 +168,8 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                   <div className="mx-4 mt-4 flex items-center gap-2 rounded-full border border-[#D4006A]/25 bg-[#D4006A]/5 px-4 py-2 text-xs text-[#D4006A]">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-[#D4006A]" />
                     <span>
-                      Agrega {itemsNeeded} prenda{itemsNeeded !== 1 ? "s" : ""}{" "}
-                      y <strong>comprá con precio mayorista</strong>
+                      Te falta agregar <strong>{missingText}</strong> para
+                      alcanzar el mínimo mayorista
                     </span>
                   </div>
                 )}
@@ -314,12 +334,14 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                         value={{ amount: cart.cost.subtotalAmount.amount }}
                       />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Descuentos</span>
-                      <span className="font-medium">
-                        -{formatPriceAmount(totalDiscount.toFixed(2))}
-                      </span>
-                    </div>
+                    {showDiscountTotal && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Descuentos</span>
+                        <span className="font-medium">
+                          -{formatPriceAmount(totalDiscount.toFixed(2))}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between border-t border-gray-100 pt-3">
                       <span className="text-base font-semibold">Total</span>
                       <AnimatedPrice

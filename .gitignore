@@ -43,3 +43,6 @@ backend/auth.json
 backend/.phpactor.json
 backend/Homestead.json
 backend/Homestead.yaml
+
+# Claude Code worktrees
+.claude/worktrees/

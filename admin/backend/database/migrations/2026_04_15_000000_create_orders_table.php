@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->string('status')->default('pending');
+            $table->string('payment_status')->default('unpaid');
             $table->decimal('total_amount', 10, 2);
             $table->string('currency')->default('USD');
             $table->string('price_mode')->default('retail');
             $table->string('payment_method')->nullable();
+            $table->string('coupon_code')->nullable();
+            $table->decimal('coupon_discount_amount', 10, 2)->default(0);
             $table->json('customer_data')->nullable();
             $table->json('shipping_address')->nullable();
             $table->json('billing_address')->nullable();

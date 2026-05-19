@@ -16,7 +16,7 @@ export function DeleteItemButton({
   item: CartItem;
   optimisticUpdate: any;
   onRemoveStart?: (merchandiseId: string) => void;
-  tone?: "dark" | "light";
+  tone?: "dark" | "light" | "checkout";
 }) {
   const [isPending, startTransition] = useTransition();
   const merchandiseId = item.merchandise.id;
@@ -53,10 +53,12 @@ export function DeleteItemButton({
       disabled={isPending}
       aria-label="Remove cart item"
       className={clsx(
-        "flex h-[24px] w-[24px] shrink-0 items-center justify-center disabled:opacity-50 transition-colors",
-        tone === "light"
-          ? "bg-white text-black"
-          : "text-gray-300 hover:text-gray-600",
+        "flex shrink-0 items-center justify-center disabled:opacity-50 transition-colors",
+        tone === "light" && "h-[24px] w-[24px] bg-white text-black",
+        tone === "dark" &&
+          "h-[24px] w-[24px] text-[#f87171] hover:text-[#ef4444]",
+        tone === "checkout" &&
+          "h-7 w-7 rounded-full bg-[#fee2e2] text-[#ef4444] hover:bg-[#fecaca]",
       )}
     >
       {tone === "light" ? (

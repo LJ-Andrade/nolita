@@ -21,13 +21,16 @@ export function ActiveFilters({ categories = [] }: ActiveFiltersProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const category = searchParams.get("categoria") ?? searchParams.get("category");
+  const category =
+    searchParams.get("categoria") ?? searchParams.get("category");
+  const colors = searchParams.getAll("color");
   const sizes = searchParams.getAll("size");
   const sort = searchParams.get("sort");
   const categoryTitle =
     categories.find((item) => item.handle === category)?.title ?? category;
 
-  const hasFilters = !!category || sizes.length > 0 || !!sort;
+  const hasFilters =
+    !!category || colors.length > 0 || sizes.length > 0 || !!sort;
 
   const removeFilter = useCallback(
     (key: string, value?: string) => {
@@ -42,7 +45,7 @@ export function ActiveFilters({ categories = [] }: ActiveFiltersProps) {
       params.delete("page");
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [searchParams, pathname, router]
+    [searchParams, pathname, router],
   );
 
   const removeCategoryFilter = useCallback(() => {
@@ -72,6 +75,13 @@ export function ActiveFilters({ categories = [] }: ActiveFiltersProps) {
           key={size}
           label={`Talle: ${size}`}
           onRemove={() => removeFilter("size", size)}
+        />
+      ))}
+      {colors.map((color) => (
+        <FilterChip
+          key={color}
+          label={`Color: ${color}`}
+          onRemove={() => removeFilter("color", color)}
         />
       ))}
       {sort && (
@@ -115,7 +125,12 @@ function FilterChip({
         style={{ backgroundColor: "var(--pb-text)", color: "#fff" }}
       >
         <svg width="7" height="7" viewBox="0 0 8 8" fill="none">
-          <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path
+            d="M1 1l6 6M7 1L1 7"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </span>
