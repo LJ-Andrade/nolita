@@ -1,6 +1,6 @@
 "use client";
 
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { removeItem } from "components/cart/actions";
 import type { CartItem } from "lib/vadmin/types";
@@ -53,11 +53,17 @@ export function DeleteItemButton({
       disabled={isPending}
       aria-label="Remove cart item"
       className={clsx(
-        "flex h-[24px] w-[24px] items-center justify-center disabled:opacity-50",
-        tone === "light" ? "bg-white text-black" : "bg-graphite text-parchment",
+        "flex h-[24px] w-[24px] shrink-0 items-center justify-center disabled:opacity-50 transition-colors",
+        tone === "light"
+          ? "bg-white text-black"
+          : "text-gray-300 hover:text-gray-600",
       )}
     >
-      <XMarkIcon className="mx-px h-4 w-4" />
+      {tone === "light" ? (
+        <XMarkIcon className="mx-px h-4 w-4" />
+      ) : (
+        <TrashIcon className="h-4 w-4" />
+      )}
     </button>
   );
 }

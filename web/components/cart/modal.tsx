@@ -2,15 +2,16 @@
 
 import { Dialog, Transition } from "@headlessui/react";
 import {
-  ShoppingCartIcon,
-  XMarkIcon,
+  ArrowLeftIcon,
   ArrowRightIcon,
-  ExclamationCircleIcon,
-  CheckCircleIcon,
+  ShoppingCartIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import LoadingDots from "components/loading-dots";
 import Price, { formatPriceAmount } from "components/price";
+import PriceModeSwitch from "components/price-mode/price-mode-switch";
+import { usePriceMode } from "components/price-mode/price-mode-context";
 import { DEFAULT_OPTION } from "lib/constants";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
@@ -19,11 +20,9 @@ import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { redirectToCheckout } from "./actions";
-
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
-import { usePriceMode } from "components/price-mode/price-mode-context";
 
 type ShopConfig = {
   id: number;
@@ -47,17 +46,30 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
     pathname?.startsWith("/finalizar-compra");
 
   const isWholesale = priceMode === "wholesale";
-  const hasConditions =
-    isWholesale && (shopConfig.min_quantity > 0 || shopConfig.min_amount > 0);
+  const totalQty = cart?.totalQuantity ?? 0;
+  const itemsNeeded = Math.max(0, shopConfig.min_quantity - totalQty);
+  const showPromoBanner = shopConfig.min_quantity > 0 && itemsNeeded > 0;
+
   const qtyMet =
     !isWholesale ||
     !shopConfig.min_quantity ||
-    (cart?.totalQuantity ?? 0) >= shopConfig.min_quantity;
+    totalQty >= shopConfig.min_quantity;
   const amountMet =
     !isWholesale ||
     !shopConfig.min_amount ||
     Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
   const canCheckout = qtyMet && amountMet;
+
+  const totalDiscount = cart?.lines.reduce((acc, item) => {
+    if (item.hasDiscount && item.cost.compareAtTotalAmount) {
+      return (
+        acc +
+        (Number(item.cost.compareAtTotalAmount.amount) -
+          Number(item.cost.totalAmount.amount))
+      );
+    }
+    return acc;
+  }, 0) ?? 0;
 
   useEffect(() => {
     if (
@@ -78,14 +90,15 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
         <Transition.Child
           as={Fragment}
           enter="transition-all ease-in-out duration-300"
-          enterFrom="opacity-0 backdrop-blur-none"
-          enterTo="opacity-100 backdrop-blur-[.5px]"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
           leave="transition-all ease-in-out duration-200"
-          leaveFrom="opacity-100 backdrop-blur-[.5px]"
-          leaveTo="opacity-0 backdrop-blur-none"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          <div className="fixed inset-0 bg-black/25" aria-hidden="true" />
         </Transition.Child>
+
         <Transition.Child
           as={Fragment}
           enter="transition-all ease-in-out duration-300"
@@ -95,41 +108,52 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
           leaveFrom="translate-x-0"
           leaveTo="translate-x-full"
         >
-          <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col border-l border-white/10 bg-black text-white md:w-[420px]">
-            <div className="flex items-center justify-between border-b border-white/10 p-6">
-              <p className="text-2xl font-medium font-serif tracking-tight">
-                Mi Carrito
-              </p>
+          <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col bg-white text-black md:w-[400px]">
+            {/* ── Header ───────────────────────────────────────────── */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <button
-                aria-label="Cerrar carrito"
                 onClick={closeCart}
-                className="flex h-10 w-10 items-center justify-center border border-white/15 bg-white/5 text-white transition-colors hover:bg-white/10"
+                className="flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-black"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <ArrowLeftIcon className="h-4 w-4" />
+                Continuar comprando
               </button>
+              <PriceModeSwitch />
             </div>
 
             {!cart || cart.lines.length === 0 ? (
-              <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden px-6">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center bg-white/10">
-                  <ShoppingCartIcon className="h-10 w-10 text-white/60" />
+              <div className="mt-20 flex w-full flex-col items-center justify-center px-6">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center bg-gray-50">
+                  <ShoppingCartIcon className="h-8 w-8 text-gray-300" />
                 </div>
-                <p className="text-center text-xl font-medium font-serif">
+                <p className="text-center text-lg font-medium">
                   Tu carrito está vacío
                 </p>
-                <p className="mt-2 text-center text-sm text-white/60">
+                <p className="mt-2 text-center text-sm text-gray-400">
                   Agrega productos para comenzar tu pedido.
                 </p>
                 <button
                   onClick={closeCart}
-                  className="mt-8 border border-white/25 px-8 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-white hover:text-black"
+                  className="mt-8 border border-black px-8 py-3 text-xs font-bold uppercase tracking-widest transition-all hover:bg-black hover:text-white"
                 >
                   Seguir Comprando
                 </button>
               </div>
             ) : (
-              <div className="flex h-full flex-col justify-between overflow-hidden">
-                <ul className="grow overflow-auto p-6 space-y-6">
+              <div className="flex h-full flex-col overflow-hidden">
+                {/* ── Promo Banner ─────────────────────────────────── */}
+                {showPromoBanner && (
+                  <div className="mx-4 mt-4 flex items-center gap-2 rounded-full border border-[#D4006A]/25 bg-[#D4006A]/5 px-4 py-2 text-xs text-[#D4006A]">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#D4006A]" />
+                    <span>
+                      Agrega {itemsNeeded} prenda{itemsNeeded !== 1 ? "s" : ""} y{" "}
+                      <strong>comprá con precio mayorista</strong>
+                    </span>
+                  </div>
+                )}
+
+                {/* ── Items ────────────────────────────────────────── */}
+                <ul className="grow overflow-y-auto px-5 py-4 space-y-0">
                   {cart.lines
                     .sort((a, b) =>
                       a.merchandise.product.title.localeCompare(
@@ -171,110 +195,97 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                         item.merchandise.product.featuredImage?.url ||
                         "";
 
+                      const optionsLabel = item.merchandise.selectedOptions
+                        .filter((o) => o.value !== DEFAULT_OPTION)
+                        .map((o) => `${o.name}: ${o.value}`)
+                        .join(" | ");
+
                       return (
                         <li
                           key={item.id ?? merchandiseId}
                           className={clsx(
-                            "flex w-full flex-col border-b border-white/10 pb-6 transition-all duration-300 ease-in-out last:border-0 last:pb-0 motion-reduce:transition-none",
-                            isRemoving && "translate-x-full scale-95 opacity-0",
+                            "flex gap-3 border-b border-gray-100 py-4 last:border-0 transition-all duration-300",
+                            isRemoving && "translate-x-full opacity-0",
                           )}
                         >
-                          <div className="relative flex w-full flex-row">
-                            <div className="absolute z-40 -left-2 -top-2">
+                          {/* Image */}
+                          <Link
+                            href={merchandiseUrl}
+                            onClick={closeCart}
+                            className="h-20 w-20 shrink-0 overflow-hidden bg-gray-50"
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={item.merchandise.product.title}
+                              width={80}
+                              height={80}
+                              className="h-full w-full object-cover"
+                            />
+                          </Link>
+
+                          {/* Info */}
+                          <div className="flex flex-1 flex-col gap-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <Link
+                                href={merchandiseUrl}
+                                onClick={closeCart}
+                                className="text-sm font-medium leading-snug hover:underline underline-offset-2 line-clamp-2"
+                              >
+                                {item.merchandise.product.title}
+                              </Link>
                               <DeleteItemButton
                                 item={item}
                                 optimisticUpdate={updateCartItem}
-                                tone="light"
+                                tone="dark"
                                 onRemoveStart={(id) =>
-                                  setRemovingItems((current) =>
-                                    new Set(current).add(id),
+                                  setRemovingItems((cur) =>
+                                    new Set(cur).add(id),
                                   )
                                 }
                               />
                             </div>
-                            <div className="flex flex-1 flex-row">
-                              <div className="relative h-24 w-24 flex-none overflow-hidden bg-white/10">
-                                <Image
-                                  className="h-full w-full object-cover"
-                                  width={96}
-                                  height={96}
-                                  alt={
-                                    item.merchandise.product.featuredImage
-                                      ?.altText ||
-                                    item.merchandise.product.title
-                                  }
-                                  src={imageUrl}
+
+                            {optionsLabel && (
+                              <p className="text-xs" style={{ color: "#D4006A" }}>
+                                {optionsLabel}
+                              </p>
+                            )}
+
+                            <div className="mt-auto flex items-center justify-between pt-2">
+                              <div className="flex h-8 items-center border border-gray-200">
+                                <EditItemQuantityButton
+                                  item={item}
+                                  type="minus"
+                                  optimisticUpdate={updateCartItem}
+                                  tone="dark"
+                                />
+                                <span className="w-8 text-center text-xs font-medium">
+                                  {item.quantity}
+                                </span>
+                                <EditItemQuantityButton
+                                  item={item}
+                                  type="plus"
+                                  optimisticUpdate={updateCartItem}
+                                  tone="dark"
                                 />
                               </div>
-                              <div className="ml-4 flex flex-1 flex-col justify-between py-1">
-                                <div>
-                                  <Link
-                                    href={merchandiseUrl}
-                                    onClick={closeCart}
-                                    className="text-sm font-medium text-white underline-offset-4 hover:underline"
-                                  >
-                                    {item.merchandise.product.title}
-                                  </Link>
-                                  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
-                                    {item.merchandise.selectedOptions.map(
-                                      (option, index) => (
-                                        <p
-                                          key={index}
-                                          className="text-[10px] uppercase tracking-wider text-white/55"
-                                        >
-                                          <span className="font-semibold text-white/35">
-                                            {option.name}:
-                                          </span>{" "}
-                                          {option.value}
-                                        </p>
-                                      ),
-                                    )}
-                                  </div>
-                                </div>
 
-                                <div className="flex items-center justify-between">
-                                  <div className="flex h-8 items-center border border-white/15 text-white">
-                                    <EditItemQuantityButton
-                                      item={item}
-                                      type="minus"
-                                      optimisticUpdate={updateCartItem}
-                                      tone="light"
-                                    />
-                                    <span className="w-8 text-center text-xs font-medium">
-                                      {item.quantity}
+                              <div className="flex flex-col items-end gap-0.5">
+                                {item.hasDiscount &&
+                                  item.cost.compareAtTotalAmount && (
+                                    <span className="text-xs text-gray-300 line-through">
+                                      {formatPriceAmount(
+                                        item.cost.compareAtTotalAmount.amount,
+                                      )}
                                     </span>
-                                    <EditItemQuantityButton
-                                      item={item}
-                                      type="plus"
-                                      optimisticUpdate={updateCartItem}
-                                      tone="light"
-                                    />
-                                  </div>
-                                  <div className="flex flex-col items-end gap-0.5">
-                                    {item.hasDiscount &&
-                                      item.cost.compareAtTotalAmount && (
-                                        <span className="text-xs text-white/40 line-through">
-                                          {formatPriceAmount(
-                                            item.cost.compareAtTotalAmount
-                                              .amount,
-                                          )}
-                                        </span>
-                                      )}
-                                    <Price
-                                      className="text-sm font-bold"
-                                      amount={item.cost.totalAmount.amount}
-                                      currencyCode={
-                                        item.cost.totalAmount.currencyCode
-                                      }
-                                    />
-                                    {item.hasDiscount &&
-                                      Number(item.discount ?? 0) > 0 && (
-                                        <span className="bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                          -{Math.round(Number(item.discount))}%
-                                        </span>
-                                      )}
-                                  </div>
-                                </div>
+                                  )}
+                                <Price
+                                  className="text-sm font-semibold"
+                                  amount={item.cost.totalAmount.amount}
+                                  currencyCode={
+                                    item.cost.totalAmount.currencyCode
+                                  }
+                                />
                               </div>
                             </div>
                           </div>
@@ -283,83 +294,35 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                     })}
                 </ul>
 
-                <div className="border-t border-white/10 bg-white/[0.06] p-6">
-                  {hasConditions && (
-                    <div className="mb-5 space-y-2 text-xs">
-                      {shopConfig.min_quantity > 0 && (
-                        <div
-                          className={clsx(
-                            "flex items-center gap-2 px-3 py-2",
-                            qtyMet
-                              ? "text-emerald-700 bg-emerald-50/60"
-                              : "text-amber-700 bg-amber-50/60",
-                          )}
-                        >
-                          {qtyMet ? (
-                            <CheckCircleIcon className="h-4 w-4 shrink-0" />
-                          ) : (
-                            <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
-                          )}
-                          <span>
-                            Mínimo <strong>{shopConfig.min_quantity}</strong>{" "}
-                            prenda{shopConfig.min_quantity !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      )}
-                      {shopConfig.min_amount > 0 && (
-                        <div
-                          className={clsx(
-                            "flex items-center gap-2 px-3 py-2",
-                            amountMet
-                              ? "text-emerald-700 bg-emerald-50/60"
-                              : "text-amber-700 bg-amber-50/60",
-                          )}
-                        >
-                          {amountMet ? (
-                            <CheckCircleIcon className="h-4 w-4 shrink-0" />
-                          ) : (
-                            <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
-                          )}
-                          <span>
-                            Compra mínima de{" "}
-                            <strong>
-                              $
-                              {Number(shopConfig.min_amount).toLocaleString(
-                                "es-AR",
-                                { minimumFractionDigits: 2 },
-                              )}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="mb-6 space-y-2 text-sm text-white/60">
+                {/* ── Footer ───────────────────────────────────────── */}
+                <div className="border-t border-gray-100 bg-white p-5">
+                  <div className="mb-5 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <p>Subtotal</p>
+                      <span className="text-gray-400">
+                        Subtotal ({totalQty} producto{totalQty !== 1 ? "s" : ""})
+                      </span>
                       <Price
-                        className="text-white"
+                        className="font-medium"
                         amount={cart.cost.subtotalAmount.amount}
                         currencyCode={cart.cost.subtotalAmount.currencyCode}
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <p>Envío</p>
-                      <p className="text-xs italic text-white">
-                        Calculado al finalizar
-                      </p>
+                      <span className="text-gray-400">Descuentos</span>
+                      <span className="font-medium">
+                        -{formatPriceAmount(totalDiscount.toFixed(2))}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between border-t border-white/10 pt-2">
-                      <p className="text-base font-serif font-medium text-white">
-                        Total
-                      </p>
+                    <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                      <span className="text-base font-semibold">Total</span>
                       <Price
-                        className="text-lg font-bold text-white"
+                        className="text-base font-bold"
                         amount={cart.cost.totalAmount.amount}
                         currencyCode={cart.cost.totalAmount.currencyCode}
                       />
                     </div>
                   </div>
+
                   <form action={redirectToCheckout}>
                     <CheckoutButton disabled={canCheckout === false} />
                   </form>
@@ -378,15 +341,15 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
 
   return (
     <button
-      className="flex w-full items-center justify-center gap-2 bg-white py-4 text-xs font-bold uppercase tracking-[0.2em] text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-2 bg-black py-4 text-sm font-semibold tracking-wide text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
       type="submit"
       disabled={disabled || pending}
     >
       {pending ? (
-        <LoadingDots className="bg-black" />
+        <LoadingDots className="bg-white" />
       ) : (
         <>
-          Continuar al checkout
+          Iniciar Pago
           <ArrowRightIcon className="h-4 w-4" />
         </>
       )}
