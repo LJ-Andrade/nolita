@@ -3,11 +3,13 @@
 This document tracks execution steps. One task per logical unit.
 
 ## Phase 55: Checkout Empty Cart Redirect
+
 1. [x] `docs/SPECS.md`: Document that checkout redirects home when the cart becomes empty.
 2. [x] `web/components/checkout/checkout-page-content.tsx`: Redirect checkout users home after the last cart item is removed.
 3. [x] Validation: Run focused storefront build/type checks.
 
 ## Phase 54: Web Deploy Bootstrap Hardening
+
 1. [x] `build-web.sh`: Create and seed `web/.env.production` when it is missing or incomplete.
 2. [x] `build-web.sh`: Use the storefront package lock that is present in the repository for production installs.
 3. [x] `docs/DEPLOY_INFO.md`: Document generated web env values and the package manager behavior.
@@ -17,6 +19,7 @@ This document tracks execution steps. One task per logical unit.
 7. [x] `web/package.json` and lockfile: Remove Windows-only Lightning CSS package from direct dependencies for Debian deploys.
 
 ## Phase 53: Storefront Footer and Brand Assets
+
 1. [x] `docs/SPECS.md`: Document footer layout, logo asset usage, and favicon behavior.
 2. [x] `web/components/layout/footer.tsx`: Replace the current footer with the Nolita editorial footer layout.
 3. [x] `web/components/layout/navbar/index.tsx`: Use the Nolita logo asset in the navbar.
@@ -24,6 +27,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused formatting or code checks without running a production build.
 
 ## Phase 52: Storefront Chrome and Catalog Control Polish
+
 1. [x] `docs/SPECS.md`: Document product card, filter visibility, navbar account action, and dark cart sidebar behavior.
 2. [x] `web/components/catalog/product-card.tsx`: Remove the new badge and move the favorite action to the left side of the image.
 3. [x] `web/components/catalog/editorial-filter-controls.tsx`: Fade the floating filter controls in progressively after the user scrolls from the top.
@@ -32,24 +36,28 @@ This document tracks execution steps. One task per logical unit.
 6. [x] Validation: Run focused storefront checks.
 
 ## Phase 51: Portable HTTP Local Development
+
 1. [x] `docs/SPECS.md`: Document local development API defaults over HTTP instead of Herd HTTPS.
 2. [x] `web/package.json` and storefront env files: Remove forced local CA certificate usage and point development env to `http://nolita.test/api`.
 3. [x] `admin/frontend` config and env files: Keep API URLs environment-driven for local development.
 4. [x] Validation: Run focused storefront and admin frontend checks.
 
 ## Phase 50: Storefront Editorial Catalog Filters
+
 1. [x] `docs/SPECS.md`: Document the floating catalog filter and editorial sort behavior.
 2. [x] `web/app/(store)/catalog/page.tsx` and home: Replace the sidebar catalog layout with the editorial category, size, and sort controls.
 3. [x] `web/components/catalog/*`: Add reusable floating filter and dropdown controls while preserving URL-driven filtering.
 4. [x] Validation: Run focused storefront checks and inspect the catalog UI.
 
 ## Phase 49: Admin Product Media and Wholesale UI Fixes
+
 1. [x] `admin/frontend/vite.config.js` and media helpers: Proxy `/storage` in development and normalize backend media URLs for admin image rendering.
 2. [x] `admin/frontend/src/views/products/*`: Show wholesale prices, move category and wholesale visibility controls, and hide color image upload/display surfaces.
 3. [x] `web/components/catalog/*` and home: Keep catalog color swatches available while hiding them on home product cards.
 4. [x] Validation: Run focused admin and storefront build checks.
 
 ## Phase 48: Public Retail and Wholesale Checkout
+
 1. [x] `docs/SPECS.md`: Document guest checkout, retail/wholesale mode, catalog visibility, cart recalculation, and checkout stock rules.
 2. [x] `admin/backend/database/migrations/*`: Update base product and order migrations for `hide_on_wholesale`, nullable `customer_id`, `price_mode`, and `customer_data`.
 3. [x] `admin/backend/app/Models/*` and controllers: Support mode-aware product visibility, guest order creation, checkout validation, and stock reduction at completion.
@@ -58,6 +66,7 @@ This document tracks execution steps. One task per logical unit.
 6. [x] Validation: Run focused backend syntax checks and storefront build/type checks.
 
 ## Phase 47: Nolita Project Rebrand and Home Direction
+
 1. [x] `docs/SPECS.md`: Document Nolita brand, development API URL, and home top/hero direction.
 2. [x] Environment and app config: Replace legacy brand development names, `planb.test`, and local database references with Nolita values.
 3. [x] Storefront chrome: Replace legacy visible branding with Nolita fallbacks.
@@ -65,12 +74,14 @@ This document tracks execution steps. One task per logical unit.
 5. [ ] Validation: Run focused checks for the storefront and search for remaining project-owned legacy brand references.
 
 ## Phase 46: Product Media Integrity
+
 1. [x] `docs/SPECS.md`: Document product media cleanup and unique media URL behavior.
 2. [x] `admin/backend/app/Http/Controllers/ProductController.php` and `ProductResource.php`: Use unique filenames, scoped media updates, model-aware product deletion, and skip missing media URLs.
 3. [x] `admin/backend/app/Console/Commands/CustomMigrate.php`: Clean product media files and records when resetting product data.
 4. [x] Validation: Run focused backend syntax and route checks.
 
 ## Phase 45: Consolidated Statistics Index Migrations
+
 1. [x] `docs/SPECS.md`: Document that sales statistics indexes live in base order migrations for fresh installs.
 2. [x] `admin/backend/database/migrations/2026_04_15_000000_create_orders_table.php`: Add the order status/date statistics index to the base table migration.
 3. [x] `admin/backend/database/migrations/2026_04_15_000001_create_order_items_table.php`: Add order/product lookup indexes to the base table migration.
@@ -78,6 +89,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused migration syntax and route checks.
 
 ## Phase 44: Admin User Role Restrictions
+
 1. [x] `docs/SPECS.md`: Document Admin and Super Admin behavior for users, roles, and permissions.
 2. [x] `admin/backend/app/Http/Controllers/UserController.php` and `routes/api.php`: Add assignable roles endpoint and enforce Super Admin modification restrictions.
 3. [x] `admin/backend/database/seeders/RoleSeeder.php`: Stop assigning role-management permissions to Admin.
@@ -85,6 +97,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused backend lint and admin frontend build/lint checks.
 
 ## Phase 43: Statistics Role Access Simplification
+
 1. [x] `docs/SPECS.md`: Document role-based statistics access for Super Admin and Admin.
 2. [x] `admin/backend/routes/api.php` and `StatisticsController.php`: Replace fine-grained statistics permission middleware with role authorization.
 3. [x] `admin/frontend/src/App.jsx`, `app-sidebar.jsx`, and `Statistics.jsx`: Gate the section by role and show both tabs to authorized users.
@@ -92,6 +105,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused backend and admin frontend checks.
 
 ## Phase 42: Statistics UX and Permissions
+
 1. [x] `docs/SPECS.md`: Document statistics permissions, category filters, CSV export, opportunities, cache, and sales comparison.
 2. [x] `admin/backend/database/seeders/PermissionSeeder.php`: Add statistics permissions.
 3. [x] `admin/backend/database/seeders/RoleSeeder.php`: Assign statistics permissions to roles.
@@ -101,11 +115,13 @@ This document tracks execution steps. One task per logical unit.
 7. [x] Validation: Run focused backend and admin frontend checks.
 
 ## Phase 41: Admin Order Inline Status Editing
+
 1. [x] `docs/SPECS.md`: Document inline status editing behavior for the admin orders list.
 2. [x] `admin/frontend/src/views/orders/OrdersList.jsx`: Add an inline order status dropdown using the existing admin update endpoint.
 3. [x] Validation: Run focused admin frontend checks.
 
 ## Phase 40: Sales Statistics Performance
+
 1. [x] `docs/SPECS.md`: Document sales period filtering and database index requirements.
 2. [x] `admin/backend/database/migrations/*_add_statistics_indexes_to_orders_tables.php`: Add indexes for sales statistics queries.
 3. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add `period` filtering with default `30d`.
@@ -113,6 +129,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused backend and admin frontend checks.
 
 ## Phase 39: Sales Statistics Analytics
+
 1. [x] `docs/SPECS.md`: Document sales analytics endpoint and UI behavior.
 2. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add sales analytics endpoint.
 3. [x] `admin/backend/routes/api.php`: Register the admin sales statistics route.
@@ -123,6 +140,7 @@ This document tracks execution steps. One task per logical unit.
 8. [x] Validation: Run focused backend and admin frontend checks.
 
 ## Phase 38: Storefront Mobile Catalog Filters
+
 1. [x] `docs/SPECS.md`: Document mobile catalog filter drawer behavior.
 2. [x] `web/components/catalog/filter-sidebar.tsx`: Allow the existing filter UI to render cleanly inside mobile surfaces.
 3. [x] `web/components/catalog/mobile-filter-drawer.tsx`: Add a mobile-only filter drawer that reuses catalog categories and sizes.
@@ -131,6 +149,7 @@ This document tracks execution steps. One task per logical unit.
 6. [x] Validation: Run the storefront build.
 
 ## Phase 37: Favorites Statistics Analytics
+
 1. [x] `docs/SPECS.md`: Document favorites analytics endpoint and UI behavior.
 2. [x] `admin/backend/app/Models/Product.php`: Add the customer favorites relationship.
 3. [x] `admin/backend/app/Http/Controllers/Api/Admin/StatisticsController.php`: Add favorites analytics endpoint.
@@ -142,6 +161,7 @@ This document tracks execution steps. One task per logical unit.
 9. [x] Validation: Run focused backend and admin frontend checks.
 
 ## Phase 36: Admin Tabbed Section Standard
+
 1. [x] `admin/frontend/src/components/admin-tabbed-section.jsx`: Extract reusable tabbed admin section component.
 2. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Use the shared tabbed section component.
 3. [x] `docs/standards/ADMIN_TABBED_SECTION_STANDARDS.md`: Document the reusable pattern.
@@ -149,6 +169,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused admin frontend checks.
 
 ## Phase 35: Admin Statistics Section
+
 1. [x] `docs/SPECS.md`: Document the initial admin statistics section contract.
 2. [x] `admin/frontend/src/views/statistics/Statistics.jsx`: Create the statistics view with breadcrumb, tabs, and placeholder cards.
 3. [x] `admin/frontend/src/App.jsx`: Register the `/estadisticas` protected route.
@@ -156,6 +177,7 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused admin frontend checks.
 
 ## Phase 34: Responsive Home Hero Image
+
 1. [x] `docs/SPECS.md`: Document responsive hero image keys and admin layout behavior.
 2. [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Save the mobile hero image with a fixed predictable filename.
 3. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Add desktop/mobile hero uploads in one responsive row and persist both site content keys.
@@ -163,17 +185,20 @@ This document tracks execution steps. One task per logical unit.
 5. [x] Validation: Run focused backend syntax and frontend build checks.
 
 ## Phase 15: Storefront Mobile Navigation Responsiveness (Completed)
+
 1. [x] `web/components/layout/navbar/mobile-menu.tsx`: Keep the mobile drawer white in all themes.
 2. [x] `web/components/layout/navbar/mobile-menu.tsx`: Add the authenticated user links available from the desktop user menu.
 3. [x] `web/components/layout/navbar/mobile-menu.tsx`: Add clear account action icons and preserve logout behavior.
 4. [x] Validation: Run the storefront build.
 
 ## Phase 13: Agent and Documentation Organization (Completed)
+
 - [x] `AGENTS.md`: Replace brittle orchestration rules with Codex-compatible workflow, documentation ownership, and project guardrails.
 - [x] `docs/README.md`: Add documentation index and update rules.
 - [x] `docs/SPECS.md`: Add documentation governance and document ownership section.
 
 ## Phase 14: Storefront Auth Pricing, Size Curves, Favorites, Logout, and Discounts (Completed)
+
 1. [x] `docs/SPECS.md`: Define authenticated pricing and product discount behavior.
 2. [x] `web/app/(store)/page.tsx`: Load customer session and favorites for featured product cards.
 3. [x] `web/components/catalog/product-card.tsx`: Hide prices for guests and render discount pricing for customers.
@@ -188,13 +213,16 @@ This document tracks execution steps. One task per logical unit.
 12. [x] Validation: Run focused TypeScript/build and PHP syntax checks.
 
 ## Phase 2: Definition (Completed)
+
 - [x] Create initial `SPECS.md` proposing the Data Contracts.
 - [x] User approve Option B (Product Variants) and Professional eCommerce features.
 
 ## Phase 3: Planning (Next)
+
 Once SPECS are approved, the actionable checklist will be expanded.
 
 ### Step 1: Backend Setup
+
 - [x] Create `ProductCategory` Model, Migration, Factory, Setup Controller & Routes (Differentiating from Blog Category)
 - [ ] Create `Color` Model, Migration, Factory, Setup Controller & Routes
 - [ ] Create `Size` Model, Migration, Factory, Setup Controller & Routes
@@ -206,10 +234,12 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [ ] Implement Image handling (Spatie Media Library or basic Storage) for `Product` (thumb/gallery) and `ProductVariant` (image).
 
 ### Step 2: Frontend API Integration
+
 - [x] Setup Axios service for `ProductCategory`
 - [ ] Setup Axios service for Products
 
 ### Step 3: Admin UI Construction
+
 - [ ] Build Taxonomy CRUD
   - [x] Product Categories CRUD
 - [ ] Build Products CRUD
@@ -220,6 +250,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
   - [ ] **Variant Manager Interface**: UI to generate and edit `ProductVariants` (assigning colors, sizes, SKUs, and stock).
 
 ## Phase 4: E-commerce Integration (Current)
+
 - [x] `web`: Create Next.js Commerce application inside `web/` using Vercel template.
 - [x] `admin/config/cors.php`: Configure CORS in VADMIN to allow requests from e-commerce domain.
 - [x] `admin/database/migrations/xxxx_create_orders_table.php`: Create Orders migration in VADMIN.
@@ -241,6 +272,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `web` & `admin/frontend`: Update `baseline-browser-mapping` and clear Next.js cache.
 
 ## Phase 5: Maintenance Mode & Shopify Deprecation (Completed)
+
 - [x] `web/app/maintenance/page.tsx`: Create a premium maintenance page.
 - [x] `web/lib/vadmin/index.ts`: Update `vadminFetch` to detect connection errors and redirect to `/maintenance`.
 - [x] `web/app/(store)`: Isolate store routes to prevent redirect loops on maintenance.
@@ -249,6 +281,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `web`: Validate project with `npm run build`.
 
 ## Phase 6: Aesthetic Refinement (In Progress)
+
 - [ ] `web/app/globals.css`: Implement `--pb-radius` token and global styles for `img` and `button`.
 - [ ] `web/components/grid/tile.tsx`: Standardize border radius for product tiles.
 - [ ] `web/components/product/gallery.tsx`: Apply border radius to gallery images and thumbnail buttons.
@@ -257,11 +290,13 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `web/lib/vadmin/methods.ts`: Implement delivery/payment methods fetching.
 
 ## Phase 7: Catalog Size Curve Feature
+
 - [x] `web/components/cart/cart-context.tsx`: Add `ADD_MULTIPLE_ITEMS` action and `addMultipleCartItems` to `useCart`.
 - [x] `web/components/cart/actions.ts`: Create `addMultipleItems` server action for adding an array of items.
 - [x] `web/components/catalog/product-card.tsx`: Add "Agregar curva de talle" button and connect it to `addMultipleItems` action.
 
 ## Phase 9: Customer Provinces & Localities (Completed)
+
 - [x] Create `Province` Model, Migration, Controller & Routes
 - [x] Create `Locality` Model, Migration, Controller & Routes
 - [x] Add prov_id and loc_id columns to customers table (migration)
@@ -278,12 +313,14 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] Web: Add `/api/provinces` and `/api/localities` Next.js routes
 
 ## Phase 8: Checkout Summary and Cart Image Adjustments
+
 - [ ] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Update cart loading to include `colorImages`.
 - [ ] `web/lib/vadmin/types.ts`: Update `CartItem` type.
 - [ ] `web/components/checkout/order-summary.tsx`: Enhance UI (remove items, show variant options, use color image).
 - [ ] `web/components/cart/modal.tsx`: Use color image based on selected variant.
 
 ## Phase 10: Category Image, Listed & Order Fields
+
 - [x] `admin/backend/database/migrations/...create_categories_table.php`: Add `image`, `listed`, `order` columns.
 - [x] `admin/backend/app/Models/Category.php`: Update fillable.
 - [x] `admin/frontend/src/hooks/use-crud-form.js`: Add `pendingCover` state for image preview.
@@ -291,6 +328,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend/src/views/product-categories/CategoriesList.jsx`: Add columns for image, order, listed.
 
 ## Phase 11: CORS & Network Fixes (Completed)
+
 - [x] `admin/backend/config/cors.php`: Update `allowed_origins` and `allowed_origins_patterns` to allow local network IPs (172.x, 10.x).
 - [x] `admin/backend/.env`: Add `SANCTUM_STATEFUL_DOMAINS` with the frontend origin.
 - [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Fix z-index of stars and connections to be behind login card.
@@ -298,6 +336,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend/src/components/ui/DeepSpaceBackground.jsx`: Refactor with tunable constants (CONFIG), HEX color support, and configurable 2-color background gradient.
 
 ## Phase 12: CRUD Shared Component Tests (Completed)
+
 - [x] `admin/frontend/src/components/bulk-actions-bar.jsx`: Fix selected count references in shared bulk action UI.
 - [x] `admin/frontend/src/components/crud-pagination.jsx`: Fix numbered page click handler.
 - [x] `admin/frontend/package.json`: Add Vitest test scripts and React Testing Library dependencies.
@@ -308,6 +347,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend/src/hooks/use-bulk-select.test.jsx`: Cover single, all, and clear selection behavior.
 
 ## Phase 13: Admin Frontend Lint Cleanup (Completed)
+
 - [x] `admin/frontend/eslint.config.js`: Configure Node globals for scripts/config files and keep lint focused on runtime errors.
 - [x] `admin/frontend/src/components/*` and `admin/frontend/src/views/*`: Fix malformed identifiers reported by `no-undef`.
 - [x] `admin/frontend/src/views/products/ProductForm.jsx`: Restore `applyToAllStock` variant bulk action.
@@ -315,10 +355,12 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/frontend`: Validate `npm run lint`, `npm run test:run`, and `npm run build`.
 
 ## Phase 14: Content Settings Visual Alignment (Completed)
+
 - [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Align content settings cards, labels, descriptions, and input styling with standard CRUD cards.
 - [x] `admin/frontend`: Validate `npm run lint` and `npm run build`.
 
 ## Phase 15: Notification Preferences Fix (Completed)
+
 - [x] `admin/backend/app/Models/User.php`: Add notification type eligibility checks and default subscriptions to disabled.
 - [x] `admin/backend/app/Models/User.php`: Pass role names as arrays to Spatie role checks so eligible notification types are visible.
 - [x] `admin/backend/app/Models/User.php`: Keep in-app notification subscriptions enabled by default.
@@ -339,28 +381,34 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] Validate backend routes/tests and admin frontend lint/build/test suite.
 
 ## Phase 16: Checkout Validation Fix (Completed)
+
 - [x] `web/app/(store)/checkout/actions.ts`: Validate required checkout fields and send province/locality IDs with city derived from locality.
 - [x] `web/components/checkout/checkout-form.tsx`: Require province and locality selects and include hidden city/locality name fields.
 - [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Validate province/locality, derive city server-side, and update customer only after successful order completion.
 - [x] `docs/SPECS.md`: Document checkout validation and customer persistence behavior.
 
 ## Phase 17: Catalog Category Filtering Fix (Completed)
+
 - [x] `docs/SPECS.md`: Document catalog category filtering contract.
 - [x] `web/lib/vadmin/index.ts`: Pass category slug to VADMIN product catalog endpoint.
 - [x] `web/app/(store)/catalog/page.tsx`: Remove permissive category fallback that displayed all products.
 
 ## Phase 18: User Menu Visual Refinement
+
 - [x] `web/components/layout/navbar/user-menu.tsx`: Remove border from UserMenu button and placeholder.
 - [x] `web/components/layout/navbar/user-menu.tsx`: Remove ring from UserMenu dropdown and enhance shadow (`shadow-2xl`).
 
 ## Phase 19: Logo Refinement
+
 - [x] `web/components/layout/navbar/index.tsx`: Remove isologo (icon) from header.
 - [x] `web/components/layout/footer.tsx`: Remove isologo (icon) from footer.
 
 ## Phase 20: Home UI Alignment
+
 - [x] `web/app/(store)/page.tsx`: Update "Nuevos ingresos" section background to match store background.
 
 ## Phase 21: Business Content Storage
+
 - [x] `docs/SPECS.md`: Document public business contact/social fields as `site_contents`.
 - [x] `admin/backend/database/seeders/BusinessSettingsSeeder.php`: Remove public contact/social keys from system settings seed data.
 - [x] `admin/backend/database/seeders/SiteContentSeeder.php`: Seed public business contact/social keys in `site_contents`.
@@ -371,6 +419,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] Validate backend and frontend.
 
 ## Phase 22: Storefront Cache Revalidation
+
 - [x] `docs/SPECS.md`: Document webhook, tags, and admin-triggered revalidation contract.
 - [x] `web/lib/constants.ts`: Add storefront cache tags for site content and shop configuration.
 - [x] `web/lib/vadmin/index.ts`: Tag cached VADMIN fetches and implement revalidation.
@@ -386,6 +435,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] Validate TypeScript build and PHP syntax.
 
 ## Phase 23: Storefront Revalidation Coverage
+
 - [x] `web/lib/constants.ts`: Add checkout method cache tag.
 - [x] `web/lib/vadmin/index.ts`: Allow checkout method tag in revalidation endpoint.
 - [x] `admin/backend/app/Services/StorefrontRevalidationService.php`: Add checkout method tag constant.
@@ -397,11 +447,13 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] Validate TypeScript build and PHP syntax.
 
 ## Phase 24: Production Build Scripts
+
 - [x] `build-web.sh`: Add production web build script with env, token, webhook, dependency, build, and PM2 checks.
 - [x] `build-admin.sh`: Add production admin panel build script.
 - [x] `README.md`: Document production build script usage.
 
 ## Phase 25: Admin Data Exports
+
 - [x] `docs/SPECS.md`: Document backend-owned export package strategy and orders export contract.
 - [x] `admin/backend/composer.json`: Add Laravel Excel and Laravel DomPDF dependencies.
 - [x] `admin/backend/app/Support/Exports/OrderExportQuery.php`: Centralize reusable order export filters.
@@ -422,10 +474,12 @@ Once SPECS are approved, the actionable checklist will be expanded.
 - [x] `admin/backend/app/Support/Exports/OrderDocumentData.php`: Add translated status and payment labels to document data.
 
 ## Phase 26: Admin Login Local Network CORS Fix
+
 - [x] `admin/frontend/src/lib/axios.js`: Register `192.168.56.1` as a known local admin host.
 - [x] `admin/backend/config/cors.php`: Allow `http://192.168.56.1:5173` as a local Vite origin.
 
 ## Phase 27: Storefront Home Product Sections
+
 1. [x] `docs/SPECS.md`: Document reusable home product section behavior.
 2. [x] `web/lib/vadmin/index.ts`: Allow storefront product fetching by featured flag.
 3. [x] `web/components/home/product-section.tsx`: Create reusable home product grid section.
@@ -433,6 +487,7 @@ Once SPECS are approved, the actionable checklist will be expanded.
 5. [x] Validate the web build.
 
 ## Phase 28: Product Detail Related Products
+
 1. [x] `docs/SPECS.md`: Document product detail related products behavior.
 2. [x] `admin/backend/app/Http/Controllers/Api/CatalogController.php`: Expose product category metadata in the storefront catalog contract.
 3. [x] `web/lib/vadmin/types.ts`: Add product category metadata to the storefront product type.
@@ -440,16 +495,19 @@ Once SPECS are approved, the actionable checklist will be expanded.
 5. [x] Validate the web build.
 
 ## Phase 29: Related Products Fallback Fill
+
 1. [x] `docs/SPECS.md`: Document fallback behavior for related products.
 2. [x] `web/app/(store)/product/[handle]/page.tsx`: Fill related products with random catalog items when same-category products are fewer than four.
 3. [x] Validate the web build.
 
 ## Phase 30: Admin Product Order Inline Editing
+
 1. [x] `docs/SPECS.md`: Document explicit product order save behavior.
 2. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Copy category order inline editing flow to products.
 3. [x] Validate the admin frontend build and lint.
 
 ## Phase 31: CRUD Inline Order Editor Component
+
 1. [x] `admin/frontend/src/components/crud-inline-order-editor.jsx`: Create reusable CRUD inline order editor.
 2. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Use shared inline order editor.
 3. [x] `admin/frontend/src/views/product-categories/CategoriesList.jsx`: Use shared inline order editor.
@@ -457,11 +515,13 @@ Once SPECS are approved, the actionable checklist will be expanded.
 5. [x] Validate the admin frontend build and lint.
 
 ## Phase 32: Storefront Footer Categories
+
 1. [x] `docs/SPECS.md`: Document dynamic footer category links.
 2. [x] `web/components/layout/footer.tsx`: Render all listed VADMIN categories in the footer and increase logo/social spacing.
 3. [x] Validate the web build.
 
 ## Phase 33: Storefront Spanish Routes and Footer Category Filtering
+
 1. [x] `docs/SPECS.md`: Document Spanish storefront routes and footer category rules.
 2. [x] `web/components/layout/footer.tsx`: Show only categories with products and link them to catalog filters.
 3. [x] `web/app/(store)`: Add Spanish route aliases for catalog, product, auth, checkout, and search.
@@ -470,18 +530,36 @@ Once SPECS are approved, the actionable checklist will be expanded.
 6. [x] Validate the web build.
 
 ## Phase 34: Windows Local Network Setup Script
+
 1. [x] `docs/SPECS.md`: Document the Windows local network setup behavior.
 2. [x] `setup-windows-dev.ps1`: Add a root PowerShell script that writes admin/frontend and backend environment values for a selected LAN host.
 3. [x] `admin/frontend/src/lib/axios.js`: Prefer `VITE_API_URL` before hostname fallback mappings.
 4. [x] Validate script syntax and admin frontend lint/build as practical.
 
 ## Phase 35: Herd API Setup Correction
+
 1. [x] `setup-windows-dev.ps1`: Default admin API configuration to the Herd URL and allow direct `-ApiUrl` overrides.
 2. [x] Regenerate local admin frontend env files for `https://nolita.test/api/`.
 3. [x] Validate script syntax and admin frontend build.
 
 ## Phase 36: Admin LAN Proxy for Herd
+
 1. [x] `admin/frontend/vite.config.js`: Proxy `/api` requests from Vite dev server to the local Herd backend.
 2. [x] `admin/frontend/.env.local`: Use relative `/api/` base URL for dev server requests.
 3. [x] `setup-windows-dev.ps1`: Support generating proxy-based admin env files.
 4. [x] Validate admin frontend build and proxied API access.
+
+## Phase 37: Storefront Product Detail Editorial Layout
+
+1. [x] `docs/SPECS.md`: Document desktop image grid, mobile swipe gallery, image modal, and purchase-panel behavior.
+2. [x] `web/components/product/product-media.tsx`: Replace the current thumbnail gallery with responsive desktop/mobile media and modal preview.
+3. [x] `web/app/(store)/product/[handle]/page.tsx`: Wire the product page to the new media layout and reference proportions.
+4. [x] `web/components/product/product-description.tsx`: Restyle the purchase panel to match the reference structure.
+5. [x] `web/components/product/variant-selector.tsx` and `web/components/cart/add-to-cart.tsx`: Align variant controls and add-to-cart row with the reference UI.
+6. [x] Validate web build; browser rendering was attempted, but the in-app browser reported the Next.js body at height `0` despite successful route content and no console errors.
+
+## Phase 38: Storefront Compact Footer
+
+1. [x] `docs/SPECS.md`: Document compact reference footer behavior.
+2. [x] `web/components/layout/footer.tsx`: Remove non-reference footer content and implement the compact Nolita footer.
+3. [x] Validate the web build.

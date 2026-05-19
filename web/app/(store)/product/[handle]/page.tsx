@@ -1,6 +1,6 @@
 import { HomeProductSection } from "components/home/product-section";
-import { Gallery } from "components/product/gallery";
 import { ProductDescription } from "components/product/product-description";
+import { ProductMedia } from "components/product/product-media";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
 import { getProduct, getProducts } from "lib/vadmin";
 import { getSession } from "lib/vadmin/auth";
@@ -8,7 +8,6 @@ import { getFavorites } from "lib/vadmin/favorites";
 import type { Image } from "lib/vadmin/types";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
@@ -92,53 +91,55 @@ export default async function ProductPage(props: {
           __html: JSON.stringify(productJsonLd),
         }}
       />
-      <div className="mx-auto max-w-(--breakpoint-2xl) px-4 py-8 lg:px-8">
-        <div className="flex flex-col lg:flex-row lg:gap-16">
-          <div className="h-full w-full basis-full lg:basis-7/12">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[700px] w-full overflow-hidden bg-transparent" />
-              }
-            >
-              <Gallery
+      <div className="bg-white">
+        <div className="mx-auto max-w-[1500px] px-0 pb-12 md:px-8 md:pt-3 lg:px-12">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_430px] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_470px]">
+            <div className="min-w-0">
+              <ProductMedia
+                title={product.title}
                 images={[
                   ...product.images.map((image: Image) => ({
                     src: image.url,
                     altText: image.altText,
                   })),
                   ...(product.colorImages || [])
-                    .filter((ci) => !product.images.some((img) => img.url === ci.url))
+                    .filter(
+                      (ci) => !product.images.some((img) => img.url === ci.url),
+                    )
                     .map((ci) => ({
                       src: ci.url,
                       altText: ci.color,
                     })),
                 ]}
               />
-            </Suspense>
-          </div>
+            </div>
 
-          <div className="basis-full lg:basis-5/12">
-            <div className="lg:sticky lg:top-32">
-              <Suspense fallback={null}>
-                <ProductDescription product={product} isAuthenticated={isAuthenticated} />
-              </Suspense>
+            <div className="px-5 md:px-0">
+              <div className="lg:sticky lg:top-28 lg:pt-12">
+                <ProductDescription
+                  product={product}
+                  isAuthenticated={isAuthenticated}
+                />
+              </div>
             </div>
           </div>
         </div>
+        <HomeProductSection
+          products={relatedProducts}
+          favoriteIds={favoriteIds}
+          isAuthenticated={isAuthenticated}
+          title="Productos relacionados"
+        />
       </div>
-      <HomeProductSection
-        products={relatedProducts}
-        favoriteIds={favoriteIds}
-        isAuthenticated={isAuthenticated}
-        title="Productos relacionados"
-      />
     </>
   );
 }
 
 async function getRelatedProducts(productId: string, categoryHandle?: string) {
   const [categoryProducts, allProducts] = await Promise.all([
-    categoryHandle ? getProducts({ category: categoryHandle }) : Promise.resolve([]),
+    categoryHandle
+      ? getProducts({ category: categoryHandle })
+      : Promise.resolve([]),
     getProducts(),
   ]);
 
@@ -166,7 +167,10 @@ async function getRelatedProducts(productId: string, categoryHandle?: string) {
 
 function shuffleProducts<T>(items: T[], seed: string): T[] {
   const shuffled = [...items];
-  let hash = Array.from(seed).reduce((value, char) => value + char.charCodeAt(0), 0);
+  let hash = Array.from(seed).reduce(
+    (value, char) => value + char.charCodeAt(0),
+    0,
+  );
 
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
     hash = (hash * 9301 + 49297) % 233280;

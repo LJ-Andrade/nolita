@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import React, { createContext, startTransition, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 
 export type PriceMode = "retail" | "wholesale";
 
@@ -10,7 +9,9 @@ type PriceModeContextType = {
   setPriceMode: (mode: PriceMode) => void;
 };
 
-const PriceModeContext = createContext<PriceModeContextType | undefined>(undefined);
+const PriceModeContext = createContext<PriceModeContextType | undefined>(
+  undefined,
+);
 
 function normalizeMode(mode?: string | null): PriceMode {
   return mode === "wholesale" ? "wholesale" : "retail";
@@ -23,14 +24,14 @@ export function PriceModeProvider({
   initialMode?: PriceMode | string;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [priceMode, setPriceModeState] = useState<PriceMode>(normalizeMode(initialMode));
+  const [priceMode, setPriceModeState] = useState<PriceMode>(
+    normalizeMode(initialMode),
+  );
 
   const setPriceMode = (mode: PriceMode) => {
     setPriceModeState(mode);
     window.localStorage.setItem("nolita_price_mode", mode);
     document.cookie = `nolita_price_mode=${mode}; path=/; max-age=31536000; samesite=lax`;
-    startTransition(() => { router.refresh(); });
   };
 
   const value = useMemo(() => ({ priceMode, setPriceMode }), [priceMode]);

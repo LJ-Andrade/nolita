@@ -3,9 +3,11 @@
 ## 0. Documentation Governance
 
 ### 0.1 Source of Truth
+
 `docs/SPECS.md` defines intended product and technical behavior. It must describe what the system should do, not the step-by-step execution history.
 
 ### 0.2 Document Ownership
+
 - `docs/PROJECT_INFO.md`: Stable architecture, commands, applications, and environment facts.
 - `docs/SPECS.md`: Intended behavior, data contracts, workflow rules, and technical requirements.
 - `docs/ROADMAP.md`: High-level project status.
@@ -14,15 +16,18 @@
 - `docs/standards/`: Reusable implementation standards.
 
 ### 0.3 Agent Workflow
+
 For new or complex behavior, update this specification first, then track execution in `docs/DEVLOG.md`. For small fixes, update documentation only when the fix changes behavior, workflow, or project knowledge.
 
 ## 1. E-commerce Web Integration
 
 ### Overview
-A new e-commerce project built with Next.js Commerce template. It resides in the `web` folder. 
+
+A new e-commerce project built with Next.js Commerce template. It resides in the `web` folder.
 It communicates strictly via REST API with the existing VADMIN backend (Laravel).
 
 ### Windows Local Network Setup
+
 - The repository root must include a Windows PowerShell setup script for development-machine deployments.
 - The script must accept an explicit LAN host/IP and generate the matching admin frontend API URL.
 - The script must support a direct API URL override and default to the local VADMIN API configured for the project, `http://nolita.test/api/`.
@@ -33,6 +38,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The authenticated admin Axios client must prefer `VITE_API_URL` before hostname fallback mappings.
 
 ### Requirements
+
 1. **Authentication:** Uses customers from VADMIN. Registering creates a record in the `customers` table of VADMIN.
 2. **Products:** Products are created in VADMIN and queried via REST API by the Next.js e-commerce.
 3. **Catalog Category Filtering:** The catalog must send the selected category slug to VADMIN through `GET /api/catalog/products?category={slug}` and must not show unrelated products when a category is active.
@@ -40,6 +46,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 5. **CORS:** Ensure CORS is configured properly in VADMIN to allow requests from the Web frontend.
 
 ### Storefront Home Sections
+
 - The storefront brand for this project is Nolita.
 - The home top bar must use a centered `NOLITA` wordmark, a compact retail/wholesale control on the right, and the cart action.
 - The home hero must follow Nolita's first visual direction: full-bleed image, soft overlay, lower-left seasonal eyebrow, and the headline "La Elegancia que no caduca".
@@ -55,20 +62,25 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The admin content editor must show desktop and mobile hero uploads in the same row on large screens, with the mobile upload in a narrower column, and stack them on smaller admin viewports.
 
 ### Storefront Product Detail
+
 - Product detail pages must display a "Productos relacionados" section above the footer when same-category products exist.
 - Related products are fetched from VADMIN using the current product category slug first, exclude the current product, and display four products whenever the catalog has enough other products.
 - If fewer than four same-category products are available, the storefront fills the remaining slots with random products from any category, without duplicates.
 - The catalog product contract must expose the product category slug and title so the storefront can request same-category related products.
+- Product detail pages must use an editorial desktop layout with product media on the left and a sticky purchase panel on the right.
+- On desktop, product media must render as a two-column image grid, not the thumbnail carousel. Clicking any image opens a full-screen image modal.
+- On mobile, product media must render as a swipeable gallery with snap scrolling and pagination dots.
+- The purchase panel must follow the reference structure: title, price, description, color/size selectors, quantity control, add-to-cart action, and share action.
 
 ### Storefront Footer
+
 - The storefront navbar and footer must use the Nolita logo image asset from `web/public/logo-black.png` instead of text-only branding.
 - The storefront favicon must use the Nolita favicon image asset from `web/public/favicon.png`.
-- The storefront footer must fetch product categories from VADMIN and render only existing category links that currently have published products.
-- Footer category links must use the same category order returned by the VADMIN catalog API.
-- Footer category links must point to the catalog filter URL, not legacy `/search/{category}` collection URLs.
-- The storefront footer must follow the Nolita editorial layout: brand block, shop links, information links, customer care links, newsletter row, and a compact legal/developer bottom row.
+- The storefront footer must follow the compact Nolita reference layout: logo on the left, terms link, business email, business phone, centered social icon row, copyright, and developer credit.
+- The storefront footer must not render category columns, customer care columns, newsletter signup, or descriptive copy unless a future approved design asks for them.
 
 ### Storefront Spanish Routes
+
 - Public storefront links must use Spanish route slugs:
   - `/catalogo` for catalog.
   - `/catalogo?categoria={slug}` for category filters.
@@ -81,6 +93,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Legacy English routes must remain available through redirects for compatibility.
 
 ### Storefront Catalog Filters
+
 - Catalog filters must render as a floating bottom control bar over the catalog experience on desktop and mobile.
 - The floating catalog filter bar must be hidden at the very top of the page and fade in progressively as the user scrolls down, so it does not interfere with the home hero.
 - The floating bar must expose category and size dropdowns plus a visible "Filtrar" action styled with the Nolita editorial visual direction.
@@ -94,15 +107,18 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Active filters and "Limpiar todo" behavior must stay consistent across the floating filter controls and the catalog product grid.
 
 ### Storefront Product Cards and Cart Chrome
+
 - Product cards must not show a "Nuevo" badge.
 - Product cards must place the favorite heart action at the top-left of the product image.
 - The storefront navbar must expose the customer account action immediately to the left of the cart action on desktop and mobile.
 - The cart sidebar must use a black background with light text and controls that preserve readable contrast.
 
 ### Admin Product Ordering
+
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
 
 ### Product Media
+
 - Product cover, gallery, and color images are managed through Spatie Media Library on the public disk.
 - Product media filenames must be unique per upload so browsers and CDNs do not reuse stale images after product edits or database resets.
 - Deleting one product or bulk deleting products must delete the related media records and stored product media files through model-aware deletion.
@@ -110,11 +126,13 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Product data resets through the custom migrate command must delete product media records and the `storage/app/public/products` directory to prevent reused product IDs from inheriting stale images.
 
 ### Admin Order Management
+
 - The admin orders list must allow changing an order status directly from the status column, using the same inline dropdown interaction pattern as product status changes.
 - Inline order status changes must use the existing VADMIN admin order update endpoint and support only `pending`, `processing`, `completed`, and `cancelled`.
 - After a successful inline status change, the list should show the updated status without requiring the admin to open the order detail page.
 
 ### Admin User Role Management
+
 - `Super Admin` users can view and manage all admin modules, users, roles, and permissions.
 - `Admin` users can view the users section when they have `users.view`.
 - `Admin` users must not access the roles or permissions sections.
@@ -125,20 +143,24 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 > [!IMPORTANT]
 > **OFFICIAL BACKEND: VADMIN**
 > This project is 100% migrated to the **VADMIN** (Laravel) backend.
+>
 > - **DO NOT USE Shopify**: All `lib/shopify` references and `SHOPIFY_*` environment variables are legacy/deprecated and will be removed.
 > - **Primary Provider**: Use `lib/vadmin` for all data fetching.
 > - **API URL**: Set via `NEXT_PUBLIC_VADMIN_API_URL`.
 > - **Nolita development API URL**: `http://nolita.test/api`.
 
 ### Architecture
+
 - **Web App:** Next.js Commerce in `/web` directory.
 
 ### UI Customization
-1. **Dark Mode:** The admin panel supports dark and light themes. 
+
+1. **Dark Mode:** The admin panel supports dark and light themes.
 2. **Toggle:** A theme toggle (Switch) must be available in the user dropdown menu for quick access.
 3. **Persistence:** Theme selection must persist across sessions using LocalStorage.
 
 ### Inventory Management
+
 1. **Stock Levels:** Products must support minimum and maximum stock levels per variant.
 2. **Alerts:** (Future) System should flag variants when stock is below `min_stock`.
 
@@ -147,9 +169,11 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ## 2. Product Tags Enhancement
 
 ### 2.1 Overview
+
 **Objective:** Align the Product Tags section with the Product Categories implementation to provide a consistent user experience, including bulk operations, advanced filtering, and standardized UI components.
 
 ### 2.2 Backend Changes
+
 - **`bulkDelete(Request $request)`**: Implemented in `ProductTagController`.
 - **API Routes**: `POST /api/product-tags/bulk-delete`.
 - **Enhanced `index()`**: Added advanced filters (ID, Name).
@@ -160,17 +184,18 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 ### 3.1 Data Contract (API)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/coupons` | List all coupons (paginated) |
-| GET | `/api/coupons?all=1` | List all coupons (no pagination) |
-| GET | `/api/coupons/{id}` | Get single coupon |
-| POST | `/api/coupons` | Create coupon |
-| PUT | `/api/coupons/{id}` | Update coupon |
-| DELETE | `/api/coupons/{id}` | Delete coupon |
-| POST | `/api/coupons/bulk-delete` | Bulk delete coupons |
+| Method | Endpoint                   | Description                      |
+| ------ | -------------------------- | -------------------------------- |
+| GET    | `/api/coupons`             | List all coupons (paginated)     |
+| GET    | `/api/coupons?all=1`       | List all coupons (no pagination) |
+| GET    | `/api/coupons/{id}`        | Get single coupon                |
+| POST   | `/api/coupons`             | Create coupon                    |
+| PUT    | `/api/coupons/{id}`        | Update coupon                    |
+| DELETE | `/api/coupons/{id}`        | Delete coupon                    |
+| POST   | `/api/coupons/bulk-delete` | Bulk delete coupons              |
 
 ### 3.2 Request/Response Example (Create)
+
 ```json
 {
   "code": "DESCUENTO20",
@@ -186,9 +211,11 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ## 4. Maintenance Mode
 
 ### 4.1 Overview
+
 **Objective:** Provide a graceful "Under Maintenance" state when the backend API is unreachable, preventing the application from displaying raw fetch errors to users.
 
 ### 4.2 Implementation
+
 - **Connection Detection**: `vadminFetch` utility monitors for `TypeError: fetch failed` and specifically checks `ECONNREFUSED` in the error cause.
 - **Automatic Redirection**: Upon detecting a connection failure, the application performs a server-side redirection to the `/maintenance` route.
 - **Maintenance Page**: A standalone, static page located at `web/app/maintenance/page.tsx` that displays a premium maintenance message and branding. It must not perform any API calls to avoid infinite loops.
@@ -198,14 +225,17 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ## 5. Design System
 
 ### 5.1 Design Tokens
+
 - **`--pb-radius`**: `12px` (Default border radius for interactive elements and media).
 
 ### 5.2 UI Rules
+
 1. **Buttons**: Storefront buttons must use square corners.
 2. **Images**: Storefront product images and UI media should use square corners.
 3. **Cards**: Product cards and similar storefront containers should use square corners for a modern, angular look.
 
 ### 5.3 Layout Standards (Admin)
+
 1.  **Alignment**: All administrative views must be **LEFT-ALIGNED**. Do not center main content containers.
 2.  **Width Management**:
     - **Lists/Tables**: Occupy full available width.
@@ -214,10 +244,11 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
     - **PageHeader**: Mandatory for all views.
     - **Glassmorphism**: Use `glass-panel` for dropdowns and floating elements.
 4.  **Dropdowns**: Standardized with `py-3` for items and `bg-primary/10` for hover states.
-6. **User Menu**: Dropdown must have no border (`ring-0`) and a prominent shadow (`shadow-2xl`) for a floating look. The trigger button should also be borderless with a clean white background.
+5.  **User Menu**: Dropdown must have no border (`ring-0`) and a prominent shadow (`shadow-2xl`) for a floating look. The trigger button should also be borderless with a clean white background.
 
 > [!TIP]
 > For more details, refer to:
+>
 > - [CRUD_STANDARDS.md](file:///e:/Vimana/nolita/nolita-repo/docs/standards/CRUD_STANDARDS.md)
 > - [AUTH_UI_STANDARDS.md](file:///e:/Vimana/nolita/nolita-repo/docs/standards/AUTH_UI_STANDARDS.md)
 
@@ -226,9 +257,11 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ## 6. Checkout Process
 
 ### 6.1 Overview
+
 A multi-step checkout process implemented in the frontend to collect shipping and payment information before finalizing the order.
 
 ### 6.2 Retail and Wholesale Storefront Modes
+
 The storefront supports public retail and wholesale modes for both guest and authenticated customers. Users can see prices, switch mode, add products to cart, and complete checkout without logging in.
 
 - `retail` mode uses `sale_price`.
@@ -251,6 +284,7 @@ The catalog API product contract must expose enough pricing metadata for the sto
 - `discount` and `hasDiscount`: discount metadata for retail `sale_price`.
 
 ### 6.3 Product Discounts
+
 VADMIN product `discount` is a percentage applied to `sale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator. Cart and checkout calculations must use the discounted final unit price.
 
 The catalog API product contract must expose enough pricing metadata for the storefront:
@@ -263,17 +297,19 @@ The catalog API product contract must expose enough pricing metadata for the sto
 The checkout backend must recalculate item `unit_price` and `subtotal` from current VADMIN product pricing before completing the order, so frontend totals and persisted order totals stay aligned.
 
 ### 6.2 Data Flow
+
 1. **Redirection**: The cart modal "Finalizar Pedido" redirects to `/checkout`.
 2. **Authentication**: Authentication is optional. Guest checkout must create an order without creating a customer.
 3. **Methods**: Shipping and payment methods are fetched from VADMIN.
 4. **Completion**: The `completeOrder` action sends collected data, cart lines, and active price mode to VADMIN checkout.
-5. **Summary UI**: 
+5. **Summary UI**:
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.
    - Redirects to the home page when the cart becomes empty while the user is on checkout, whether the last item is removed from the checkout summary or the cart sidebar.
 
 ### 6.3 Validation and Customer Persistence
+
 - Checkout requires name, email, phone, WhatsApp, CUIT, address, postal code, province, locality, delivery method, and payment method.
 - The web checkout payload sends `province_id`, `locality_id`, and `city`; `city` is derived from the selected locality.
 - VADMIN accepts `province_id` and `locality_id`, verifies that the locality belongs to the selected province, and derives `city` from locality when needed.
@@ -288,29 +324,34 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 ## 9. Customer Addresses: Provinces and Localities
 
 ### 9.1 Overview
+
 **Objective:** Add geographic data (province and locality) to Customer model, with two new related models: Province and Locality.
 
 ### 9.2 Backend Changes
 
 #### Models
+
 - `Province`: id, name, code (ISO), timestamps
 - `Locality`: id, name, province_id (FK), timestamps
 
 #### Customer Update
+
 - Add `prov_id` (FK to provinces) nullable
 - Add `loc_id` (FK to localities) nullable
 - Relationships: Customer belongsTo Province, Customer belongsTo Locality
 
 #### Data Contract (API)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/provinces` | List all provinces |
-| GET | `/api/localities?province_id=X` | List localities by province |
-| GET | `/api/customers` | List customers (includes province/locality) |
-| POST | `/api/customers` | Create customer with prov_id/loc_id |
-| PUT | `/api/customers/{id}` | Update customer with prov_id/loc_id |
+
+| Method | Endpoint                        | Description                                 |
+| ------ | ------------------------------- | ------------------------------------------- |
+| GET    | `/api/provinces`                | List all provinces                          |
+| GET    | `/api/localities?province_id=X` | List localities by province                 |
+| GET    | `/api/customers`                | List customers (includes province/locality) |
+| POST   | `/api/customers`                | Create customer with prov_id/loc_id         |
+| PUT    | `/api/customers/{id}`           | Update customer with prov_id/loc_id         |
 
 ### 9.3 Frontend Changes
+
 - Admin: CustomerForm adds province/locality selects (cascading)
 - Web: profile-form and checkout-form add province/locality fields
 - Types: CustomerSession updated with prov_id, loc_id
@@ -320,9 +361,11 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 ## 8. Catalog: Add Size Curve (Curva de Talle)
 
 ### 7.1 Overview
+
 **Objective:** Allow users to add a complete "size curve" (one item of every available variant) directly from the product card in the catalog.
 
 ### 7.2 Implementation
+
 - **UI:** A button "Agregar curva de talle" appears below the "Ver Producto" button on product card hover.
 - **Action:** Triggers a server action `addMultipleItems` sending an array of available variant IDs.
 - **State:** Updates optimistic cart state via `ADD_MULTIPLE_ITEMS` action in the cart context.
@@ -332,28 +375,32 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 ## 10. Admin Notification Preferences
 
 ### 10.1 Overview
+
 Users can configure which administrative notification types they want to receive.
 
 ### 10.2 Requirements
+
 1. **Visibility:** Users only see notification types allowed by their role and optional required permission.
 2. **Explicit email opt-in:** Email notifications are disabled by default until the user enables them.
 3. **Admin notifications:** In-app admin notifications are created for every eligible user individually.
 4. **API Contract:**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/notification-preferences` | List available notification types with current user preferences |
-| POST | `/api/notification-preferences/{notificationTypeId}/toggle` | Toggle one channel (`email` or `browser`) |
-| PUT | `/api/notification-preferences` | Bulk update notification channel preferences |
+| Method | Endpoint                                                    | Description                                                     |
+| ------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| GET    | `/api/notification-preferences`                             | List available notification types with current user preferences |
+| POST   | `/api/notification-preferences/{notificationTypeId}/toggle` | Toggle one channel (`email` or `browser`)                       |
+| PUT    | `/api/notification-preferences`                             | Bulk update notification channel preferences                    |
 
 ---
 
 ## 11. Public Business Content Storage
 
 ### 11.1 Overview
+
 Public business contact fields must be managed as site content, not system settings.
 
 ### 11.2 Storage Contract
+
 - `system_settings` remains reserved for operational configuration such as `site_url`, `mail_to_address`, `business_name`, language, and skin settings.
 - `site_contents` owns public contact and social fields:
   - `business_phone`
@@ -369,6 +416,7 @@ Public business contact fields must be managed as site content, not system setti
 - These records use `section = business`.
 
 ### 11.3 API Contract
+
 - Admin business info editor reads and writes through `/api/site-content`.
 - `/api/public/business-info` remains available for compatibility, but its data source is `site_contents`.
 - `/api/system-settings` must not create or seed public business contact/social keys.
@@ -378,9 +426,11 @@ Public business contact fields must be managed as site content, not system setti
 ## 12. Storefront Cache Revalidation
 
 ### 12.1 Overview
+
 Admin changes that affect the public storefront must invalidate the Next.js cache immediately, without requiring a manual rebuild.
 
 ### 12.2 Web Contract
+
 - `POST /api/revalidate` accepts a shared token and a list of tags.
 - Valid tags:
   - `products`
@@ -392,6 +442,7 @@ Admin changes that affect the public storefront must invalidate the Next.js cach
 - Invalid or missing tokens must return `401`.
 
 ### 12.3 VADMIN Contract
+
 - VADMIN sends a revalidation webhook after successful admin writes for:
   - products and product variants
   - product sizes, colors, and tags
@@ -409,30 +460,36 @@ Admin changes that affect the public storefront must invalidate the Next.js cach
 ## 13. System Data Exports
 
 ### 13.1 Overview
+
 Administrative data exports must be generated by VADMIN, not by the React frontend. The frontend only requests an export with the active filters and downloads the generated response.
 
 ### 13.2 Package Strategy
+
 - Spreadsheet exports use `maatwebsite/excel`.
 - PDF exports use `barryvdh/laravel-dompdf`.
 - Do not add a second PDF package unless DomPDF cannot satisfy a documented PDF layout requirement.
 
 ### 13.3 Initial Scope
+
 The first implementation covers admin order exports.
 
 ### 13.4 API Contract
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/orders/export?format=xlsx` | Export filtered orders as XLSX |
-| GET | `/api/admin/orders/export?format=csv` | Export filtered orders as CSV |
-| GET | `/api/admin/orders/export?format=pdf` | Export filtered orders as PDF |
-| GET | `/api/admin/orders/{order}/export?format=xls` | Export one order as XLS |
-| GET | `/api/admin/orders/{order}/export?format=xlsx` | Export one order as XLSX |
-| GET | `/api/admin/orders/{order}/export?format=pdf` | Export one order as PDF |
+
+| Method | Endpoint                                       | Description                    |
+| ------ | ---------------------------------------------- | ------------------------------ |
+| GET    | `/api/admin/orders/export?format=xlsx`         | Export filtered orders as XLSX |
+| GET    | `/api/admin/orders/export?format=csv`          | Export filtered orders as CSV  |
+| GET    | `/api/admin/orders/export?format=pdf`          | Export filtered orders as PDF  |
+| GET    | `/api/admin/orders/{order}/export?format=xls`  | Export one order as XLS        |
+| GET    | `/api/admin/orders/{order}/export?format=xlsx` | Export one order as XLSX       |
+| GET    | `/api/admin/orders/{order}/export?format=pdf`  | Export one order as PDF        |
 
 Supported filters must match the admin orders list where applicable:
+
 - `search`: order ID, customer name, or customer email.
 
 ### 13.5 Backend Rules
+
 - Exports require authenticated admin access and `view orders` permission.
 - Export logic lives in dedicated export/service classes, not in React.
 - XLSX and CSV responses are generated through Laravel Excel.
@@ -444,6 +501,7 @@ Supported filters must match the admin orders list where applicable:
 - Large exports should later move to queued jobs and stored files.
 
 ### 13.6 Frontend Rules
+
 - The orders list displays export actions for XLSX, CSV, and PDF.
 - The order detail page displays separate buttons for XLSX and PDF exports.
 - Export requests include the current search filter.
@@ -454,9 +512,11 @@ Supported filters must match the admin orders list where applicable:
 ## 14. Admin Statistics Section
 
 ### 14.1 Overview
+
 VADMIN must include an administrative statistics section for future business metrics.
 
 ### 14.2 Frontend Rules
+
 - The admin sidebar must expose a top-level "Estadísticas" menu item.
 - The statistics route is `/estadisticas`.
 - The statistics section is available to users with the `Super Admin` or `Admin` role.
@@ -471,6 +531,7 @@ VADMIN must include an administrative statistics section for future business met
 - Empty states should guide the admin toward the next useful action.
 
 ### 14.3 Favorites Analytics Contract
+
 - Admin favorites analytics are exposed through `GET /api/admin/statistics/favorites`.
 - The endpoint requires authenticated admin access with the `Super Admin` or `Admin` role.
 - The endpoint accepts an optional `category_id` query parameter.
@@ -487,6 +548,7 @@ VADMIN must include an administrative statistics section for future business met
 - Demo seed data may create additional customers and customer favorite assignments for local analytics testing.
 
 ### 14.4 Sales Analytics Contract
+
 - Admin sales analytics are exposed through `GET /api/admin/statistics/sales`.
 - The endpoint requires authenticated admin access with the `Super Admin` or `Admin` role.
 - Sales totals must use `completed` orders only.

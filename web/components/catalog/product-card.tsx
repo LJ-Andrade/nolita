@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { toggleFavoriteAction } from "lib/vadmin/favorites-actions";
 import { ProductPrice } from "components/product/product-price";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { isProductPurchasableInMode } from "lib/pricing";
 
 type ProductCardProps = {
   product: Product;
@@ -27,6 +29,7 @@ export function ProductCard({
   showColors = true,
 }: ProductCardProps) {
   const router = useRouter();
+  const { priceMode } = usePriceMode();
   const defaultImageUrl =
     product.featuredImage?.url ?? product.images?.[0]?.url ?? "";
   const [currentImage, setCurrentImage] = useState(defaultImageUrl);
@@ -44,6 +47,13 @@ export function ProductCard({
     if (hexValues[index]) return hexValues[index];
     return COLOR_MAP[name.toLowerCase()] ?? "#CCCCCC";
   };
+
+  if (
+    priceMode === "wholesale" &&
+    (product.hideOnWholesale || !isProductPurchasableInMode(product, priceMode))
+  ) {
+    return null;
+  }
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +82,15 @@ export function ProductCard({
       <Link
         href={`/producto/${product.handle}`}
         className="relative block overflow-hidden rounded-[12px] isolate"
-        style={{ aspectRatio: "4/5", backgroundColor: "var(--pb-surface)" }}
+        style={{
+          aspectRatio: "4/5",
+          backgroundColor: "var(--pb-surface)",
+          display: "block",
+          isolation: "isolate",
+          overflow: "hidden",
+          position: "relative",
+          width: "100%",
+        }}
       >
         {imageUrl ? (
           <Image
@@ -81,6 +99,7 @@ export function ProductCard({
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
             className="pb-card-image object-cover"
+            style={{ objectFit: "cover" }}
             priority={priority}
           />
         ) : (

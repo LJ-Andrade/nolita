@@ -8,8 +8,9 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+import { AnimatedPrice } from "components/animated-price";
 import LoadingDots from "components/loading-dots";
-import Price, { formatPriceAmount } from "components/price";
+import { formatPriceAmount } from "components/price";
 import PriceModeSwitch from "components/price-mode/price-mode-switch";
 import { usePriceMode } from "components/price-mode/price-mode-context";
 import { DEFAULT_OPTION } from "lib/constants";
@@ -60,16 +61,17 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
     Number(cart?.cost?.subtotalAmount?.amount || 0) >= shopConfig.min_amount;
   const canCheckout = qtyMet && amountMet;
 
-  const totalDiscount = cart?.lines.reduce((acc, item) => {
-    if (item.hasDiscount && item.cost.compareAtTotalAmount) {
-      return (
-        acc +
-        (Number(item.cost.compareAtTotalAmount.amount) -
-          Number(item.cost.totalAmount.amount))
-      );
-    }
-    return acc;
-  }, 0) ?? 0;
+  const totalDiscount =
+    cart?.lines.reduce((acc, item) => {
+      if (item.hasDiscount && item.cost.compareAtTotalAmount) {
+        return (
+          acc +
+          (Number(item.cost.compareAtTotalAmount.amount) -
+            Number(item.cost.totalAmount.amount))
+        );
+      }
+      return acc;
+    }, 0) ?? 0;
 
   useEffect(() => {
     if (
@@ -108,7 +110,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
           leaveFrom="translate-x-0"
           leaveTo="translate-x-full"
         >
-          <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col bg-white text-black md:w-[400px]">
+          <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full max-w-full flex-col overflow-x-hidden bg-white text-black md:w-[400px]">
             {/* ── Header ───────────────────────────────────────────── */}
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <button
@@ -140,20 +142,20 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                 </button>
               </div>
             ) : (
-              <div className="flex h-full flex-col overflow-hidden">
+              <div className="flex h-full min-w-0 flex-col overflow-hidden">
                 {/* ── Promo Banner ─────────────────────────────────── */}
                 {showPromoBanner && (
                   <div className="mx-4 mt-4 flex items-center gap-2 rounded-full border border-[#D4006A]/25 bg-[#D4006A]/5 px-4 py-2 text-xs text-[#D4006A]">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-[#D4006A]" />
                     <span>
-                      Agrega {itemsNeeded} prenda{itemsNeeded !== 1 ? "s" : ""} y{" "}
-                      <strong>comprá con precio mayorista</strong>
+                      Agrega {itemsNeeded} prenda{itemsNeeded !== 1 ? "s" : ""}{" "}
+                      y <strong>comprá con precio mayorista</strong>
                     </span>
                   </div>
                 )}
 
                 {/* ── Items ────────────────────────────────────────── */}
-                <ul className="grow overflow-y-auto px-5 py-4 space-y-0">
+                <ul className="grow space-y-0 overflow-x-hidden overflow-y-auto px-4 py-4 md:px-5">
                   {cart.lines
                     .sort((a, b) =>
                       a.merchandise.product.title.localeCompare(
@@ -204,7 +206,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                         <li
                           key={item.id ?? merchandiseId}
                           className={clsx(
-                            "flex gap-3 border-b border-gray-100 py-4 last:border-0 transition-all duration-300",
+                            "flex w-full min-w-0 gap-3 border-b border-gray-100 py-4 transition-all duration-300 last:border-0",
                             isRemoving && "translate-x-full opacity-0",
                           )}
                         >
@@ -224,35 +226,40 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                           </Link>
 
                           {/* Info */}
-                          <div className="flex flex-1 flex-col gap-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 flex-1 flex-col gap-1">
+                            <div className="flex min-w-0 items-start justify-between gap-2">
                               <Link
                                 href={merchandiseUrl}
                                 onClick={closeCart}
-                                className="text-sm font-medium leading-snug hover:underline underline-offset-2 line-clamp-2"
+                                className="min-w-0 flex-1 text-sm font-medium leading-snug underline-offset-2 line-clamp-2 hover:underline"
                               >
                                 {item.merchandise.product.title}
                               </Link>
-                              <DeleteItemButton
-                                item={item}
-                                optimisticUpdate={updateCartItem}
-                                tone="dark"
-                                onRemoveStart={(id) =>
-                                  setRemovingItems((cur) =>
-                                    new Set(cur).add(id),
-                                  )
-                                }
-                              />
+                              <div className="shrink-0">
+                                <DeleteItemButton
+                                  item={item}
+                                  optimisticUpdate={updateCartItem}
+                                  tone="dark"
+                                  onRemoveStart={(id) =>
+                                    setRemovingItems((cur) =>
+                                      new Set(cur).add(id),
+                                    )
+                                  }
+                                />
+                              </div>
                             </div>
 
                             {optionsLabel && (
-                              <p className="text-xs" style={{ color: "#D4006A" }}>
+                              <p
+                                className="text-xs"
+                                style={{ color: "#D4006A" }}
+                              >
                                 {optionsLabel}
                               </p>
                             )}
 
-                            <div className="mt-auto flex items-center justify-between pt-2">
-                              <div className="flex h-8 items-center border border-gray-200">
+                            <div className="mt-auto flex min-w-0 items-center justify-between gap-3 pt-2">
+                              <div className="flex h-8 shrink-0 items-center border border-gray-200">
                                 <EditItemQuantityButton
                                   item={item}
                                   type="minus"
@@ -270,21 +277,20 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                                 />
                               </div>
 
-                              <div className="flex flex-col items-end gap-0.5">
-                                {item.hasDiscount &&
-                                  item.cost.compareAtTotalAmount && (
-                                    <span className="text-xs text-gray-300 line-through">
-                                      {formatPriceAmount(
-                                        item.cost.compareAtTotalAmount.amount,
-                                      )}
-                                    </span>
-                                  )}
-                                <Price
-                                  className="text-sm font-semibold"
-                                  amount={item.cost.totalAmount.amount}
-                                  currencyCode={
-                                    item.cost.totalAmount.currencyCode
-                                  }
+                              <div className="min-w-0 overflow-hidden text-right">
+                                <AnimatedPrice
+                                  className="max-w-full overflow-hidden text-sm font-semibold"
+                                  compareClass="text-xs text-gray-300"
+                                  layoutClass="flex flex-col items-end gap-0.5"
+                                  priceClass="text-sm font-semibold"
+                                  value={{
+                                    amount: item.cost.totalAmount.amount,
+                                    compareAtAmount:
+                                      item.hasDiscount &&
+                                      item.cost.compareAtTotalAmount
+                                        ? item.cost.compareAtTotalAmount.amount
+                                        : undefined,
+                                  }}
                                 />
                               </div>
                             </div>
@@ -299,12 +305,13 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                   <div className="mb-5 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">
-                        Subtotal ({totalQty} producto{totalQty !== 1 ? "s" : ""})
+                        Subtotal ({totalQty} producto{totalQty !== 1 ? "s" : ""}
+                        )
                       </span>
-                      <Price
+                      <AnimatedPrice
                         className="font-medium"
-                        amount={cart.cost.subtotalAmount.amount}
-                        currencyCode={cart.cost.subtotalAmount.currencyCode}
+                        priceClass="font-medium"
+                        value={{ amount: cart.cost.subtotalAmount.amount }}
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -315,10 +322,10 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                     </div>
                     <div className="flex items-center justify-between border-t border-gray-100 pt-3">
                       <span className="text-base font-semibold">Total</span>
-                      <Price
+                      <AnimatedPrice
                         className="text-base font-bold"
-                        amount={cart.cost.totalAmount.amount}
-                        currencyCode={cart.cost.totalAmount.currencyCode}
+                        priceClass="text-base font-bold"
+                        value={{ amount: cart.cost.totalAmount.amount }}
                       />
                     </div>
                   </div>

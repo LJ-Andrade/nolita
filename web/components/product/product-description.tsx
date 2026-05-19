@@ -1,59 +1,45 @@
 import { AddToCart } from "components/cart/add-to-cart";
 import Prose from "components/prose";
 import { Product } from "lib/vadmin/types";
-import { AddSizeCurveButton } from "./add-size-curve-button";
 import { ProductPrice } from "./product-price";
 import { VariantSelector } from "./variant-selector";
 
 export function ProductDescription({
-	product,
-	isAuthenticated,
+  product,
+  isAuthenticated,
 }: {
-	product: Product;
-	isAuthenticated: boolean;
+  product: Product;
+  isAuthenticated: boolean;
 }) {
-	return (
-		<>
-			<div className="mb-8 flex flex-col border-b border-neutral-200 pb-6 dark:border-neutral-800">
-				<h1
-					className="mb-4 text-4xl font-medium leading-tight lg:text-5xl"
-					style={{ fontFamily: "var(--font-serif)", color: "var(--pb-text)" }}
-				>
-					{product.title}
-				</h1>
+  return (
+    <section className="mx-auto max-w-[430px] lg:mx-0">
+      <div className="mb-10">
+        <h1 className="mb-2 text-base font-medium leading-snug text-black">
+          {product.title}
+        </h1>
 
-				{product.descriptionHtml ? (
-					<div className="mb-8 border-b border-neutral-200 pb-8 dark:border-neutral-800">
+        <div className="text-xl font-medium tracking-tight text-black">
+          <ProductPrice product={product} size="detail" />
+        </div>
+      </div>
 
-						<Prose
-							className="text-sm leading-relaxed text-black"
-							html={product.descriptionHtml}
-						/>
-					</div>
-				) : null}
+      {product.descriptionHtml ? (
+        <Prose
+          className="mx-0 mb-14 max-w-[390px] text-[15px] leading-7 text-neutral-600"
+          html={product.descriptionHtml}
+        />
+      ) : null}
 
-				<div className="flex items-center gap-4">
-					<div className="text-2xl font-medium tracking-tight" style={{ color: "var(--pb-text)" }}>
-						<ProductPrice product={product} size="detail" />
-					</div>
-				</div>
-			</div>
+      <div className="border-t border-neutral-200 pt-6">
+        <VariantSelector
+          options={product.options}
+          variants={product.variants}
+        />
+      </div>
 
-			<VariantSelector options={product.options} variants={product.variants} />
-
-
-
-			<div className="mb-8">
-				<AddToCart product={product} />
-				<div className="mt-4">
-					<AddSizeCurveButton
-						product={product}
-						className="flex w-full items-center justify-center text-center text-sm font-medium text-black underline-offset-4 transition-colors hover:underline"
-					/>
-				</div>
-			</div>
-
-
-		</>
-	);
+      <div className="border-t border-neutral-200 pt-8">
+        <AddToCart product={product} />
+      </div>
+    </section>
+  );
 }

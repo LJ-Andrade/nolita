@@ -1,8 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { ProductOption, ProductVariant } from "lib/vadmin/types";
 import { COLOR_MAP } from "lib/constants";
+import { ProductOption, ProductVariant } from "lib/vadmin/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -44,7 +44,8 @@ export function VariantSelector({
   const updateOption = (name: string, value: string, isAvailable: boolean) => {
     if (!isAvailable) {
       toast.error("Combinación sin stock", {
-        description: `Lo sentimos, la variante seleccionada no tiene unidades disponibles en este momento.`,
+        description:
+          "Lo sentimos, la variante seleccionada no tiene unidades disponibles en este momento.",
       });
       return;
     }
@@ -54,68 +55,94 @@ export function VariantSelector({
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
-  return options.map((option) => (
-    <div key={option.id}>
-      <dl className="mb-8">
-        <dt className="mb-4 text-sm uppercase tracking-wide font-medium">{option.name}</dt>
-        <dd className="flex flex-wrap gap-3">
-          {option.values.map((value) => {
-            const optionNameLowerCase = option.name.toLowerCase();
+  return options.map((option) => {
+    const optionNameLowerCase = option.name.toLowerCase();
+    const isColor = optionNameLowerCase === "color";
+    const selectedValue = searchParams.get(optionNameLowerCase);
 
-            // Base option params on current searchParams so we can preserve any other param state.
-            const optionParams: Record<string, string> = {};
-            searchParams.forEach((v, k) => (optionParams[k] = v));
-            optionParams[optionNameLowerCase] = value;
+    return (
+      <div key={option.id} className={isColor ? "mb-7" : "mb-5"}>
+        <dl>
+          <dt className="mb-3 text-[10px] font-medium uppercase tracking-[0.2em] text-black">
+            {isColor ? (
+              <>
+                Color
+                {selectedValue ? <span>: {selectedValue}</span> : null}
+              </>
+            ) : (
+              option.name
+            )}
+          </dt>
+          <dd
+            className={clsx("flex flex-wrap", isColor ? "gap-2.5" : "gap-2.5")}
+          >
+            {option.values.map((value, index) => {
+              const optionParams: Record<string, string> = {};
+              searchParams.forEach((v, k) => (optionParams[k] = v));
+              optionParams[optionNameLowerCase] = value;
 
-            // Filter out invalid options and check if the option combination is available for sale.
-            const filtered = Object.entries(optionParams).filter(
-              ([key, value]) =>
-                options.find(
-                  (option) =>
-                    option.name.toLowerCase() === key &&
-                    option.values.includes(value),
+              const filtered = Object.entries(optionParams).filter(
+                ([key, optionValue]) =>
+                  options.find(
+                    (productOption) =>
+                      productOption.name.toLowerCase() === key &&
+                      productOption.values.includes(optionValue),
+                  ),
+              );
+
+              const isAvailableForSale = combinations.find((combination) =>
+                filtered.every(
+                  ([key, optionValue]) =>
+                    combination[key] === optionValue &&
+                    combination.availableForSale,
                 ),
-            );
-            
-            const isAvailableForSale = combinations.find((combination) =>
-              filtered.every(
-                ([key, value]) =>
-                  combination[key] === value && combination.availableForSale,
-              ),
-            );
+              );
+              const isActive =
+                selectedValue?.toLowerCase() === value.toLowerCase();
+              const colorHex =
+                option.hexValues?.[index] ??
+                COLOR_MAP[value.toLowerCase()] ??
+                "#CCCCCC";
 
-            // The option is active if it's in the selected options.
-            const isActive = searchParams.get(optionNameLowerCase)?.toLowerCase() === value.toLowerCase();
-
-            return (
-              <button
-                onClick={() => updateOption(optionNameLowerCase, value, !!isAvailableForSale)}
-                key={value}
-                aria-disabled={!isAvailableForSale}
-                title={`${option.name} ${value}${!isAvailableForSale ? " (Sin stock)" : ""}`}
-                className={clsx(
-                  "flex min-w-[80px] items-center justify-center gap-2 border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-200",
-                  isActive
-                    ? "border-black bg-black text-white"
-                    : "border-neutral-200 bg-transparent text-neutral-500 hover:border-black hover:bg-neutral-50 hover:text-black dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-white dark:hover:bg-neutral-900 dark:hover:text-white",
-                  {
-                    "relative z-10 cursor-pointer opacity-40 overflow-hidden before:absolute before:inset-x-0 before:-z-10 before:h-px before:-rotate-45 before:bg-neutral-300 dark:before:bg-neutral-700":
-                      !isAvailableForSale,
+              return (
+                <button
+                  onClick={() =>
+                    updateOption(
+                      optionNameLowerCase,
+                      value,
+                      !!isAvailableForSale,
+                    )
                   }
-                )}
-              >
-                {optionNameLowerCase === "color" && (
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full border border-black/10"
-                    style={{ backgroundColor: COLOR_MAP[value.toLowerCase()] ?? "#CCC" }}
-                  />
-                )}
-                {value}
-              </button>
-            );
-          })}
-        </dd>
-      </dl>
-    </div>
-  ));
+                  key={value}
+                  aria-disabled={!isAvailableForSale}
+                  title={`${option.name} ${value}${
+                    !isAvailableForSale ? " (Sin stock)" : ""
+                  }`}
+                  className={clsx(
+                    "relative flex items-center justify-center transition-all duration-200",
+                    isColor
+                      ? "h-7 w-7 rounded-full border text-transparent"
+                      : "h-10 min-w-10 border px-3 text-xs font-medium uppercase tracking-[0.04em]",
+                    isActive && !isColor && "border-black bg-white text-black",
+                    !isActive &&
+                      !isColor &&
+                      "border-neutral-300 bg-white text-black hover:border-black",
+                    isActive && isColor
+                      ? "border-black ring-1 ring-black ring-offset-2"
+                      : isColor &&
+                          "border-neutral-300 hover:border-black hover:ring-1 hover:ring-black hover:ring-offset-2",
+                    !isAvailableForSale &&
+                      "cursor-not-allowed overflow-hidden opacity-35 before:absolute before:inset-x-0 before:h-px before:-rotate-45 before:bg-neutral-300",
+                  )}
+                  style={isColor ? { backgroundColor: colorHex } : undefined}
+                >
+                  {!isColor && value}
+                </button>
+              );
+            })}
+          </dd>
+        </dl>
+      </div>
+    );
+  });
 }
