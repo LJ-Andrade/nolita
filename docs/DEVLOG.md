@@ -2,10 +2,15 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 70: Storefront Site Content Cache Tag Fix
+
+1. [x] `web/lib/vadmin/index.ts`: Tag site content and shop configuration cache entries with their matching revalidation tags.
+2. [x] Validation: Run focused storefront formatting/checks.
+
 ## Phase 69: Hero Banner Cache Busting
 
 1. [x] `docs/SPECS.md`: Document versioned hero banner URLs for admin and storefront freshness.
-2. [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Return versioned URLs for fixed-name hero uploads.
+2. [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Save hero uploads with unique filenames and return versioned URLs.
 3. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Version admin preview URLs with `updated_at` when persisted image values have no query string.
 4. [x] `admin/frontend/src/lib/media-url.js`: Preserve query strings when normalizing `/storage` media URLs.
 5. [x] `web/lib/vadmin/index.ts`: Preserve image URL query strings when mapping VADMIN storage URLs.

@@ -6,6 +6,7 @@ use App\Models\SiteContent;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use App\Services\StorefrontRevalidationService;
 
@@ -101,13 +102,12 @@ class SiteContentController extends Controller
             $file = $request->file('image');
             $key  = $request->input('key');
 
-            // Hero banners are saved with fixed filenames so the storefront
-            // can reference predictable paths.
             if ($key === 'home_hero_banner' || $key === 'home_hero_banner_mobile') {
                 $extension = $file->getClientOriginalExtension();
-                $filename  = $key === 'home_hero_banner_mobile'
-                    ? "hero_mobile_1.{$extension}"
-                    : "hero_1.{$extension}";
+                $prefix = $key === 'home_hero_banner_mobile'
+                    ? 'hero-mobile'
+                    : 'hero';
+                $filename  = "{$prefix}-" . Str::uuid() . ".{$extension}";
                 $path      = $file->storeAs('web', $filename, 'public');
             } else {
                 $path = $file->store('web', 'public');

@@ -404,7 +404,7 @@ export async function getSiteContent(
   section?: string,
 ): Promise<Record<string, string>> {
   "use cache";
-  cacheTag(TAGS.collections);
+  cacheTag(TAGS.siteContent);
   cacheLife("days");
 
   try {
@@ -422,7 +422,7 @@ export async function getSiteContent(
 
 export async function getShopConfiguration(): Promise<ShopConfiguration> {
   "use cache";
-  cacheTag(TAGS.collections);
+  cacheTag(TAGS.shopConfiguration);
   cacheLife("days");
 
   try {
