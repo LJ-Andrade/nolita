@@ -2,6 +2,14 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 69: Hero Banner Cache Busting
+
+1. [x] `docs/SPECS.md`: Document versioned hero banner URLs for admin and storefront freshness.
+2. [x] `admin/backend/app/Http/Controllers/SiteContentController.php`: Return versioned URLs for fixed-name hero uploads.
+3. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Version admin preview URLs with `updated_at` when persisted image values have no query string.
+4. [x] `web/lib/vadmin/index.ts`: Preserve image URL query strings when mapping VADMIN storage URLs.
+5. [x] Validation: Run focused syntax/build checks.
+
 ## Phase 68: Admin Build Env Bootstrap
 
 1. [x] `build-admin.sh`: Create `admin/backend/.env` when missing and ensure Cloudflare purge env placeholders exist.

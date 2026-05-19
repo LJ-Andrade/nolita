@@ -42,14 +42,14 @@ class DatabaseSeeder extends Seeder
 		);
 		$violeta->syncRoles(['Employee']);
 
-		$geo = User::firstOrCreate(
-			['email' => 'geo@gmail.com'],
+		$nolita = User::firstOrCreate(
+			['email' => 'nolita@gmail.com'],
 			[
-				'name' => 'Geo Georgie',
+				'name' => 'Nolita',
 				'password' => bcrypt('12121212'),
 			]
 		);
-		$geo->syncRoles(['Employee']);
+		$nolita->syncRoles(['Employee']);
 
         $this->call([
             CategorySeeder::class,

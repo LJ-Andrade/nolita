@@ -59,6 +59,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The home hero uses site content keys for responsive imagery:
   - `home_hero_banner`: required desktop/background image.
   - `home_hero_banner_mobile`: optional mobile image.
+- Hero banner uploads may reuse fixed storage filenames, but their persisted/admin/storefront URLs must include a cache-busting version query so the admin preview and storefront request the newly uploaded file immediately.
 - The announcement bar above the home hero must use mode-specific VADMIN site content:
   - `home_top_text_retail`: text shown in retail mode.
   - `home_top_text_wholesale`: text shown in wholesale mode.

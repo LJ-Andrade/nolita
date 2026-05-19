@@ -116,6 +116,9 @@ class SiteContentController extends Controller
             /** @var \Illuminate\Filesystem\FilesystemAdapter $publicDisk */
             $publicDisk = Storage::disk('public');
             $url = $publicDisk->url($path);
+            if ($key === 'home_hero_banner' || $key === 'home_hero_banner_mobile') {
+                $url .= '?v=' . now()->timestamp;
+            }
 
             $this->revalidateSiteContent();
 

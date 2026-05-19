@@ -1,20 +1,15 @@
 import { TAGS } from "lib/constants";
-import {
-  cacheLife,
-  cacheTag,
-  revalidatePath,
-  revalidateTag,
-} from "next/cache";
+import { cacheLife, cacheTag, revalidatePath, revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse, type NextRequest } from "next/server";
 import { VADMIN_API_ENDPOINT } from "./config";
-import { 
-  Cart, 
-  Collection, 
-  Menu, 
-  Page, 
-  Product, 
+import {
+  Cart,
+  Collection,
+  Menu,
+  Page,
+  Product,
   ShopConfiguration,
 } from "./types";
 
@@ -25,7 +20,13 @@ const storefrontTags = [
   TAGS.shopConfiguration,
   TAGS.checkoutMethods,
 ] as const;
-const storefrontPaths = ["/", "/catalogo", "/catalog", "/buscar", "/search"] as const;
+const storefrontPaths = [
+  "/",
+  "/catalogo",
+  "/catalog",
+  "/buscar",
+  "/search",
+] as const;
 
 export async function vadminFetch<T>({
   cache,
@@ -60,11 +61,13 @@ export async function vadminFetch<T>({
 
     const finalHeaders = {
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
       ...headers,
     };
 
-    const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase());
+    const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(
+      method.toUpperCase(),
+    );
     const finalCache = cache || (isMutation ? "no-store" : "force-cache");
     const nextOptions =
       finalCache === "no-store" || (!tags?.length && revalidate === undefined)
@@ -94,7 +97,7 @@ export async function vadminFetch<T>({
       const text = await result.text();
       throw {
         status: result.status,
-        message: `API returned ${contentType || 'no content-type'}. Error: ${text.substring(0, 100)}`,
+        message: `API returned ${contentType || "no content-type"}. Error: ${text.substring(0, 100)}`,
       };
     }
 
@@ -113,22 +116,34 @@ export async function vadminFetch<T>({
       e.name === "AbortError" ||
       e.code === "ABORT_ERR" ||
       e.message === "This operation was aborted";
-    const isSilent = isAbortError || e.status === 404 || silentStatuses.includes(e.status);
+    const isSilent =
+      isAbortError || e.status === 404 || silentStatuses.includes(e.status);
     if (!isSilent) {
       console.error(`[vadminFetch Error] path: ${path}`, {
         message: e.message,
         cause: e.cause,
-        status: e.status
+        status: e.status,
       });
     }
-    
+
     // Check for connection errors or server failures (500, 503, Network, DB)
-    const isNetworkError = !isAbortError && (e.message?.includes("fetch failed") || e.cause?.code === "ECONNREFUSED" || e.cause?.code === "ENOTFOUND");
-    const isDbError = e.message?.toLowerCase().includes("base de datos") || e.message?.toLowerCase().includes("database connection");
+    const isNetworkError =
+      !isAbortError &&
+      (e.message?.includes("fetch failed") ||
+        e.cause?.code === "ECONNREFUSED" ||
+        e.cause?.code === "ENOTFOUND");
+    const isDbError =
+      e.message?.toLowerCase().includes("base de datos") ||
+      e.message?.toLowerCase().includes("database connection");
     const isServerError = e.status === 500 || e.status === 503;
 
-    if (redirectOnServerError && (isNetworkError || isDbError || isServerError)) {
-      console.warn(`[vadminFetch] Redirecting to maintenance. Network: ${isNetworkError}, DB: ${isDbError}, Server: ${isServerError}`);
+    if (
+      redirectOnServerError &&
+      (isNetworkError || isDbError || isServerError)
+    ) {
+      console.warn(
+        `[vadminFetch] Redirecting to maintenance. Network: ${isNetworkError}, DB: ${isDbError}, Server: ${isServerError}`,
+      );
       redirect("/maintenance");
     }
 
@@ -137,8 +152,11 @@ export async function vadminFetch<T>({
 }
 export function getVadminImageUrl(path: string | null | undefined): string {
   if (!path) return "";
-  const parsedPath = path.startsWith("http") ? new URL(path).pathname : path;
-  const cleanPath = parsedPath.startsWith("/") ? parsedPath : `/${parsedPath}`;
+  const parsedPath = path.startsWith("http") ? new URL(path) : null;
+  const rawPath = parsedPath
+    ? `${parsedPath.pathname}${parsedPath.search}`
+    : path;
+  const cleanPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
 
   if (cleanPath.startsWith("/storage/")) {
     return `/vadmin-storage/${cleanPath.replace("/storage/", "")}`;
@@ -156,10 +174,11 @@ function normalizeProductImageUrls(product: Product): Product {
           url: getVadminImageUrl(product.featuredImage.url),
         }
       : product.featuredImage,
-    images: product.images?.map((image) => ({
-      ...image,
-      url: getVadminImageUrl(image.url),
-    })) ?? [],
+    images:
+      product.images?.map((image) => ({
+        ...image,
+        url: getVadminImageUrl(image.url),
+      })) ?? [],
     colorImages: product.colorImages?.map((image) => ({
       ...image,
       url: getVadminImageUrl(image.url),
@@ -196,7 +215,10 @@ export async function getProducts({
   return res.body.map(normalizeProductImageUrls);
 }
 
-export async function getProduct(handle: string, mode?: "retail" | "wholesale"): Promise<Product | undefined> {
+export async function getProduct(
+  handle: string,
+  mode?: "retail" | "wholesale",
+): Promise<Product | undefined> {
   "use cache";
   cacheTag(TAGS.products);
   cacheLife("days");
@@ -213,7 +235,9 @@ export async function getProduct(handle: string, mode?: "retail" | "wholesale"):
   }
 }
 
-export async function getCollections(params?: { listed?: boolean }): Promise<Collection[]> {
+export async function getCollections(params?: {
+  listed?: boolean;
+}): Promise<Collection[]> {
   "use cache";
   cacheTag(TAGS.collections);
   cacheLife("days");
@@ -259,7 +283,9 @@ export async function getCollections(params?: { listed?: boolean }): Promise<Col
   ];
 }
 
-export async function getCollection(handle: string): Promise<Collection | undefined> {
+export async function getCollection(
+  handle: string,
+): Promise<Collection | undefined> {
   const collections = await getCollections();
   return collections.find((c) => c.handle === handle);
 }
@@ -290,17 +316,17 @@ export async function getCollectionProducts({
 
 export async function getMenu(handle: string): Promise<Menu[]> {
   // Static menu for now or fetch from categories
-  if (handle === 'next-js-commerce-footer-menu') {
+  if (handle === "next-js-commerce-footer-menu") {
     return [
-      { title: 'Inicio', path: '/' },
-      { title: 'Contacto', path: '/contact' },
+      { title: "Inicio", path: "/" },
+      { title: "Contacto", path: "/contact" },
     ];
   }
-  
+
   const collections = await getCollections();
-  return collections.slice(0, 5).map(c => ({
+  return collections.slice(0, 5).map((c) => ({
     title: c.title,
-    path: c.path
+    path: c.path,
   }));
 }
 
@@ -340,11 +366,15 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const requestedTags = payload.tags?.length ? payload.tags : [...storefrontTags];
+  const requestedTags = payload.tags?.length
+    ? payload.tags
+    : [...storefrontTags];
   const validTags = requestedTags.filter((tag) =>
     storefrontTags.includes(tag as (typeof storefrontTags)[number]),
   );
-  const requestedPaths = payload.paths?.length ? payload.paths : [...storefrontPaths];
+  const requestedPaths = payload.paths?.length
+    ? payload.paths
+    : [...storefrontPaths];
 
   validTags.forEach((tag) => revalidateTag(tag, { expire: 0 }));
   requestedPaths.forEach((path) => {
@@ -370,7 +400,9 @@ export async function getPages(): Promise<Page[]> {
   return [];
 }
 
-export async function getSiteContent(section?: string): Promise<Record<string, string>> {
+export async function getSiteContent(
+  section?: string,
+): Promise<Record<string, string>> {
   "use cache";
   cacheTag(TAGS.collections);
   cacheLife("days");

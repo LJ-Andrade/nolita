@@ -28,16 +28,7 @@ class CustomerSeeder extends Seeder
 				'address' => 'Calle Falsa 123',
 				'postal_code' => '1000',
 				'is_active' => true,
-			],
-			[
-				'name' => 'Geo ',
-				'email' => 'geo@gmail.com',
-				'password' => Hash::make('12121212'),
-				'phone' => '1234567890',
-				'address' => 'Calle Falsa 123',
-				'postal_code' => '1000',
-				'is_active' => true,
-			],
+			]
 		];
 
 
