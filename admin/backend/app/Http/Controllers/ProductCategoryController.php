@@ -90,7 +90,7 @@ class ProductCategoryController extends Controller
             $category->update(['image' => $path]);
         }
 
-        $this->revalidateCollections();
+        $this->revalidateCollections($category);
 
         return new ProductCategoryResource($category);
     }
@@ -102,6 +102,8 @@ class ProductCategoryController extends Controller
 
     public function update(Request $request, ProductCategory $product_category)
     {
+        $previousSlug = $product_category->slug;
+
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'slug' => 'sometimes|nullable|string|max:255|unique:product_categories,slug,' . $product_category->id,
@@ -132,7 +134,7 @@ class ProductCategoryController extends Controller
 
         $product_category->update($data);
 
-        $this->revalidateCollections();
+        $this->revalidateCollections($product_category, $previousSlug);
 
         return new ProductCategoryResource($product_category);
     }
@@ -141,7 +143,7 @@ class ProductCategoryController extends Controller
     {
         $product_category->delete();
 
-        $this->revalidateCollections();
+        $this->revalidateCollections($product_category);
 
         return response()->noContent();
     }
@@ -153,18 +155,48 @@ class ProductCategoryController extends Controller
             'ids.*' => 'integer|exists:product_categories,id'
         ]);
 
+        $categories = ProductCategory::whereIn('id', $request->ids)->get();
         ProductCategory::whereIn('id', $request->ids)->delete();
 
-        $this->revalidateCollections();
+        $this->revalidateCollectionsForCategories($categories);
 
         return response()->json(['message' => 'Categorías de producto eliminadas correctamente']);
     }
 
-    private function revalidateCollections(): void
+    private function revalidateCollections(?ProductCategory $category = null, ?string $previousSlug = null): void
     {
         $this->storefrontRevalidation->revalidate([
             StorefrontRevalidationService::COLLECTIONS,
             StorefrontRevalidationService::PRODUCTS,
-        ]);
+        ], $this->categoryPaths($category ? [$category] : [], $previousSlug));
+    }
+
+    private function revalidateCollectionsForCategories(iterable $categories): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::COLLECTIONS,
+            StorefrontRevalidationService::PRODUCTS,
+        ], $this->categoryPaths($categories));
+    }
+
+    private function categoryPaths(iterable $categories, ?string $previousSlug = null): array
+    {
+        $slugs = array_filter([$previousSlug]);
+
+        foreach ($categories as $category) {
+            if ($category->slug) {
+                $slugs[] = $category->slug;
+            }
+        }
+
+        $paths = [];
+        foreach (array_unique($slugs) as $slug) {
+            $paths[] = "/catalogo?categoria={$slug}";
+            $paths[] = "/catalogo?category={$slug}";
+            $paths[] = "/catalog?categoria={$slug}";
+            $paths[] = "/catalog?category={$slug}";
+        }
+
+        return $paths;
     }
 }

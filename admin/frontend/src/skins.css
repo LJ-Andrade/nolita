@@ -251,7 +251,11 @@ html.light {
   }
 
   .ProseMirror {
-    @apply min-h-[300px] outline-none p-4;
+    @apply min-h-[240px] outline-none p-4 text-black;
+  }
+
+  .ProseMirror p {
+    @apply mb-3 leading-7;
   }
 
   .ProseMirror p.is-editor-empty:first-child::before {
@@ -279,7 +283,7 @@ html.light {
   }
 
   .ProseMirror strong {
-    @apply font-bold text-primary;
+    @apply font-bold text-black;
   }
 
   .ProseMirror blockquote {

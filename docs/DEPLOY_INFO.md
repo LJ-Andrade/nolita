@@ -122,6 +122,15 @@ NEXTJS_REVALIDATE_TOKEN=<same-shared-secret-as-web>
 
 Set these variables in `admin/backend/.env`, then clear cached Laravel config after deploy.
 
+When production traffic is routed through Cloudflare, also configure a Cloudflare API token with cache purge permission for the zone:
+
+```bash
+CLOUDFLARE_ZONE_ID=<cloudflare-zone-id>
+CLOUDFLARE_API_TOKEN=<cloudflare-api-token-with-cache-purge>
+```
+
+VADMIN uses the same admin write revalidation flow to purge affected public storefront URLs from Cloudflare. Missing Cloudflare values or purge failures are logged but do not block admin saves.
+
 ### Storefront Dependency Install
 The storefront currently commits `web/package-lock.json`, so `build-web.sh` uses `npm ci` for production installs.
 

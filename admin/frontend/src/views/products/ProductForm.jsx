@@ -235,12 +235,12 @@ export default function ProductForm() {
 			setProductName(fakeName);
 
 			// Cover
-			const coverFile = await fetchFakeImage(800, 800, 'cover.jpg');
+			const coverFile = await fetchFakeImage(500, 700, 'cover.jpg');
 			if (coverFile) handleCoverChange(coverFile);
 
 			// Gallery
-			const g1 = await fetchFakeImage(800, 800, 'gal1.jpg');
-			const g2 = await fetchFakeImage(800, 800, 'gal2.jpg');
+			const g1 = await fetchFakeImage(500, 700, 'gal1.jpg');
+			const g2 = await fetchFakeImage(500, 700, 'gal2.jpg');
 			const newGallery = [];
 			if (g1) newGallery.push({ id: `new-${Date.now()}-1`, file: g1, preview: URL.createObjectURL(g1) });
 			if (g2) newGallery.push({ id: `new-${Date.now()}-2`, file: g2, preview: URL.createObjectURL(g2) });
@@ -886,6 +886,8 @@ export default function ProductForm() {
 										value={coverUrl}
 										onChange={handleCoverChange}
 										onRemove={() => handleCoverChange(null)}
+										aspect={5 / 7}
+										outputSize={{ width: 500, height: 700 }}
 									/>
 								</CardContent>
 							</Card>
@@ -900,6 +902,8 @@ export default function ProductForm() {
 										value={gallery}
 										onChange={setGallery}
 										onRemoveExisting={id ? handleRemoveGalleryImage : undefined}
+										aspect={5 / 7}
+										outputSize={{ width: 500, height: 700 }}
 									/>
 								</CardContent>
 							</Card>

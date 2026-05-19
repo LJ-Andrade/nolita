@@ -18,7 +18,7 @@ export function ProductCount({ products }: ProductCountProps) {
   ).length;
 
   return (
-    <p className="text-sm text-[#d85a3f]">
+    <p className="text-sm text-[var(--pb-filter-accent)]">
       {visibleCount} {visibleCount === 1 ? "producto" : "productos"}
     </p>
   );

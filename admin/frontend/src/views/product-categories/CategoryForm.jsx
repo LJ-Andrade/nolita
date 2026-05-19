@@ -21,6 +21,8 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
+const CATEGORY_IMAGE_UPLOAD_ENABLED = false;
+
 export default function CategoryForm() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -81,12 +83,8 @@ export default function CategoryForm() {
       formData.append('slug', values.slug || '');
       formData.append('listed', values.listed ? '1' : '0');
       formData.append('order', String(values.order || 0));
-      
-      console.log('pendingCover type:', pendingCover?.constructor?.name);
-      console.log('pendingCover value:', pendingCover);
-      
-      if (pendingCover instanceof File) {
-        console.log('Appending file to FormData');
+
+      if (CATEGORY_IMAGE_UPLOAD_ENABLED && pendingCover instanceof File) {
         formData.append('image', pendingCover);
       }
 
@@ -189,25 +187,27 @@ export default function CategoryForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>{"Imagen"}</FormLabel>
-                      <FormControl>
-                        <ImageUpload
-                          value={pendingCover}
-                          onChange={(file) => {
-                            setPendingCover(file);
-                          }}
-                          disabled={loading}
-                          aspect={1}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {CATEGORY_IMAGE_UPLOAD_ENABLED && (
+                  <FormField
+                    control={form.control}
+                    name="image"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>{"Imagen"}</FormLabel>
+                        <FormControl>
+                          <ImageUpload
+                            value={pendingCover}
+                            onChange={(file) => {
+                              setPendingCover(file);
+                            }}
+                            disabled={loading}
+                            aspect={1}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}

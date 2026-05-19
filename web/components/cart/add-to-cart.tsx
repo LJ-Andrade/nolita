@@ -22,14 +22,16 @@ function SubmitButton({
   isPending: boolean;
 }) {
   const buttonClasses =
-    "relative flex h-11 w-full items-center justify-center bg-[#f4f1ee] px-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600 transition-colors duration-200";
+    "relative flex h-11 w-full items-center justify-center px-5 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200";
+  const disabledButtonClasses =
+    "cursor-not-allowed bg-neutral-300 text-neutral-500";
 
   if (!availableForSale) {
     return (
       <button
         type="button"
         disabled
-        className={clsx(buttonClasses, "cursor-not-allowed opacity-55")}
+        className={clsx(buttonClasses, disabledButtonClasses)}
       >
         Sin stock
       </button>
@@ -42,7 +44,7 @@ function SubmitButton({
         type="button"
         aria-label="Por favor selecciona una opción"
         disabled
-        className={clsx(buttonClasses, "cursor-not-allowed text-neutral-400")}
+        className={clsx(buttonClasses, disabledButtonClasses)}
       >
         Seleccionar talle
       </button>
@@ -54,10 +56,13 @@ function SubmitButton({
       type="submit"
       aria-label="Agregar al carrito"
       disabled={isPending}
-      className={clsx(buttonClasses, "hover:bg-[#ebe6e1] disabled:opacity-70")}
+      className={clsx(
+        buttonClasses,
+        "bg-black text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500",
+      )}
     >
       {isPending ? (
-        <LoadingDots className="bg-neutral-700" />
+        <LoadingDots className="bg-white" />
       ) : (
         <>Agregar al carrito</>
       )}

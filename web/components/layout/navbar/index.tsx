@@ -1,5 +1,6 @@
 import CartModal from "components/cart/modal";
 import CartTrigger from "components/cart/trigger";
+import MobilePriceModeBar from "components/price-mode/mobile-price-mode-bar";
 import PriceModeSwitch from "components/price-mode/price-mode-switch";
 import { getMenu, getShopConfiguration } from "lib/vadmin";
 import { getSession } from "lib/vadmin/auth";
@@ -56,29 +57,29 @@ export async function Navbar() {
       </nav>
 
       {/* ── Mobile Navbar ──────────────────────────────────────────────── */}
+      <MobilePriceModeBar />
       <div className="flex h-[64px] items-center justify-between bg-white px-4 md:hidden">
-        <Link
-          href="/"
-          prefetch={true}
-          className="relative block h-8 w-32 transition-opacity hover:opacity-75"
-          aria-label={SITE_NAME || "Nolita"}
-        >
-          <Image
-            src="/logo-black.png"
-            alt={SITE_NAME || "Nolita"}
-            fill
-            priority
-            sizes="128px"
-            className="object-contain"
-          />
-        </Link>
         <div className="flex items-center gap-2">
           <Suspense fallback={null}>
             <MobileMenu menu={menu} customer={session} />
           </Suspense>
-          <Suspense fallback={null}>
-            <UserMenu customer={session} />
-          </Suspense>
+          <Link
+            href="/"
+            prefetch={true}
+            className="relative block h-8 w-32 transition-opacity hover:opacity-75"
+            aria-label={SITE_NAME || "Nolita"}
+          >
+            <Image
+              src="/logo-black.png"
+              alt={SITE_NAME || "Nolita"}
+              fill
+              priority
+              sizes="128px"
+              className="object-contain"
+            />
+          </Link>
+        </div>
+        <div className="flex items-center">
           <CartTrigger />
         </div>
       </div>

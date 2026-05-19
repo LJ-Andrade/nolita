@@ -21,7 +21,7 @@ const createImage = (url) =>
     image.src = url
   })
 
-async function getCroppedImg(imageSrc, pixelCrop) {
+async function getCroppedImg(imageSrc, pixelCrop, outputSize) {
   const image = await createImage(imageSrc)
   const canvas = document.createElement("canvas")
   const ctx = canvas.getContext("2d")
@@ -30,8 +30,8 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     return null
   }
 
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
+  canvas.width = outputSize?.width || pixelCrop.width
+  canvas.height = outputSize?.height || pixelCrop.height
 
   ctx.drawImage(
     image,
@@ -41,8 +41,8 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    canvas.width,
+    canvas.height
   )
 
   return new Promise((resolve) => {
@@ -57,6 +57,7 @@ export function ImageUpload({
   onChange, 
   disabled, 
   aspect = 1, 
+  outputSize,
   cropShape = 'rect',
   className 
 }) {
@@ -86,7 +87,7 @@ export function ImageUpload({
   const handleCropSave = async () => {
     try {
       setIsUploading(true)
-      const croppedImageBlob = await getCroppedImg(image, croppedAreaPixels)
+      const croppedImageBlob = await getCroppedImg(image, croppedAreaPixels, outputSize)
       
       const file = new File([croppedImageBlob], 'cover.jpg', {
         type: 'image/jpeg',

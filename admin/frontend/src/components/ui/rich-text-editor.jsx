@@ -175,9 +175,10 @@ export function RichTextEditor({ value, onChange, placeholder }) {
     content: value,
     editorProps: {
       attributes: {
-        class: 'max-w-none focus:outline-none min-h-[200px] text-slate-900 prose prose-sm max-w-none',
+        class: 'focus:outline-none min-h-[200px] text-black',
         spellcheck: 'true',
         lang: 'es',
+        'data-placeholder': placeholder || 'Escribir contenido...',
       },
     },
     onUpdate: ({ editor }) => {
@@ -187,7 +188,7 @@ export function RichTextEditor({ value, onChange, placeholder }) {
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContenvalue
+      editor.commands.setContent(value || '', false)
     }
   }, [value, editor])
 

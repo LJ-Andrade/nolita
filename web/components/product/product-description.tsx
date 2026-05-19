@@ -25,7 +25,7 @@ export function ProductDescription({
 
       {product.descriptionHtml ? (
         <Prose
-          className="mx-0 mb-14 max-w-[390px] text-[15px] leading-7 text-neutral-600"
+          className="mx-0 mb-14 w-full max-w-none px-0 text-[15px] leading-7 text-neutral-600 prose-p:my-3 prose-p:px-0 prose-strong:font-semibold prose-strong:text-black prose-a:text-black prose-ul:mt-4 prose-ul:pl-4 prose-ol:mt-4 prose-ol:pl-4"
           html={product.descriptionHtml}
         />
       ) : null}

@@ -83,7 +83,7 @@ export function ProductCard({
         href={`/producto/${product.handle}`}
         className="relative isolate block overflow-hidden"
         style={{
-          aspectRatio: "4/5",
+          aspectRatio: "5/7",
           backgroundColor: "var(--pb-surface)",
           display: "block",
           isolation: "isolate",

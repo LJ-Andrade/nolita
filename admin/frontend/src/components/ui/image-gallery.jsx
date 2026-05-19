@@ -2,9 +2,57 @@ import { useState, useCallback } from "react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { X, Plus, GripVertical, Image as ImageIcon } from "lucide-react";
+import Cropper from "react-easy-crop";
+import { X, Plus, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { getMediaUrl } from "@/lib/media-url";
+
+const createImage = (url) =>
+	new Promise((resolve, reject) => {
+		const image = new Image();
+		image.addEventListener("load", () => resolve(image));
+		image.addEventListener("error", (error) => reject(error));
+		image.setAttribute("crossOrigin", "anonymous");
+		image.src = url;
+	});
+
+async function getCroppedImg(imageSrc, pixelCrop, outputSize) {
+	const image = await createImage(imageSrc);
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+
+	if (!ctx) {
+		return null;
+	}
+
+	canvas.width = outputSize?.width || pixelCrop.width;
+	canvas.height = outputSize?.height || pixelCrop.height;
+
+	ctx.drawImage(
+		image,
+		pixelCrop.x,
+		pixelCrop.y,
+		pixelCrop.width,
+		pixelCrop.height,
+		0,
+		0,
+		canvas.width,
+		canvas.height
+	);
+
+	return new Promise((resolve) => {
+		canvas.toBlob((blob) => {
+			resolve(blob);
+		}, "image/jpeg", 0.92);
+	});
+}
 
 function SortableImage({ image, onRemove }) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -21,7 +69,7 @@ function SortableImage({ image, onRemove }) {
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="relative group aspect-square rounded-md overflow-hidden border bg-muted"
+			className="relative group aspect-[5/7] rounded-md overflow-hidden border bg-muted"
 		>
 			<img
 				src={getMediaUrl(image.url) || image.preview}
@@ -46,8 +94,21 @@ function SortableImage({ image, onRemove }) {
 	);
 }
 
-export function ImageGallery({ value = [], onChange, onRemoveExisting }) {
+export function ImageGallery({
+	value = [],
+	onChange,
+	onRemoveExisting,
+	aspect = 5 / 7,
+	outputSize = { width: 500, height: 700 },
+}) {
 	const [isUploading, setIsUploading] = useState(false);
+	const [pendingFiles, setPendingFiles] = useState([]);
+	const [activeFile, setActiveFile] = useState(null);
+	const [activeImage, setActiveImage] = useState(null);
+	const [crop, setCrop] = useState({ x: 0, y: 0 });
+	const [zoom, setZoom] = useState(1);
+	const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -66,22 +127,75 @@ export function ImageGallery({ value = [], onChange, onRemoveExisting }) {
 		}
 	};
 
+	const openCropperForFile = useCallback((file) => {
+		const reader = new FileReader();
+		reader.addEventListener("load", () => {
+			setActiveFile(file);
+			setActiveImage(reader.result);
+			setCrop({ x: 0, y: 0 });
+			setZoom(1);
+			setIsDialogOpen(true);
+		});
+		reader.readAsDataURL(file);
+	}, []);
+
+	const processNextFile = useCallback((files) => {
+		const [nextFile, ...remainingFiles] = files;
+		setPendingFiles(remainingFiles);
+
+		if (nextFile) {
+			openCropperForFile(nextFile);
+			return;
+		}
+
+		setActiveFile(null);
+		setActiveImage(null);
+		setIsDialogOpen(false);
+		setIsUploading(false);
+	}, [openCropperForFile]);
+
 	const handleFileSelect = useCallback((e) => {
 		const files = Array.from(e.target.files);
 		if (files.length === 0) return;
 
 		setIsUploading(true);
-
-		const newImages = files.map((file, index) => ({
-			id: `new-${Date.now()}-${index}`,
-			file,
-			preview: URL.createObjectURL(file),
-		}));
-
-		onChange([...value, ...newImages]);
-		setIsUploading(false);
+		processNextFile(files);
 		e.target.value = "";
-	}, [value, onChange]);
+	}, [processNextFile]);
+
+	const onCropComplete = useCallback((_reachedArea, reachedAreaPixels) => {
+		setCroppedAreaPixels(reachedAreaPixels);
+	}, []);
+
+	const handleCropSave = async () => {
+		if (!activeFile || !activeImage || !croppedAreaPixels) return;
+
+		try {
+			const croppedImageBlob = await getCroppedImg(
+				activeImage,
+				croppedAreaPixels,
+				outputSize
+			);
+			const file = new File([croppedImageBlob], activeFile.name || "gallery.jpg", {
+				type: "image/jpeg",
+			});
+			const newImage = {
+				id: `new-${Date.now()}-${activeFile.name}`,
+				file,
+				preview: URL.createObjectURL(file),
+			};
+
+			onChange([...value, newImage]);
+			processNextFile(pendingFiles);
+		} catch (error) {
+			console.error(error);
+			setIsUploading(false);
+		}
+	};
+
+	const handleCropCancel = () => {
+		processNextFile(pendingFiles);
+	};
 
 	const handleRemove = useCallback((id) => {
 		const image = value.find((img) => img.id === id);
@@ -103,7 +217,7 @@ export function ImageGallery({ value = [], onChange, onRemoveExisting }) {
 							<SortableImage key={image.id} image={image} onRemove={handleRemove} />
 						))}
 
-						<label className="aspect-square rounded-md border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 bg-muted/30">
+						<label className="aspect-[5/7] rounded-md border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 bg-muted/30">
 							<input
 								type="file"
 								accept="image/*"
@@ -124,6 +238,48 @@ export function ImageGallery({ value = [], onChange, onRemoveExisting }) {
 					</div>
 				</SortableContext>
 			</DndContext>
+
+			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+				<DialogContent className="sm:max-w-[600px]">
+					<DialogHeader>
+						<DialogTitle>Crop Image</DialogTitle>
+					</DialogHeader>
+					<div className="relative h-[460px] w-full mt-4 bg-black overflow-hidden rounded-md">
+						<Cropper
+							image={activeImage}
+							crop={crop}
+							zoom={zoom}
+							aspect={aspect}
+							showGrid={true}
+							onCropChange={setCrop}
+							onCropComplete={onCropComplete}
+							onZoomChange={setZoom}
+						/>
+					</div>
+					<div className="mt-4">
+						<label className="text-sm font-medium">Zoom</label>
+						<input
+							type="range"
+							value={zoom}
+							min={1}
+							max={3}
+							step={0.1}
+							aria-labelledby="Zoom"
+							onChange={(e) => setZoom(parseFloat(e.target.value))}
+							className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+						/>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={handleCropCancel} disabled={!isUploading}>
+							Skip
+						</Button>
+						<Button onClick={handleCropSave} disabled={!isUploading}>
+							{isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+							Subir
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

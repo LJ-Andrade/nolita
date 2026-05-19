@@ -40,6 +40,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
   const { priceMode } = usePriceMode();
   const pathname = usePathname();
   const quantityRef = useRef(cart?.totalQuantity);
+  const hasObservedCartQuantity = useRef(false);
   const closeCart = () => setIsOpen(false);
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const isCheckoutPage =
@@ -94,17 +95,30 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
   const showDiscountTotal = totalDiscount > 0;
 
   useEffect(() => {
+    if (!cart) {
+      return;
+    }
+
+    const totalQuantity = cart.totalQuantity ?? 0;
+
+    if (!hasObservedCartQuantity.current) {
+      quantityRef.current = totalQuantity;
+      hasObservedCartQuantity.current = true;
+      return;
+    }
+
     if (
-      cart?.totalQuantity &&
-      cart?.totalQuantity !== quantityRef.current &&
-      cart?.totalQuantity > 0
+      totalQuantity > 0 &&
+      totalQuantity !== quantityRef.current &&
+      totalQuantity > (quantityRef.current ?? 0)
     ) {
       if (!isOpen && !isCheckoutPage) {
         setIsOpen(true);
       }
-      quantityRef.current = cart?.totalQuantity;
     }
-  }, [isOpen, isCheckoutPage, cart?.totalQuantity]);
+
+    quantityRef.current = totalQuantity;
+  }, [isOpen, isCheckoutPage, cart?.totalQuantity, setIsOpen]);
 
   return (
     <Transition show={isOpen}>

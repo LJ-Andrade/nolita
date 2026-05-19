@@ -77,7 +77,10 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Product detail pages must use an editorial desktop layout with product media on the left and a sticky purchase panel on the right.
 - On desktop, product media must render as a two-column image grid, not the thumbnail carousel. Clicking any image opens a full-screen image modal.
 - On mobile, product media must render as a swipeable gallery with snap scrolling and pagination dots.
+- Product media and catalog product card images must use a 5:7 portrait ratio, matching product uploads prepared at approximately 500 x 700 pixels.
 - The purchase panel must follow the reference structure: title, price, description, color/size selectors, quantity control, add-to-cart action, and share action.
+- The product detail add-to-cart button must render black when enabled and gray when disabled.
+- Product rich text descriptions must preserve basic formatting from the admin editor with neutral storefront typography. Bold text must remain black/foreground, and the description block must not add lateral padding inside the product purchase panel.
 
 ### Storefront Footer
 
@@ -113,14 +116,23 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The catalog page must show a top category navigation row using VADMIN categories that currently have published products.
 - The catalog sort control must render as an editorial dropdown on the right side of the product controls, with options for featured, newest, discount, and price ordering.
 - Active filters and "Limpiar todo" behavior must stay consistent across the floating filter controls and the catalog product grid.
+- Catalog filter accents, active category states, product count text, and sort/filter submenu active items must use `#C51162`.
+- Floating filter buttons and the "Filtrar" sort button must use a 2px border radius.
+- Open floating filter panels and the "Filtrar" sort menu must close when the user clicks outside them.
 
 ### Storefront Product Cards and Cart Chrome
 
 - Product cards must not show a "Nuevo" badge.
 - Product cards must place the favorite heart action at the top-left of the product image.
 - The storefront navbar must expose the customer account action immediately to the left of the cart action on desktop and mobile.
+- On mobile, the retail/wholesale mode control must render as a full-width bar above the navbar, with two equal-width buttons. The mobile navbar itself must not contain the mode control.
 - The cart sidebar must use a black background with light text and controls that preserve readable contrast.
 - The cart summary must hide the discounts row when the current cart discount total is zero.
+- The cart sidebar must not open automatically when the storefront loads or refreshes with an existing cart. It may open after an explicit cart action or a new add-to-cart quantity increase.
+
+### Admin Product Categories
+
+- The product category form must keep category image support available in code and API compatibility, but the admin image upload control is hidden from the interface until explicitly re-enabled.
 
 ### Admin Product Ordering
 
@@ -129,6 +141,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 ### Product Media
 
 - Product cover, gallery, and color images are managed through Spatie Media Library on the public disk.
+- Product cover and gallery uploads in the admin product form must be cropped to a 5:7 portrait ratio and exported at approximately 500 x 700 pixels before upload.
 - Product media filenames must be unique per upload so browsers and CDNs do not reuse stale images after product edits or database resets.
 - Deleting one product or bulk deleting products must delete the related media records and stored product media files through model-aware deletion.
 - Product gallery order updates must only affect media records owned by the product being updated.
@@ -465,6 +478,11 @@ Admin changes that affect the public storefront must invalidate the Next.js cach
   - `NEXTJS_REVALIDATE_WEBHOOK_URL`
   - `NEXTJS_REVALIDATE_TOKEN`
 - Missing webhook configuration must not block admin writes.
+- When Cloudflare credentials are configured, the same VADMIN revalidation flow must purge the affected public storefront URLs from Cloudflare after admin writes.
+- Cloudflare purge configuration comes from:
+  - `CLOUDFLARE_ZONE_ID`
+  - `CLOUDFLARE_API_TOKEN`
+- Missing Cloudflare configuration or purge failures must not block admin writes.
 
 ---
 

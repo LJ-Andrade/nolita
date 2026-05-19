@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const SORT_OPTIONS = [
   { label: "Destacados", value: "featured" },
@@ -20,6 +20,8 @@ export function CatalogFilterAction() {
   const pathname = usePathname();
   const router = useRouter();
   const currentSort = (searchParams.get("sort") ?? "featured") as SortValue;
+  const [isOpen, setIsOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDetailsElement | null>(null);
 
   const setSort = useCallback(
     (value: SortValue) => {
@@ -36,15 +38,42 @@ export function CatalogFilterAction() {
       router.push(query ? `${pathname}?${query}` : pathname, {
         scroll: false,
       });
+      setIsOpen(false);
     },
     [pathname, router, searchParams],
   );
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && sortMenuRef.current?.contains(target)) {
+        return;
+      }
+
+      setIsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isOpen]);
+
   return (
-    <details className="group relative shrink-0">
+    <details
+      ref={sortMenuRef}
+      className="group relative shrink-0"
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
       <summary
-        className="flex h-10 min-w-[118px] cursor-pointer items-center justify-center gap-2 border border-[#d85a3f] bg-white px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#d85a3f] outline-none transition-colors hover:bg-[#fbf7f4] sm:min-w-[132px] sm:text-xs [&::-webkit-details-marker]:hidden"
-        style={{ borderRadius: 9999, listStyle: "none" }}
+        className="catalog-filter-pill flex h-10 min-w-[118px] cursor-pointer items-center justify-center gap-2 border border-[var(--pb-filter-accent)] bg-white px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--pb-filter-accent)] outline-none transition-colors hover:bg-[#fbf7f4] sm:min-w-[132px] sm:text-xs [&::-webkit-details-marker]:hidden"
+        style={{ borderRadius: 2, listStyle: "none" }}
       >
         Filtrar
         <ChevronDownIcon
@@ -56,8 +85,7 @@ export function CatalogFilterAction() {
       </summary>
 
       <div
-        className="absolute right-0 top-[calc(100%+0.75rem)] z-40 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5"
-        style={{ borderRadius: 18 }}
+        className="catalog-filter-menu absolute right-0 top-[calc(100%+0.75rem)] z-40 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5"
       >
         <p className="px-6 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-black/45">
           Ordenar por
@@ -70,7 +98,7 @@ export function CatalogFilterAction() {
             className={clsx(
               "block w-full px-6 py-3 text-left text-sm outline-none transition-colors hover:bg-[#fbf7f4]",
               currentSort === option.value
-                ? "font-semibold text-[#d85a3f]"
+                ? "font-semibold text-[var(--pb-filter-accent)]"
                 : "text-[var(--pb-text)]",
             )}
           >

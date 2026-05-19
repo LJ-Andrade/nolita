@@ -64,7 +64,7 @@ export function ProductMedia({ images, title }: ProductMediaProps) {
     <>
       <section aria-label={`${title} imágenes`} className="w-full">
         {!media.length ? (
-          <div className="aspect-[4/5] w-full bg-neutral-100" />
+          <div className="aspect-[5/7] w-full bg-neutral-100" />
         ) : null}
 
         <div className="hidden grid-cols-2 gap-4 md:grid">
@@ -73,7 +73,7 @@ export function ProductMedia({ images, title }: ProductMediaProps) {
               key={`${image.src}-${index}`}
               type="button"
               onClick={() => openModal(index)}
-              className="group relative aspect-[4/5] w-full overflow-hidden bg-neutral-50 text-left outline-none"
+              className="group relative aspect-[5/7] w-full overflow-hidden bg-neutral-50 text-left outline-none"
               aria-label={`Ampliar imagen ${index + 1} de ${title}`}
             >
               <Image
@@ -106,7 +106,7 @@ export function ProductMedia({ images, title }: ProductMediaProps) {
                 key={`${image.src}-${index}`}
                 type="button"
                 onClick={() => openModal(index)}
-                className="relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden bg-neutral-50"
+                className="relative aspect-[5/7] w-full shrink-0 snap-center overflow-hidden bg-neutral-50"
                 aria-label={`Ampliar imagen ${index + 1} de ${title}`}
               >
                 <Image

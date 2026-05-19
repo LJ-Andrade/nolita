@@ -236,7 +236,7 @@ class ProductController extends Controller
             }
         }
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes']));
     }
@@ -250,7 +250,7 @@ class ProductController extends Controller
     {
         $product->qr_url = $product->generateQrUrl();
         $product->save();
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'media', 'variants.color', 'variants.size']));
     }
@@ -264,13 +264,15 @@ class ProductController extends Controller
         $product->qr_url = $validated['qr_url'];
         $product->save();
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
         
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'media', 'variants.color', 'variants.size']));
     }
 
     public function update(Request $request, Product $product)
     {
+        $previousSlug = $product->slug;
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:100|unique:products,code,' . $product->id,
@@ -478,7 +480,7 @@ class ProductController extends Controller
             }
         }
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product, $previousSlug);
 
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes']));
     }
@@ -511,7 +513,7 @@ class ProductController extends Controller
 
         $product->save();
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return new ProductResource($product->load(['author', 'category', 'tags', 'sizes', 'colors', 'variants']));
     }
@@ -526,7 +528,7 @@ class ProductController extends Controller
 
         $media->delete();
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return response()->json(['message' => 'Image deleted successfully']);
     }
@@ -535,7 +537,7 @@ class ProductController extends Controller
     {
         $product->delete();
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return response()->noContent();
     }
@@ -552,11 +554,10 @@ public function bulkDelete(Request $request)
         }
 
         $ids = $request->input('ids');
-        Product::whereIn('id', $ids)
-            ->get()
-            ->each(fn (Product $product) => $product->delete());
+        $products = Product::whereIn('id', $ids)->get();
+        $products->each(fn (Product $product) => $product->delete());
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalogForProducts($products);
 
         return response()->noContent();
     }
@@ -593,17 +594,44 @@ public function bulkDelete(Request $request)
 
         $variant->update($data);
 
-        $this->revalidateCatalog();
+        $this->revalidateCatalog($product);
 
         return new ProductVariantResource($variant->load(['color', 'size']));
     }
 
-    private function revalidateCatalog(): void
+    private function revalidateCatalog(?Product $product = null, ?string $previousSlug = null): void
     {
         $this->storefrontRevalidation->revalidate([
             StorefrontRevalidationService::PRODUCTS,
             StorefrontRevalidationService::COLLECTIONS,
-        ]);
+        ], $this->productPaths($product ? [$product] : [], $previousSlug));
+    }
+
+    private function revalidateCatalogForProducts(iterable $products): void
+    {
+        $this->storefrontRevalidation->revalidate([
+            StorefrontRevalidationService::PRODUCTS,
+            StorefrontRevalidationService::COLLECTIONS,
+        ], $this->productPaths($products));
+    }
+
+    private function productPaths(iterable $products, ?string $previousSlug = null): array
+    {
+        $slugs = array_filter([$previousSlug]);
+
+        foreach ($products as $product) {
+            if ($product->slug) {
+                $slugs[] = $product->slug;
+            }
+        }
+
+        $paths = [];
+        foreach (array_unique($slugs) as $slug) {
+            $paths[] = "/producto/{$slug}";
+            $paths[] = "/product/{$slug}";
+        }
+
+        return $paths;
     }
 
     private function mediaFileName(string $prefix, string $extension): string

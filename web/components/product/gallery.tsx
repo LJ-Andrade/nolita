@@ -67,7 +67,7 @@ export function Gallery({
       )}
 
       {/* Main Image */}
-      <div className="relative isolate aspect-[4/5] w-full flex-1 overflow-hidden border border-neutral-200 bg-neutral-50">
+      <div className="relative isolate aspect-[5/7] w-full flex-1 overflow-hidden border border-neutral-200 bg-neutral-50">
         {images[imageIndex] && (
           <Image
             className="h-full w-full object-cover transition-all duration-500"

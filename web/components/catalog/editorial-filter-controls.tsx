@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Collection } from "lib/vadmin/types";
 
 const SIZES_ORDER = [
@@ -46,6 +46,7 @@ export function EditorialFilterControls({
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [scrollOpacity, setScrollOpacity] = useState(0);
   const [footerOffset, setFooterOffset] = useState(0);
+  const filterControlsRef = useRef<HTMLDivElement | null>(null);
 
   const activeCategory =
     searchParams.get("categoria") ?? searchParams.get("category") ?? "";
@@ -170,6 +171,30 @@ export function EditorialFilterControls({
   }, [scrollOpacity]);
 
   useEffect(() => {
+    if (!openPanel) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Node &&
+        filterControlsRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      setOpenPanel(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [openPanel]);
+
+  useEffect(() => {
     let frame = 0;
 
     const updateFooterOffset = () => {
@@ -241,6 +266,7 @@ export function EditorialFilterControls({
         }}
       >
         <div
+          ref={filterControlsRef}
           className={clsx(
             "relative flex items-center justify-center gap-2 sm:gap-3",
             scrollOpacity > 0.05
@@ -251,10 +277,9 @@ export function EditorialFilterControls({
           {openPanel === "category" && (
             <div
               className={clsx(
-                "absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[10rem]",
+                "catalog-filter-menu absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[10rem]",
                 "bottom-[4.5rem]",
               )}
-              style={{ borderRadius: 18 }}
             >
               <DropdownButton
                 active={!activeCategory}
@@ -275,10 +300,9 @@ export function EditorialFilterControls({
           {openPanel === "colors" && (
             <div
               className={clsx(
-                "absolute left-1/2 grid w-[232px] -translate-x-1/2 grid-cols-1 gap-1 bg-white p-2 shadow-2xl ring-1 ring-black/5 sm:w-[260px] sm:grid-cols-2",
+                "catalog-filter-menu absolute left-1/2 grid w-[232px] -translate-x-1/2 grid-cols-1 gap-1 bg-white p-2 shadow-2xl ring-1 ring-black/5 sm:w-[260px] sm:grid-cols-2",
                 "bottom-[4.5rem]",
               )}
-              style={{ borderRadius: 18 }}
             >
               {sortedColors.map((color) => {
                 const active = activeColors.includes(color.name);
@@ -291,10 +315,10 @@ export function EditorialFilterControls({
                     className={clsx(
                       "flex h-11 items-center gap-3 px-3 text-left text-xs font-medium uppercase tracking-[0.12em] outline-none transition-colors",
                       active
-                        ? "bg-[#fbf7f4] text-[#d85a3f]"
+                        ? "bg-[#fbf7f4] text-[var(--pb-filter-accent)]"
                         : "text-[var(--pb-text)] hover:bg-[#fbf7f4]",
                     )}
-                    style={{ borderRadius: 12 }}
+                    style={{ borderRadius: 2 }}
                     aria-pressed={active}
                   >
                     <span
@@ -311,10 +335,9 @@ export function EditorialFilterControls({
           {openPanel === "sizes" && (
             <div
               className={clsx(
-                "absolute left-1/2 grid w-[190px] -translate-x-1/2 grid-cols-3 gap-2 bg-white p-4 shadow-2xl ring-1 ring-black/5",
+                "catalog-filter-menu absolute left-1/2 grid w-[190px] -translate-x-1/2 grid-cols-3 gap-2 bg-white p-4 shadow-2xl ring-1 ring-black/5",
                 "bottom-[4.5rem]",
               )}
-              style={{ borderRadius: 18 }}
             >
               {sortedSizes.map((size) => {
                 const active = activeSizes.includes(size);
@@ -327,11 +350,11 @@ export function EditorialFilterControls({
                     className={clsx(
                       "catalog-size-chip flex h-10 items-center justify-center border text-[13px] outline-none transition-colors",
                       active
-                        ? "border-[#d85a3f] bg-white text-[#d85a3f]"
+                        ? "border-[var(--pb-filter-accent)] bg-white text-[var(--pb-filter-accent)]"
                         : "border-[var(--pb-border)] bg-white text-[var(--pb-text)] hover:border-[var(--pb-accent)]",
                     )}
                     style={{
-                      borderRadius: 10,
+                      borderRadius: 2,
                       overflow: "hidden",
                     }}
                     aria-pressed={active}
@@ -384,7 +407,7 @@ function CategoryNavButton({
       className={clsx(
         "border-b pb-3 text-xs uppercase tracking-[0.3em] outline-none transition-colors",
         active
-          ? "border-[#d85a3f] text-[#d85a3f]"
+          ? "border-[var(--pb-filter-accent)] text-[var(--pb-filter-accent)]"
           : "border-transparent text-black/45 hover:text-black",
       )}
     >
@@ -408,7 +431,9 @@ function DropdownButton({
       onClick={onClick}
       className={clsx(
         "block w-full px-6 py-3 text-left text-sm outline-none transition-colors hover:bg-[#fbf7f4]",
-        active ? "font-semibold text-[#d85a3f]" : "text-[var(--pb-text)]",
+        active
+          ? "font-semibold text-[var(--pb-filter-accent)]"
+          : "text-[var(--pb-text)]",
       )}
     >
       {label}
@@ -431,10 +456,10 @@ function PillButton({
       onClick={onClick}
       className={clsx(
         "catalog-filter-pill flex h-10 min-w-[98px] items-center justify-center gap-2 border border-black/10 bg-white/70 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md outline-none transition-colors hover:bg-white sm:min-w-[124px] sm:px-5 sm:text-xs sm:tracking-[0.17em]",
-        active ? "text-[#d85a3f]" : "text-[var(--pb-text)]",
+        active ? "text-[var(--pb-filter-accent)]" : "text-[var(--pb-text)]",
       )}
       style={{
-        borderRadius: 9999,
+        borderRadius: 2,
         overflow: "hidden",
       }}
       aria-expanded={active}

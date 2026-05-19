@@ -24,6 +24,7 @@
   --pb-text-muted: #b1a495; /* Khaki Beige */
   --pb-accent: #2f2922; /* Graphite */
   --pb-accent-hover: #6f6052; /* Stone Brown */
+  --pb-filter-accent: #c51162;
   --pb-badge-bg: #2f2922; /* Graphite */
   --pb-badge-text: #fbf7f4; /* Parchment */
   --pb-announce-bg: #2f2922; /* Graphite */
@@ -352,16 +353,16 @@ button {
 
 button.catalog-filter-pill,
 .catalog-filter-pill {
-  border-radius: 9999px !important;
+  border-radius: 2px !important;
   overflow: hidden;
 }
 
 .catalog-filter-menu {
-  border-radius: 18px !important;
+  border-radius: 2px !important;
 }
 
 button.catalog-size-chip,
 .catalog-size-chip {
-  border-radius: 12px !important;
+  border-radius: 2px !important;
   overflow: hidden;
 }

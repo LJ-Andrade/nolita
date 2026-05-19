@@ -2,6 +2,60 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 67: Cloudflare Storefront Cache Purge
+
+1. [x] `docs/SPECS.md`: Document optional Cloudflare purge as part of VADMIN storefront revalidation.
+2. [x] `admin/backend/app/Services/StorefrontRevalidationService.php`: Purge affected Cloudflare URLs after successful admin writes when credentials are configured.
+3. [x] `admin/backend/config/services.php` and env examples: Document Cloudflare cache purge configuration.
+4. [x] `docs/DEPLOY_INFO.md`: Document production Cloudflare cache purge setup.
+5. [x] Validation: Run focused PHP syntax checks.
+
+## Phase 61: Storefront and Category Form Polish
+
+1. [x] `docs/SPECS.md`: Document hidden category image upload, portrait product imagery, add-to-cart colors, and cart auto-open behavior.
+2. [x] `admin/frontend/src/views/product-categories/CategoryForm.jsx`: Hide category image upload without removing image support.
+3. [x] `web/components/cart/add-to-cart.tsx`: Make the enabled add-to-cart button black and disabled states gray.
+4. [x] `web/components/catalog/product-card.tsx` and `web/components/product/product-media.tsx`: Increase product image portrait height.
+5. [x] `web/components/cart/modal.tsx`: Prevent existing cart hydration from opening the sidebar on page load.
+6. [x] Validation: Run focused admin/frontend and storefront checks.
+
+## Phase 62: Product Media 5:7 Upload and Display
+
+1. [x] `docs/SPECS.md`: Document 5:7 product media upload and storefront display requirements.
+2. [x] `admin/frontend/src/components/ui/image-upload.jsx`: Export cropped product cover uploads at 500 x 700 for 5:7 crops.
+3. [x] `admin/frontend/src/components/ui/image-gallery.jsx`: Add 5:7 crop flow for gallery uploads and previews.
+4. [x] `admin/frontend/src/views/products/ProductForm.jsx`: Configure cover and gallery uploads for the product 5:7 ratio.
+5. [x] `web/components/catalog/product-card.tsx` and product media components: Render product imagery in 5:7.
+6. [x] Validation: Run focused admin/frontend and storefront checks.
+
+## Phase 63: Product Rich Text Polish
+
+1. [x] `docs/SPECS.md`: Document neutral product rich text behavior.
+2. [x] `admin/frontend/src/components/ui/rich-text-editor.jsx` and `admin/frontend/src/skins.css`: Fix editor content sync and neutral bold styling.
+3. [x] `web/components/product/product-description.tsx`: Render product descriptions without lateral padding and with neutral rich text styles.
+4. [x] Validation: Run focused admin/frontend and storefront checks.
+
+## Phase 64: Storefront Filter Accent Polish
+
+1. [x] `docs/SPECS.md`: Document filter accent color and filter button radius.
+2. [x] `web/app/globals.css`: Add the storefront filter accent token and 2px filter button radius.
+3. [x] `web/components/catalog/*`: Replace orange filter/category/count active states with `#C51162`.
+4. [x] Validation: Run focused storefront checks.
+
+## Phase 65: Storefront Filter Outside Click Close
+
+1. [x] `docs/SPECS.md`: Document outside-click close behavior for filter panels.
+2. [x] `web/components/catalog/editorial-filter-controls.tsx`: Close floating filter panels when clicking outside.
+3. [x] `web/components/catalog/catalog-filter-action.tsx`: Close the sort menu when clicking outside or selecting an option.
+4. [x] Validation: Run focused storefront checks.
+
+## Phase 66: Mobile Price Mode Bar
+
+1. [x] `docs/SPECS.md`: Document the mobile-only retail/wholesale mode bar above the navbar.
+2. [x] `web/components/price-mode/mobile-price-mode-bar.tsx`: Add a mobile-only full-width mode switch.
+3. [x] `web/components/layout/navbar/index.tsx`: Render the mobile mode bar above the mobile navbar while keeping desktop unchanged.
+4. [x] Validation: Run focused storefront checks.
+
 ## Phase 60: Guest Checkout Hardening
 
 1. [x] `docs/SPECS.md`: Document unified public checkout routing and customer guard resolution.
