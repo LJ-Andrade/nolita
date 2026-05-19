@@ -79,9 +79,11 @@ pm2 start npm --name "nolita-web" -- run start -- -p 3002
 The admin frontend is a static Vite SPA. It must be built and then served by Nginx.
 
 ```bash
-cd /home/nolita/htdocs/nolita.com.ar/nolita/admin/frontend
-corepack pnpm build
+cd /home/nolita/htdocs/nolita.com.ar/nolita
+./build-admin.sh
 ```
+
+`build-admin.sh` creates `admin/backend/.env` from `admin/backend/.env.example` when it is missing and ensures Cloudflare cache purge placeholders exist. Fill `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN` with the real production values before relying on automatic Cloudflare purges.
 
 ## Environment Variables
 

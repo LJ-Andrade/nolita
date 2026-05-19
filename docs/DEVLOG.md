@@ -2,6 +2,12 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 68: Admin Build Env Bootstrap
+
+1. [x] `build-admin.sh`: Create `admin/backend/.env` when missing and ensure Cloudflare purge env placeholders exist.
+2. [x] `docs/DEPLOY_INFO.md`: Document the admin build script and Cloudflare placeholder behavior.
+3. [x] Validation: Run shell syntax validation.
+
 ## Phase 67: Cloudflare Storefront Cache Purge
 
 1. [x] `docs/SPECS.md`: Document optional Cloudflare purge as part of VADMIN storefront revalidation.
