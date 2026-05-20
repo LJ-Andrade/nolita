@@ -114,6 +114,52 @@ For online development or staging environments, use that environment's public AP
 
 The script also generates or syncs `NEXTJS_REVALIDATE_TOKEN` between `web/.env.production` and `admin/backend/.env`.
 
+### Sentry Error Monitoring
+
+Sentry is configured per runtime and remains inactive when DSNs are empty. Production should use `production` as the Sentry environment and keep tracing disabled initially unless performance monitoring is explicitly needed.
+
+Use the Debian helper from the repository root to configure the backend, admin frontend, and storefront env files:
+
+```bash
+cd /home/nolita/htdocs/nolita.com.ar/nolita
+./deploy-sentry-debian.sh
+```
+
+The script writes:
+
+- `admin/backend/.env`: `SENTRY_LARAVEL_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, `SENTRY_TRACES_SAMPLE_RATE`, and `SENTRY_SEND_DEFAULT_PII`.
+- `admin/frontend/.env.production.local`: `VITE_SENTRY_DSN`, `VITE_SENTRY_ENVIRONMENT`, `VITE_SENTRY_RELEASE`, and `VITE_SENTRY_TRACES_SAMPLE_RATE`.
+- `web/.env.production`: `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`, and `SENTRY_TRACES_SAMPLE_RATE`.
+
+To configure and run the full production flow:
+
+```bash
+./deploy-sentry-debian.sh
+```
+
+The script asks whether to configure source maps, run install steps, run builds and restart PM2, and send a backend test event. Flags remain available for non-interactive deployments.
+
+To enable source map uploads for readable frontend stack traces during production builds:
+
+```bash
+./deploy-sentry-debian.sh --source-maps --run-build
+```
+
+The source map flow requires a Sentry auth token and org slug. The script stores them only in server env files. Do not commit `SENTRY_AUTH_TOKEN`.
+
+For non-interactive deployment, pass values as flags or exported environment variables:
+
+```bash
+SENTRY_LARAVEL_DSN="..." \
+VITE_SENTRY_DSN="..." \
+NEXT_PUBLIC_SENTRY_DSN="..." \
+SENTRY_ORG="..." \
+SENTRY_AUTH_TOKEN="..." \
+./deploy-sentry-debian.sh --yes --source-maps --run-build --test-backend
+```
+
+Frontend Sentry DSN changes require rebuilding `admin/frontend` and `web`; backend Sentry changes require clearing and rebuilding Laravel config cache.
+
 ### Storefront Cache Revalidation
 Because Nginx proxies public `/api/*` requests to Laravel, VADMIN should call the Next.js revalidation route directly through the local PM2 port:
 

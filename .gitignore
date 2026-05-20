@@ -14,6 +14,8 @@ db.json
 .vscode/
 *.swp
 *.swo
+.env.sentry-build-plugin
+**/.env.sentry-build-plugin
 
 # Project specific
 backend/.env

@@ -247,6 +247,46 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 ---
 
+## 4.5 Error Monitoring
+
+### 4.5.1 Overview
+
+The system must report important production errors to Sentry across the VADMIN backend, admin frontend, and public storefront without changing user-facing recovery flows.
+
+### 4.5.2 Scope
+
+- VADMIN Laravel must report unhandled exceptions and critical API failures through the official Laravel Sentry SDK.
+- The Next.js storefront must report server, edge, request, and client rendering errors through the official Next.js Sentry SDK.
+- The React/Vite admin frontend must report uncaught browser errors, unhandled promise rejections, and React render failures through the official React Sentry SDK.
+- Monitoring must be disabled when no Sentry DSN is configured, so local development and tests do not send events accidentally.
+- Sentry must not replace existing user-facing error handling. The storefront maintenance redirect must continue to redirect users to `/maintenance` when VADMIN is unavailable.
+- Session Replay, user feedback widgets, logs, and high-volume performance tracing are out of initial scope unless explicitly enabled later.
+- Default PII collection must remain disabled. User identity may be added later only after a privacy review.
+- Production builds should support source map upload through `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` values supplied by the deployment environment. Auth tokens must not be committed.
+- The repository root provides `setup-sentry.ps1` to configure local Sentry DSNs for all three applications without committing secrets.
+- The repository root provides `deploy-sentry-debian.sh` to configure production Sentry environment values on Debian and optionally run install, build, source map upload, PM2 restart, and backend test steps.
+
+### 4.5.3 Environment Variables
+
+- Backend:
+  - `SENTRY_LARAVEL_DSN`
+  - `SENTRY_ENVIRONMENT`
+  - `SENTRY_RELEASE`
+  - `SENTRY_TRACES_SAMPLE_RATE`
+- Admin frontend:
+  - `VITE_SENTRY_DSN`
+  - `VITE_SENTRY_ENVIRONMENT`
+  - `VITE_SENTRY_RELEASE`
+  - `VITE_SENTRY_TRACES_SAMPLE_RATE`
+- Storefront:
+  - `NEXT_PUBLIC_SENTRY_DSN`
+  - `SENTRY_ENVIRONMENT`
+  - `SENTRY_RELEASE`
+  - `SENTRY_TRACES_SAMPLE_RATE`
+  - `SENTRY_AUTH_TOKEN` for source map upload during build.
+
+---
+
 ## 5. Design System
 
 ### 5.1 Design Tokens

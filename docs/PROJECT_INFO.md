@@ -94,6 +94,7 @@ Rules:
 - `admin/frontend` manages data through VADMIN API routes.
 - `web` consumes VADMIN data through `web/lib/vadmin`.
 - Maintenance mode redirects the storefront to `/maintenance` when the VADMIN API is unavailable.
+- Sentry monitors critical unhandled errors across `admin/backend`, `admin/frontend`, and `web` when DSN environment variables are configured.
 - Do not add new Shopify dependencies, Shopify fetchers, or `SHOPIFY_*` environment variables.
 
 ## Environment
@@ -101,6 +102,8 @@ Rules:
 - Production server: VPS with Nginx.
 - Production database: MySQL.
 - Local backend database: MySQL database named `nolita`.
+- Sentry is disabled by default when DSNs are empty. Configure `SENTRY_LARAVEL_DSN`, `VITE_SENTRY_DSN`, and `NEXT_PUBLIC_SENTRY_DSN` per environment to enable reporting.
+- Run `./setup-sentry.ps1` from the repository root to configure local Sentry DSNs across the backend, admin panel, and storefront. The script prompts for environment and optional source map settings when flags are omitted.
 
 ## Commands
 

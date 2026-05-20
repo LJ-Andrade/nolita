@@ -1,5 +1,6 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const appRoot = dirname(fileURLToPath(import.meta.url));
 const vadminApiEndpoint = process.env.NEXT_PUBLIC_VADMIN_API_URL;
@@ -10,7 +11,7 @@ if (!vadminApiEndpoint) {
 
 const vadminOrigin = new URL(vadminApiEndpoint).origin;
 
-export default {
+const nextConfig = {
   cacheComponents: true,
   turbopack: {
     root: appRoot,
@@ -114,3 +115,13 @@ export default {
     ],
   },
 };
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+});

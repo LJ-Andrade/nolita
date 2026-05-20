@@ -2,6 +2,27 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 73: Sentry Critical Error Monitoring
+
+1. [x] `docs/SPECS.md`: Document initial Sentry monitoring scope, privacy defaults, and environment variables.
+2. [x] `admin/backend`: Install and configure the Laravel Sentry SDK for unhandled exceptions.
+3. [x] `web`: Install and configure the Next.js Sentry SDK for server, request, edge, and client errors.
+4. [x] `admin/frontend`: Install and configure the React Sentry SDK for browser and React render errors.
+5. [x] Environment examples: Document Sentry DSNs, release, environment, traces sample rate, and source map token placeholders.
+6. [x] Validation: Run focused backend, storefront, and admin frontend checks.
+
+## Phase 74: Sentry Local Environment Setup Script
+
+1. [x] `setup-sentry.ps1`: Add an interactive root setup script for backend, admin, and storefront Sentry DSNs.
+2. [x] `docs/SPECS.md`: Document the root Sentry setup script as the standard local configuration path.
+3. [x] Validation: Run PowerShell syntax validation.
+
+## Phase 75: Sentry Debian Production Setup Script
+
+1. [x] `deploy-sentry-debian.sh`: Add a Debian deployment helper for Sentry env values, backend cache, optional installs, builds, source maps, PM2 restart, and backend test event.
+2. [x] `docs/DEPLOY_INFO.md`: Document Sentry production setup with the Debian helper script.
+3. [x] Validation: Run Bash syntax validation.
+
 ## Phase 71: Storefront Price Mode Switch Robustness
 
 1. [x] `docs/SPECS.md`: Document the active green status dot and robust mode refresh behavior.
