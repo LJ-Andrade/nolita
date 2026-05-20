@@ -95,11 +95,42 @@ class StorefrontRevalidationService
         $apiToken = config('services.cloudflare.api_token');
         $urls = $this->buildCloudflareUrls($paths);
 
-        if (!$zoneId || !$apiToken || empty($urls)) {
+        if (!$zoneId || !$apiToken) {
+            Log::warning('Skipped Cloudflare storefront cache purge because credentials are not configured.', [
+                'has_zone_id' => (bool) $zoneId,
+                'has_api_token' => (bool) $apiToken,
+                'tags' => $tags,
+                'paths' => $paths,
+            ]);
+
+            return;
+        }
+
+        $purgeEverything = (bool) config('services.cloudflare.purge_everything');
+
+        if (!$purgeEverything && empty($urls)) {
+            Log::warning('Skipped Cloudflare storefront cache purge because no public storefront URLs could be built.', [
+                'storefront_url' => config('services.cloudflare.storefront_url'),
+                'tags' => $tags,
+                'paths' => $paths,
+            ]);
+
             return;
         }
 
         try {
+            if ($purgeEverything) {
+                Http::timeout(5)
+                    ->acceptJson()
+                    ->withToken($apiToken)
+                    ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", [
+                        'purge_everything' => true,
+                    ])
+                    ->throw();
+
+                return;
+            }
+
             foreach (array_chunk($urls, 30) as $chunk) {
                 Http::timeout(5)
                     ->acceptJson()
@@ -115,6 +146,7 @@ class StorefrontRevalidationService
                 'tags' => $tags,
                 'paths' => $paths,
                 'urls' => $urls,
+                'purge_everything' => $purgeEverything,
             ]);
         }
     }
@@ -133,7 +165,7 @@ class StorefrontRevalidationService
 
     private function buildCloudflareUrls(array $paths): array
     {
-        $baseUrl = rtrim((string) config('app.url'), '/');
+        $baseUrl = rtrim((string) config('services.cloudflare.storefront_url'), '/');
 
         if (!str_starts_with($baseUrl, 'http://') && !str_starts_with($baseUrl, 'https://')) {
             return [];

@@ -525,6 +525,8 @@ Admin changes that affect the public storefront must invalidate the Next.js cach
 - Cloudflare purge configuration comes from:
   - `CLOUDFLARE_ZONE_ID`
   - `CLOUDFLARE_API_TOKEN`
+- VADMIN must build Cloudflare purge URLs from `CLOUDFLARE_STOREFRONT_URL` when present, falling back to `APP_URL`.
+- `CLOUDFLARE_PURGE_EVERYTHING=true` may be enabled for deployments where URL-only purges leave stale catalog variants, query-string cache keys, or price-mode responses.
 - Missing Cloudflare configuration or purge failures must not block admin writes.
 
 ---

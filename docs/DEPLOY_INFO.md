@@ -175,9 +175,13 @@ When production traffic is routed through Cloudflare, also configure a Cloudflar
 ```bash
 CLOUDFLARE_ZONE_ID=<cloudflare-zone-id>
 CLOUDFLARE_API_TOKEN=<cloudflare-api-token-with-cache-purge>
+CLOUDFLARE_STOREFRONT_URL=https://nolita.com.ar
+CLOUDFLARE_PURGE_EVERYTHING=true
 ```
 
 VADMIN uses the same admin write revalidation flow to purge affected public storefront URLs from Cloudflare. Missing Cloudflare values or purge failures are logged but do not block admin saves.
+
+`CLOUDFLARE_PURGE_EVERYTHING=true` is the production default for this project because catalog prices can be cached through query-string variants and price-mode responses. Set it to `false` only if URL-only purges are verified to cover the live Cloudflare cache rules.
 
 ### Storefront Dependency Install
 The storefront currently commits `web/package-lock.json`, so `build-web.sh` uses `npm ci` for production installs.

@@ -3,6 +3,7 @@ set -euo pipefail
 
 PM2_APP_NAME="${PM2_APP_NAME:-nolita-web}"
 EXPECTED_WEBHOOK_URL="${EXPECTED_WEBHOOK_URL:-http://127.0.0.1:3003/api/revalidate}"
+EXPECTED_CLOUDFLARE_STOREFRONT_URL="${EXPECTED_CLOUDFLARE_STOREFRONT_URL:-https://nolita.com.ar}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$ROOT_DIR/web"
@@ -128,6 +129,20 @@ ensure_revalidation_config() {
   fi
 }
 
+ensure_cloudflare_config() {
+  local cloudflare_storefront_url
+
+  cloudflare_storefront_url="$(read_env_value "$BACKEND_ENV" "CLOUDFLARE_STOREFRONT_URL")"
+
+  if [ -z "$cloudflare_storefront_url" ]; then
+    set_env_value "$BACKEND_ENV" "CLOUDFLARE_STOREFRONT_URL" "$EXPECTED_CLOUDFLARE_STOREFRONT_URL"
+    echo "Added CLOUDFLARE_STOREFRONT_URL to backend env."
+  fi
+
+  set_env_value "$BACKEND_ENV" "CLOUDFLARE_PURGE_EVERYTHING" "true"
+  echo "Set CLOUDFLARE_PURGE_EVERYTHING=true in backend env."
+}
+
 install_web_dependencies() {
   if [ -f "$WEB_DIR/package-lock.json" ]; then
     require_command npm
@@ -162,6 +177,7 @@ require_command pm2
 
 ensure_web_env_config
 ensure_revalidation_config
+ensure_cloudflare_config
 
 web_api_url="$(read_env_value "$WEB_ENV" "NEXT_PUBLIC_VADMIN_API_URL")"
 [ -n "$web_api_url" ] || fail "Set NEXT_PUBLIC_VADMIN_API_URL in $WEB_ENV, for example https://your-domain/api"

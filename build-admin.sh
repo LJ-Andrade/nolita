@@ -54,6 +54,16 @@ ensure_backend_env_config() {
     set_env_value "$BACKEND_ENV" "CLOUDFLARE_API_TOKEN" ""
     echo "Added CLOUDFLARE_API_TOKEN placeholder to backend env."
   fi
+
+  if ! grep -q -E "^CLOUDFLARE_STOREFRONT_URL=" "$BACKEND_ENV"; then
+    set_env_value "$BACKEND_ENV" "CLOUDFLARE_STOREFRONT_URL" ""
+    echo "Added CLOUDFLARE_STOREFRONT_URL placeholder to backend env."
+  fi
+
+  if ! grep -q -E "^CLOUDFLARE_PURGE_EVERYTHING=" "$BACKEND_ENV"; then
+    set_env_value "$BACKEND_ENV" "CLOUDFLARE_PURGE_EVERYTHING" "true"
+    echo "Added CLOUDFLARE_PURGE_EVERYTHING placeholder to backend env."
+  fi
 }
 
 echo "Checking admin production build..."

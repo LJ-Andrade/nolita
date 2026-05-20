@@ -42,6 +42,8 @@ return [
     'cloudflare' => [
         'zone_id' => env('CLOUDFLARE_ZONE_ID'),
         'api_token' => env('CLOUDFLARE_API_TOKEN'),
+        'storefront_url' => env('CLOUDFLARE_STOREFRONT_URL', env('APP_URL')),
+        'purge_everything' => env('CLOUDFLARE_PURGE_EVERYTHING', false),
     ],
 
 ];

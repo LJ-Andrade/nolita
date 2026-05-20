@@ -2,6 +2,14 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 76: Cloudflare Storefront Purge Diagnostics
+
+1. [x] `docs/SPECS.md`: Document explicit storefront purge URL and optional full-zone purge behavior.
+2. [x] `admin/backend/app/Services/StorefrontRevalidationService.php`: Add skipped-purge logging, explicit storefront URL support, and optional full-zone purge.
+3. [x] `admin/backend/config/services.php`, env examples, and deploy docs: Add Cloudflare storefront URL and purge mode configuration.
+4. [x] `build-web.sh` and `build-admin.sh`: Seed Nolita Cloudflare storefront URL and full-zone purge defaults in backend env setup.
+5. [x] Validation: Run focused backend and script syntax checks.
+
 ## Phase 73: Sentry Critical Error Monitoring
 
 1. [x] `docs/SPECS.md`: Document initial Sentry monitoring scope, privacy defaults, and environment variables.
