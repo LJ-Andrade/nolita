@@ -34,8 +34,8 @@ WEB_DSN="${NEXT_PUBLIC_SENTRY_DSN:-}"
 SENTRY_RELEASE="${SENTRY_RELEASE:-$DEFAULT_RELEASE}"
 SENTRY_ORG="${SENTRY_ORG:-}"
 SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}"
-ADMIN_SENTRY_PROJECT="${ADMIN_SENTRY_PROJECT:-nolita-admin}"
-WEB_SENTRY_PROJECT="${WEB_SENTRY_PROJECT:-nolita-web}"
+ADMIN_SENTRY_PROJECT="${ADMIN_SENTRY_PROJECT:-nolita-admin-panel}"
+WEB_SENTRY_PROJECT="${WEB_SENTRY_PROJECT:-nolita-storefront}"
 
 usage() {
   cat <<'USAGE'
@@ -188,12 +188,12 @@ ask_choice() {
     return
   fi
 
-  echo "$label"
+  echo "$label" >&2
   for index in "${!choices[@]}"; do
     local number=$((index + 1))
     local marker=""
     [ "${choices[$index]}" = "$default" ] && marker=" (default)"
-    echo "  $number. ${choices[$index]}$marker"
+    echo "  $number. ${choices[$index]}$marker" >&2
   done
 
   read -r -p "Choose an option: " value
