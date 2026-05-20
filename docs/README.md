@@ -21,6 +21,7 @@ This directory is the operational memory for the project. Keep each document foc
 | `standards/CRUD_STANDARDS.md` | CRUD list, form, table, and action patterns. |
 | `standards/FILE_HANDLING_STANDARDS.md` | File upload and handling rules. |
 | `standards/ADMIN_TABBED_SECTION_STANDARDS.md` | Admin pages with breadcrumbs, tabs, and active content cards. |
+| `standards/SENTRY_IMPLEMENTATION_STANDARDS.md` | Sentry setup standard for Laravel, React/Vite, and Next.js projects. |
 
 ## Agent Update Rules
 

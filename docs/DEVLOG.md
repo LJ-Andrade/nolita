@@ -2,6 +2,11 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 77: Reusable Sentry Implementation Standard
+
+1. [x] `docs/standards/SENTRY_IMPLEMENTATION_STANDARDS.md`: Document reusable Sentry implementation steps for Laravel, React/Vite, Next.js, env variables, setup scripts, alerts, source maps, validation, and common failures.
+2. [x] `docs/README.md`: Add the Sentry implementation standard to the documentation index.
+
 ## Phase 76: Cloudflare Storefront Purge Diagnostics
 
 1. [x] `docs/SPECS.md`: Document explicit storefront purge URL and optional full-zone purge behavior.
