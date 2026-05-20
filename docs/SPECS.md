@@ -127,6 +127,8 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Product cards must place the favorite heart action at the top-left of the product image.
 - The storefront navbar must expose the customer account action immediately to the left of the cart action on desktop and mobile.
 - On mobile, the retail/wholesale mode control must render as a full-width bar above the navbar, with two equal-width buttons. The mobile navbar itself must not contain the mode control.
+- The selected retail/wholesale mode control must show a small green status dot inside the active option on desktop and mobile.
+- Changing the retail/wholesale mode must update client-rendered prices immediately without refreshing the current route. Do not call `router.refresh()`, `window.location.reload()`, navigation redirects, or any equivalent page reload as part of the mode switch, because route refreshes cause visible storefront image/layout flashes. The mode cookie must still be persisted so future page loads and server actions use the selected mode.
 - The cart sidebar must use a black background with light text and controls that preserve readable contrast.
 - The cart summary must hide the discounts row when the current cart discount total is zero.
 - The cart sidebar must not open automatically when the storefront loads or refreshes with an existing cart. It may open after an explicit cart action or a new add-to-cart quantity increase.
@@ -327,7 +329,7 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 4. **Completion**: The `completeOrder` action sends collected data, cart lines, and active price mode to VADMIN checkout.
 5. **API Routing**: The storefront posts to the public VADMIN `POST /api/checkout` endpoint for both guests and authenticated customers. When an `auth_token` cookie is present, the storefront forwards it as a Bearer header so VADMIN can associate the order with the customer via the Sanctum `customer` guard. A missing or expired token must not block checkout; the order is persisted as a guest order in that case.
 6. **Customer Resolution (Backend)**: `OrderController::checkout` must resolve the customer via `auth('customer')->user()` so the public route can still link orders to authenticated customers when a valid Bearer token is sent.
-5. **Summary UI**:
+7. **Summary UI**:
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.

@@ -2,6 +2,20 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 71: Storefront Price Mode Switch Robustness
+
+1. [x] `docs/SPECS.md`: Document the active green status dot and robust mode refresh behavior.
+2. [x] `web/components/price-mode/*`: Add the green active indicator to desktop and mobile controls.
+3. [x] `web/components/price-mode/price-mode-context.tsx`: Persist mode defensively for server actions and future loads.
+4. [x] Validation: Run focused storefront checks.
+
+## Phase 72: Storefront Price Mode No-Refresh Switch
+
+1. [x] `docs/SPECS.md`: Document client-side price mode updates without route refresh.
+2. [x] `web/components/price-mode/price-mode-context.tsx`: Remove route refresh from mode changes while keeping cookie persistence.
+3. [x] `docs/SPECS.md`: Add an explicit no-`router.refresh()` regression guard for the retail/wholesale mode switch.
+4. [x] Validation: Run focused storefront checks.
+
 ## Phase 70: Storefront Site Content Cache Tag Fix
 
 1. [x] `web/lib/vadmin/index.ts`: Tag site content and shop configuration cache entries with their matching revalidation tags.

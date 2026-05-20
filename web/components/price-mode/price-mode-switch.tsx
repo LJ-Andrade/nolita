@@ -13,24 +13,32 @@ export default function PriceModeSwitch() {
         type="button"
         onClick={() => setPriceMode("retail")}
         className={clsx(
-          "px-3.5 py-1.5 transition-all",
+          "flex items-center gap-1.5 px-3.5 py-1.5 transition-all",
           !isWholesale
             ? "bg-[#D4006A] text-white shadow-sm"
-            : "text-stone-brown hover:text-black"
+            : "text-stone-brown hover:text-black",
         )}
+        aria-pressed={!isWholesale}
       >
+        {!isWholesale && (
+          <span className="h-1.5 w-1.5 rounded-full bg-[#1FAD57]" />
+        )}
         Minorista
       </button>
       <button
         type="button"
         onClick={() => setPriceMode("wholesale")}
         className={clsx(
-          "px-3.5 py-1.5 transition-all",
+          "flex items-center gap-1.5 px-3.5 py-1.5 transition-all",
           isWholesale
             ? "bg-[#D4006A] text-white shadow-sm"
-            : "text-stone-brown hover:text-black"
+            : "text-stone-brown hover:text-black",
         )}
+        aria-pressed={isWholesale}
       >
+        {isWholesale && (
+          <span className="h-1.5 w-1.5 rounded-full bg-[#1FAD57]" />
+        )}
         Mayorista
       </button>
     </div>

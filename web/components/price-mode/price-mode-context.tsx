@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type PriceMode = "retail" | "wholesale";
 
@@ -17,6 +24,16 @@ function normalizeMode(mode?: string | null): PriceMode {
   return mode === "wholesale" ? "wholesale" : "retail";
 }
 
+function persistPriceMode(mode: PriceMode) {
+  try {
+    window.localStorage.setItem("nolita_price_mode", mode);
+  } catch {
+    // Cookie persistence is the source of truth for server-rendered data.
+  }
+
+  document.cookie = `nolita_price_mode=${mode}; path=/; max-age=31536000; samesite=lax`;
+}
+
 export function PriceModeProvider({
   initialMode = "retail",
   children,
@@ -27,14 +44,34 @@ export function PriceModeProvider({
   const [priceMode, setPriceModeState] = useState<PriceMode>(
     normalizeMode(initialMode),
   );
+  const normalizedInitialMode = normalizeMode(initialMode);
 
-  const setPriceMode = (mode: PriceMode) => {
-    setPriceModeState(mode);
-    window.localStorage.setItem("nolita_price_mode", mode);
-    document.cookie = `nolita_price_mode=${mode}; path=/; max-age=31536000; samesite=lax`;
-  };
+  useEffect(() => {
+    try {
+      const storedMode = window.localStorage.getItem("nolita_price_mode");
+      if (!storedMode) return;
 
-  const value = useMemo(() => ({ priceMode, setPriceMode }), [priceMode]);
+      const normalizedStoredMode = normalizeMode(storedMode);
+      if (normalizedStoredMode === normalizedInitialMode) return;
+
+      setPriceModeState(normalizedStoredMode);
+      persistPriceMode(normalizedStoredMode);
+    } catch {
+      persistPriceMode(normalizedInitialMode);
+    }
+  }, [normalizedInitialMode]);
+
+  const setPriceMode = useCallback((mode: PriceMode) => {
+    const normalizedMode = normalizeMode(mode);
+
+    setPriceModeState(normalizedMode);
+    persistPriceMode(normalizedMode);
+  }, []);
+
+  const value = useMemo(
+    () => ({ priceMode, setPriceMode }),
+    [priceMode, setPriceMode],
+  );
 
   return (
     <PriceModeContext.Provider value={value}>
