@@ -5,22 +5,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 /**
  * Reusable CRUD Table component
  * Supports sorting, selection, custom columns, and row actions
- * 
+ *
  * @param {Object} props
  * @param {Array} props.items - Data items to display
  * @param {Array} props.columns - Column definitions
@@ -50,14 +51,14 @@ export function CrudTable({
   sortDir,
   onSortt,
   actions,
-  emptyMessage = 'No data available',
-  loadingMessage = 'Loading...'
+  emptyMessage = "No data available",
+  loadingMessage = "Loading...",
 }) {
   const renderSortIcon = (column) => {
     if (sortBy !== column.key) {
       return <ArrowUpDown className="ml-2 h-4 w-4" />;
     }
-    return sortDir === 'asc' ? (
+    return sortDir === "asc" ? (
       <ArrowUp className="ml-2 h-4 w-4" />
     ) : (
       <ArrowDown className="ml-2 h-4 w-4" />
@@ -66,112 +67,125 @@ export function CrudTable({
 
   const renderCell = (item, column) => {
     const value = item[column.key];
-    
-    if (column.format === 'date') {
+
+    if (column.format === "date") {
       return formatDate(value);
     }
-    
+
     if (column.render) {
       return column.render(value, item);
     }
-    
+
     return value;
   };
 
   const colSpan = columns.length + (selectable ? 2 : 1);
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {selectable && (
-            <TableHead className="w-10">
-              <Checkbox
-                checked={isAllSelected}
-                onCheckedChange={onSelecttAll}
-              />
-            </TableHead>
-          )}
-          {columns.map((column) => (
-            <TableHead
-              key={column.key}
-              className={`
-                ${column.sortable ? 'cursor-pointer select-none' : ''}
-                ${column.width ? column.width : ''}
-                ${column.align === 'right' ? 'text-right' : ''}
-              `}
-              onClick={() => column.sortable && onSortt && onSortt(column.key)}
-            >
-              <div className={`flex items-center ${column.align === 'right' ? 'justify-end' : ''}`}>
-                {column.label}
-                {column.sortable && renderSortIcon(column)}
-              </div>
-            </TableHead>
-          ))}
-          <TableHead className="text-right w-[120px]">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody className={loading ? 'opacity-50 pointer-events-none' : ''}>
-        {loading && items.length === 0 && (
+    <AdminTableShell>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={colSpan} className="text-center">
-              {loadingMessage}
-            </TableCell>
-          </TableRow>
-        )}
-        {!loading && items.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={colSpan} className="text-center py-8 text-muted-foreground">
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        )}
-        {items.map((item) => (
-          <TableRow key={item.id} className="h-10">
             {selectable && (
-              <TableCell className="py-2">
+              <TableHead className="w-10">
                 <Checkbox
-                  checked={selectedIds.includes(item.id)}
-                  onCheckedChange={() => onSelectt && onSelectt(item.id)}
+                  checked={isAllSelected}
+                  onCheckedChange={onSelecttAll}
                 />
-              </TableCell>
+              </TableHead>
             )}
             {columns.map((column) => (
-              <TableCell
+              <TableHead
                 key={column.key}
                 className={`
-                  py-2
-                  ${column.align === 'right' ? 'text-right' : ''}
-                  ${column.key === 'name' ? 'font-medium' : ''}
-                `}
+                ${column.sortable ? "cursor-pointer select-none" : ""}
+                ${column.width ? column.width : ""}
+                ${column.align === "right" ? "text-right" : ""}
+              `}
+                onClick={() =>
+                  column.sortable && onSortt && onSortt(column.key)
+                }
               >
-                {renderCell(item, column)}
-              </TableCell>
+                <div
+                  className={`flex items-center ${column.align === "right" ? "justify-end" : ""}`}
+                >
+                  {column.label}
+                  {column.sortable && renderSortIcon(column)}
+                </div>
+              </TableHead>
             ))}
-            <TableCell className="text-right py-2 w-[120px]">
-              <div className="flex items-center justify-end gap-1">
-                {actions && (
-                  <>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-                          <ChevronDown className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {actions(item, true)}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <div className="hidden lg:flex items-center gap-1">
-                      {actions(item, false)}
-                    </div>
-                  </>
-                )}
-              </div>
-            </TableCell>
+            <TableHead className="text-right w-[120px]">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
+          {loading && items.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={colSpan} className="text-center">
+                {loadingMessage}
+              </TableCell>
+            </TableRow>
+          )}
+          {!loading && items.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={colSpan}
+                className="text-center py-8 text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          )}
+          {items.map((item) => (
+            <TableRow key={item.id} className="h-10">
+              {selectable && (
+                <TableCell className="py-2">
+                  <Checkbox
+                    checked={selectedIds.includes(item.id)}
+                    onCheckedChange={() => onSelectt && onSelectt(item.id)}
+                  />
+                </TableCell>
+              )}
+              {columns.map((column) => (
+                <TableCell
+                  key={column.key}
+                  className={`
+                  py-2
+                  ${column.align === "right" ? "text-right" : ""}
+                  ${column.key === "name" ? "font-medium" : ""}
+                `}
+                >
+                  {renderCell(item, column)}
+                </TableCell>
+              ))}
+              <TableCell className="text-right py-2 w-[120px]">
+                <div className="flex items-center justify-end gap-1">
+                  {actions && (
+                    <>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 lg:hidden"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {actions(item, true)}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <div className="hidden lg:flex items-center gap-1">
+                        {actions(item, false)}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </AdminTableShell>
   );
 }

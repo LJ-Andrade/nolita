@@ -59,7 +59,7 @@ export default function ProductSizeForm() {
 				}
 				breadcrumbs={[
 					{ label: 'PRODUCTOS' },
-					{ label: "Talles" || 'Talles', href: '/product-sizes' },
+					{ label: "Talles" || 'Talles', href: '/productos-talles' },
 					{ label: id ? "Editar" : "Crear" },
 				]}
 			/>

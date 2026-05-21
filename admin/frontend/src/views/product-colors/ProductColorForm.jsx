@@ -59,7 +59,7 @@ export default function ProductColorForm() {
         title={title}
         breadcrumbs={[
           { label: 'PRODUCTOS' },
-          { label: "Colores" || 'Colores', href: '/product-colors' },
+          { label: "Colores" || 'Colores', href: '/productos-colores' },
           { label: id ? "Editar" : "Crear" },
         ]}
       />
