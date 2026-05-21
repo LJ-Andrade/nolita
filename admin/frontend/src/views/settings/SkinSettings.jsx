@@ -10,17 +10,31 @@ import { PageHeader } from '@/components/page-header';
 
 const SKIN_FIELDS = [
   { key: 'sidebar_bg', label: 'Sidebar Background' },
+  { key: 'sidebar_foreground', label: 'Sidebar Text' },
+  { key: 'sidebar_accent', label: 'Sidebar Accent' },
+  { key: 'sidebar_border', label: 'Sidebar Border' },
   { key: 'gradient_start', label: 'Gradient Start' },
   { key: 'gradient_end', label: 'Gradient End' },
+  { key: 'card', label: 'Card Background' },
+  { key: 'card_foreground', label: 'Card Text' },
+  { key: 'card_border_color', label: 'Card Border' },
+  { key: 'card_shadow_color', label: 'Card Shadow' },
 ];
+
+const getResolvedTheme = (theme) => {
+  if (theme !== 'system') return theme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const isHexColor = (value) => /^#[0-9a-fA-F]{6}$/.test(value);
 
 export default function SkinSettings() {
   const { theme, setTheme } = useTheme();
   const { settings, loading, saving, updateSetting, saveSkinSettings, resetToDefaults, defaultValues } = useSkinSettings();
-  const [activeTheme, setActiveTheme] = useState(theme);
+  const [activeTheme, setActiveTheme] = useState(() => getResolvedTheme(theme));
 
   useEffect(() => {
-    setActiveTheme(theme);
+    setActiveTheme(getResolvedTheme(theme));
   }, [theme]);
 
   const getValue = (theme, field) => {
@@ -57,13 +71,13 @@ export default function SkinSettings() {
 
   const renderColorField = (theme, fieldKey, label) => {
     const value = getValue(theme, fieldKey);
-    const isNone = value === 'none';
+    const pickerValue = isHexColor(value) ? value : '#ffffff';
 
     return (
       <div key={`${theme}-${fieldKey}`} className="flex items-center gap-4">
         <input
           type="color"
-          value={isNone ? '#ffffff' : value}
+          value={pickerValue}
           onChange={(e) => updateSetting(`skin_${theme}_${fieldKey}`, e.target.value)}
           className="h-10 w-10 rounded-full border border-input cursor-pointer"
         />

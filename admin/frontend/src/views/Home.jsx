@@ -68,7 +68,7 @@ export default function Home() {
 						<User className="h-5 w-5 text-primary" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.4)]">
+						<div className="text-2xl font-bold text-primary drop-shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_40%,transparent)]">
 							{data?.user?.name}
 						</div>
 						<p className="text-sm text-muted-foreground/80 mt-1">{data?.user?.email}</p>
@@ -90,7 +90,7 @@ export default function Home() {
 							{getIcon(key)}
 						</CardHeader>
 						<CardContent>
-							<div className="text-4xl font-black tracking-tighter drop-shadow-[0_0_10px_hsl(var(--primary)/0.3)]">
+							<div className="text-4xl font-black tracking-tighter drop-shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_30%,transparent)]">
 								{value}
 							</div>
 							<div className="h-1 w-12 bg-primary/40 rounded-full mt-4 group-hover:w-24 transition-all duration-500" />

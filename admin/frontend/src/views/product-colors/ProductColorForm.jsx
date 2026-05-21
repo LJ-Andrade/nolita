@@ -43,6 +43,8 @@ export default function ProductColorForm() {
     },
   });
 
+  const title = id ? `Editando color "${entityName}"` : "Crear Color";
+
   if (fetching) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -54,11 +56,7 @@ export default function ProductColorForm() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={
-          id
-            ? `${"Editando color"} "${entityName}"`
-            : "product_colors.create_title" || 'Crear Color'
-        }
+        title={title}
         breadcrumbs={[
           { label: 'PRODUCTOS' },
           { label: "Colores" || 'Colores', href: '/product-colors' },
@@ -72,9 +70,7 @@ export default function ProductColorForm() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {id
-                    ? `${"Editando color"} "${entityName}"`
-                    : "product_colors.create_title" || 'Crear Color'}
+                  {title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

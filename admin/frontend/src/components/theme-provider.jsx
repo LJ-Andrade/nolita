@@ -13,6 +13,10 @@ const SKIN_KEYS_LIGHT = [
   "skin_light_sidebar_border",
   "skin_light_gradient_start",
   "skin_light_gradient_end",
+  "skin_light_card",
+  "skin_light_card_foreground",
+  "skin_light_card_border_color",
+  "skin_light_card_shadow_color",
 ]
 
 const SKIN_KEYS_DARK = [
@@ -22,22 +26,11 @@ const SKIN_KEYS_DARK = [
   "skin_dark_sidebar_border",
   "skin_dark_gradient_start",
   "skin_dark_gradient_end",
+  "skin_dark_card",
+  "skin_dark_card_foreground",
+  "skin_dark_card_border_color",
+  "skin_dark_card_shadow_color",
 ]
-
-const DEFAULT_SKIN_VALUES = {
-  skin_light_sidebar_bg: "#f0f0f0",
-  skin_light_sidebar_foreground: "#333333",
-  skin_light_sidebar_accent: "#d9d9d9",
-  skin_light_sidebar_border: "#d1d5db",
-  skin_light_gradient_start: "#e0e7ff",
-  skin_light_gradient_end: "#f5f5f5",
-  skin_dark_sidebar_bg: "#0d0d14",
-  skin_dark_sidebar_foreground: "#f5f5f5",
-  skin_dark_sidebar_accent: "#1e1e2a",
-  skin_dark_sidebar_border: "#1e1e2a",
-  skin_dark_gradient_start: "#313159",
-  skin_dark_gradient_end: "#232334",
-}
 
 function getResolvedTheme(theme) {
   if (theme === "system") {
@@ -77,22 +70,9 @@ export function ThemeProvider({
         }
       })
 
-      const allKeys = [...SKIN_KEYS_LIGHT, ...SKIN_KEYS_DARK]
-
-      const skinData = {}
-      allKeys.forEach((key) => {
-        skinData[key] = skinSettings[key] || DEFAULT_SKIN_VALUES[key] || ""
-      })
-      applySkinSettings(skinData)
+      applySkinSettings(skinSettings)
     } catch (error) {
       console.error("Failed to load skin settings:", error)
-      const resolvedTheme = getResolvedTheme(theme)
-      const skinKeys = resolvedTheme === "dark" ? SKIN_KEYS_DARK : SKIN_KEYS_LIGHT
-      const fallbackData = {}
-      skinKeys.forEach((key) => {
-        fallbackData[key] = DEFAULT_SKIN_VALUES[key] || ""
-      })
-      applySkinSettings(fallbackData)
     } finally {
       setSkinLoaded(true)
     }
@@ -131,14 +111,12 @@ export function ThemeProvider({
     const resolvedTheme = getResolvedTheme(theme)
     const skinKeys = resolvedTheme === "dark" ? SKIN_KEYS_DARK : SKIN_KEYS_LIGHT
 
-    const skinData = {}
+    const root = document.documentElement
     skinKeys.forEach((key) => {
-      const currentValue = document.documentElement.style.getPropertyValue(
-        "--" + key.replace(/_/g, "-")
-      )
-      skinData[key] = currentValue || DEFAULT_SKIN_VALUES[key] || ""
+      const cssVarName = "--" + key.replace(/_/g, "-")
+      const currentValue = root.style.getPropertyValue(cssVarName)
+      if (currentValue) root.style.setProperty(cssVarName, currentValue)
     })
-    applySkinSettings(skinData)
   }, [theme, skinLoaded])
 
   const value = {
