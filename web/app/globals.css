@@ -366,3 +366,32 @@ button.catalog-size-chip,
   border-radius: 2px !important;
   overflow: hidden;
 }
+
+/* Rich text tables coming from product description / pages */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.9em;
+}
+.prose table th,
+.prose table td {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 6px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+.prose table th {
+  background: #f7f4f1;
+  font-weight: 600;
+}
+.prose table p {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

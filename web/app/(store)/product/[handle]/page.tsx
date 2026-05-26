@@ -68,8 +68,11 @@ export default async function ProductPage(props: {
     "@type": "Product",
     name: product.title,
     description: product.description,
-    image: product.featuredImage.url,
   };
+
+  if (product.featuredImage?.url) {
+    productJsonLd.image = product.featuredImage.url;
+  }
 
   if (isAuthenticated) {
     productJsonLd.offers = {

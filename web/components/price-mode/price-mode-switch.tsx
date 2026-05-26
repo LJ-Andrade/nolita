@@ -8,7 +8,7 @@ export default function PriceModeSwitch() {
   const isWholesale = priceMode === "wholesale";
 
   return (
-    <div className="flex items-center border border-gray-200 p-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]">
+    <div className="flex items-center border border-gray-200 p-0.5 text-[14px] font-semibold uppercase tracking-[0.18em]">
       <button
         type="button"
         onClick={() => setPriceMode("retail")}

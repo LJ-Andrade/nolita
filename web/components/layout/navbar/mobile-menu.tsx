@@ -3,7 +3,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import {
   ArrowLeftOnRectangleIcon,
-  ArrowRightOnRectangleIcon,
   Bars3Icon,
   HeartIcon,
   Squares2X2Icon,
@@ -97,13 +96,13 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
                     </ul>
                   </nav>
 
+                  {customer && (
                   <nav aria-label="Account navigation">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                       Cuenta
                     </p>
 
-                    {customer ? (
-                      <div className="space-y-4">
+                    <div className="space-y-4">
                         <div className="rounded-[12px] border border-neutral-100 bg-neutral-50 px-4 py-3">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                             Sesión iniciada
@@ -145,17 +144,8 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
                           </li>
                         </ul>
                       </div>
-                    ) : (
-                      <Link
-                        href="/ingreso"
-                        onClick={closeMobileMenu}
-                        className="flex items-center gap-3 border-y border-neutral-100 py-4 text-lg font-medium text-black transition-colors hover:text-neutral-500"
-                      >
-                        <ArrowRightOnRectangleIcon className="h-5 w-5 text-neutral-500" />
-                        Ingresar
-                      </Link>
-                    )}
                   </nav>
+                    )}
                 </div>
               </div>
             </Dialog.Panel>

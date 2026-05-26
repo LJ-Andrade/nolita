@@ -236,17 +236,17 @@ export function EditorialFilterControls({
         style={{ borderColor: "var(--pb-border)" }}
         aria-label="Categorías del catálogo"
       >
-        <div className="no-scrollbar mx-auto flex w-full max-w-screen-2xl items-center justify-start overflow-x-auto px-4 py-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:justify-center lg:px-8">
-          <div className="flex min-w-max items-center gap-8">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 py-5 lg:px-8">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {showAllCategoryNav && (
-              <CategoryNavButton
+              <CategoryPill
                 active={!activeCategory}
                 label="Todos"
                 onClick={() => setCategory("")}
               />
             )}
             {categories.map((category) => (
-              <CategoryNavButton
+              <CategoryPill
                 key={category.handle}
                 active={activeCategory === category.handle}
                 label={category.title}
@@ -277,7 +277,7 @@ export function EditorialFilterControls({
           {openPanel === "category" && (
             <div
               className={clsx(
-                "catalog-filter-menu absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] overflow-hidden bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[10rem]",
+                "catalog-filter-menu absolute left-0 w-[232px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-180px)] overflow-y-auto bg-white py-2 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:right-[10rem]",
                 "bottom-[4.5rem]",
               )}
             >
@@ -391,7 +391,7 @@ export function EditorialFilterControls({
   );
 }
 
-function CategoryNavButton({
+function CategoryPill({
   active,
   label,
   onClick,
@@ -405,11 +405,12 @@ function CategoryNavButton({
       type="button"
       onClick={onClick}
       className={clsx(
-        "border-b pb-3 text-xs uppercase tracking-[0.3em] outline-none transition-colors",
+        "border px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] outline-none transition-colors",
         active
-          ? "border-[var(--pb-filter-accent)] text-[var(--pb-filter-accent)]"
-          : "border-transparent text-black/45 hover:text-black",
+          ? "border-[var(--pb-filter-accent)] bg-[var(--pb-filter-accent)] text-white"
+          : "border-black/15 bg-white text-black/60 hover:border-black hover:text-black",
       )}
+      style={{ borderRadius: 2 }}
     >
       {label}
     </button>

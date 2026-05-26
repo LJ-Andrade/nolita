@@ -102,17 +102,18 @@ All CRUD modules must follow a consistent layout to ensure uniform user experien
 ### ⚠️ IMPORTANT: Title in Both Places
 
 **The title MUST appear in BOTH locations:**
+
 1. **PageHeader** - For breadcrumbs context
 2. **CardHeader > CardTitle** - For visual clarity in the form card
 
 Both should show the EXACT same text:
+
 - Create mode: `"Crear [Módulo]"` (e.g., "Crear Etiqueta")
 - Edit mode: `"Editando [módulo] \"[nombre]\""` (e.g., "Editando etiqueta \"Electrónica\"")
 
-
 ### Key Requirements
 
-- **PageHeader**: 
+- **PageHeader**:
   - Create: Use translated title (e.g., `t('module.create_title')`)
   - Edit: Dynamic title with entity name: `"Editing [module] \"${name}\""`
   - Breadcrumbs: `[Parent] > [Module List] > [Create/Edit]`
@@ -121,11 +122,9 @@ Both should show the EXACT same text:
   - Use `max-w-2xl` class to limit width for single-column forms
   - **CardHeader MUST contain CardTitle** (same text as PageHeader title)
   - This provides visual consistency and clarity for the user
-  
 - **Form Layout**:
   - Fields organized logically in sections if needed
   - Use grid for side-by-side fields: `grid grid-cols-1 md:grid-cols-2 gap-4`
-  
 - **Action Buttons**:
   - Located at the **bottom** of the form
   - Aligned to the **RIGHT**
@@ -135,39 +134,45 @@ Both should show the EXACT same text:
 ### Example: Tag Form (Edit)
 
 ```jsx
-{id ? (
-  <PageHeader
-    title={`Editando etiqueta "${tagName}"`}
-    breadcrumbs={[
-      { label: "Productos", href: "/products" },
-      { label: "Etiquetas", href: "/product-tags" },
-      { label: "Editar" },
-    ]}
-  />
-) : (
-  <PageHeader
-    title="Crear Etiqueta"
-    breadcrumbs={[
-      { label: "Productos", href: "/products" },
-      { label: "Etiquetas", href: "/product-tags" },
-      { label: "Crear" },
-    ]}
-  />
-)}
+{
+  id ? (
+    <PageHeader
+      title={`Editando etiqueta "${tagName}"`}
+      breadcrumbs={[
+        { label: "Productos", href: "/products" },
+        { label: "Etiquetas", href: "/product-tags" },
+        { label: "Editar" },
+      ]}
+    />
+  ) : (
+    <PageHeader
+      title="Crear Etiqueta"
+      breadcrumbs={[
+        { label: "Productos", href: "/products" },
+        { label: "Etiquetas", href: "/product-tags" },
+        { label: "Crear" },
+      ]}
+    />
+  );
+}
 
 <Card className="max-w-2xl">
   <CardHeader>
     <CardTitle>
       {id
-        ? `${t('product_tags.editing') || 'Editando etiqueta'} "${entityName}"`
-        : t('product_tags.create_title')}
+        ? `${t("product_tags.editing") || "Editando etiqueta"} "${entityName}"`
+        : t("product_tags.create_title")}
     </CardTitle>
   </CardHeader>
   <CardContent className="space-y-4">
     {/* Form fields */}
-    
+
     <div className="flex gap-2 justify-end">
-      <Button type="button" variant="outline" onClick={() => navigate("/product-tags")}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => navigate("/product-tags")}
+      >
         <X className="mr-2 h-4 w-4" />
         Cancelar
       </Button>
@@ -178,7 +183,8 @@ Both should show the EXACT same text:
       </Button>
     </div>
   </CardContent>
-</Card>
+</Card>;
+```
 
 ---
 
@@ -187,20 +193,22 @@ Both should show the EXACT same text:
 ### Structure
 
 ```
+
 ┌─────────────────────────────────────────────────┐
-│ PageHeader                                      │
-│ ├── Title: "Configuration Name"                │
-│ └── Breadcrumbs: [Parent] > [Current]          │
+│ PageHeader │
+│ ├── Title: "Configuration Name" │
+│ └── Breadcrumbs: [Parent] > [Current] │
 └─────────────────────────────────────────────────┘
 ┌─────────────────────────────────────────────────┐
-│ Container (max-w-4xl, LEFT aligned)             │
-│ └── Card                                        │
-│     ├── CardHeader                              │
-│     │   ├── CardTitle                           │
-│     │   └── CardDescription                     │
-│     └── CardContent                             │
-│         └── Settings / Toggles / Form           │
+│ Container (max-w-4xl, LEFT aligned) │
+│ └── Card │
+│ ├── CardHeader │
+│ │ ├── CardTitle │
+│ │ └── CardDescription │
+│ └── CardContent │
+│ └── Settings / Toggles / Form │
 └─────────────────────────────────────────────────┘
+
 ```
 
 ### Key Requirements
@@ -217,8 +225,8 @@ Both should show the EXACT same text:
   <PageHeader
     title="Preferencias de Notificaciones"
     breadcrumbs={[
-      { label: 'PERFIL' },
-      { label: 'Preferencias de Notificaciones' },
+      { label: "PERFIL" },
+      { label: "Preferencias de Notificaciones" },
     ]}
   />
   <Card>
@@ -226,9 +234,7 @@ Both should show the EXACT same text:
       <CardTitle>Preferencias de Notificaciones</CardTitle>
       <CardDescription>Configura tus alertas.</CardDescription>
     </CardHeader>
-    <CardContent>
-       {/* Content */}
-    </CardContent>
+    <CardContent>{/* Content */}</CardContent>
   </Card>
 </div>
 ```
@@ -245,6 +251,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Table
+import { AdminTableShell } from "@/components/admin-table-shell";
 import {
   Table,
   TableBody,
@@ -255,7 +262,14 @@ import {
 } from "@/components/ui/table";
 
 // Form
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -280,11 +294,47 @@ import { toast } from "sonner";
 - **Destructive Actions** (Delete): `variant="ghost"` with `className="text-red-500"`
 - **Icon Usage**: All action buttons should have icons (from lucide-react)
 
+### Table Shell
+
+CRUD list tables must use the shared table frame so every list has the same radius, background, and horizontal scrolling behavior.
+
+Required behavior:
+
+- Standard list modules should render data through `CrudTable`; it already includes `AdminTableShell`.
+- Custom list tables, such as Products, must wrap the top-level `<Table>` with `AdminTableShell`.
+- Nested detail tables may use a local frame only when they are visually subordinate to a row expansion or form section.
+- Row striping is controlled globally by `TableBody`; do not add per-screen stripe classes unless the table has a special state.
+- Tables should not render visible borders or row dividers; the header cells carry the darker header background.
+- Table shell and stripe colors must be changed in `admin/frontend/src/skins.css`, not inside individual list views.
+
+Editable skin variables:
+
+- `--admin-table-bg`
+- `--admin-table-border-color`
+- `--admin-table-border-width`
+- `--admin-table-radius`
+- `--admin-table-header-bg`
+- `--admin-table-row-bg`
+- `--admin-table-row-stripe-bg`
+- `--admin-table-row-hover-bg`
+
+Example for custom tables:
+
+```jsx
+<AdminTableShell>
+  <Table>
+    <TableHeader>{/* headings */}</TableHeader>
+    <TableBody>{/* rows */}</TableBody>
+  </Table>
+</AdminTableShell>
+```
+
 ### Inline Order Editing
 
 CRUD list tables that expose an `order` field must use `CrudInlineOrderEditor` from `admin/frontend/src/components/crud-inline-order-editor.jsx`.
 
 Required behavior:
+
 - Display the current order as compact clickable text.
 - Enter edit mode only after the user clicks the order value.
 - Do not send API requests while typing.
@@ -309,8 +359,17 @@ Example:
 
 - Use `react-hook-form` with `zodResolver` for validation
 - Use `zod` schemas for form validation
+- Input, textarea, and select colors must come from `admin/frontend/src/skins.css` variables.
 - Handle errors with toast notifications
 - Show loading states on submit buttons
+
+Editable form control skin variables:
+
+- `--admin-input-bg`
+- `--admin-input-text`
+- `--admin-input-placeholder`
+- `--admin-input-border-color`
+- `--admin-input-focus-border-color`
 
 ---
 
@@ -319,11 +378,13 @@ Example:
 ### Format by Module Type
 
 **Child of Products:**
+
 - List: `Productos > [Module]`
 - Create: `Productos > [Module] > Crear`
 - Edit: `Productos > [Module] > Editar`
 
 **Standalone Modules:**
+
 - List: `[Module]`
 - Create: `[Module] > Crear`
 - Edit: `[Module] > Editar`
@@ -339,12 +400,15 @@ Example:
 ## 5. Title Standards
 
 ### List View
+
 - Simple plural: `"Etiquetas"`, `"Productos"`, `"Categorías"`
 
 ### Create View
+
 - Use translation key: `t('module.create_title')` → `"Crear Etiqueta"`
 
 ### Edit View
+
 - Dynamic with entity name: `"Editing [module] \"${name}\""`
 - Examples:
   - `"Editando etiqueta \"Electrónica\""`
@@ -367,7 +431,13 @@ const [sortBy, setSortBy] = useState("id");
 const [sortDir, setSortDir] = useState("desc");
 
 // Selection
-const { selectedIds, isAllSelected, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelect(items);
+const {
+  selectedIds,
+  isAllSelected,
+  toggleSelect,
+  toggleSelectAll,
+  clearSelection,
+} = useBulkSelect(items);
 ```
 
 ### Form View State
@@ -456,11 +526,13 @@ views/
 Before submitting a new CRUD module, verify:
 
 ### List View
+
 - [ ] PageHeader with correct breadcrumbs
 - [ ] CardHeader with action button(s) aligned LEFT
 - [ ] Empty CardHeader (no title)
 - [ ] Collapsible filters section
 - [ ] Data table with sortable columns
+- [ ] Data table uses `CrudTable` or wraps the top-level custom `<Table>` in `AdminTableShell`
 - [ ] Order fields use `CrudInlineOrderEditor` when inline ordering is available
 - [ ] Bulk selection checkboxes
 - [ ] BulkActionsBar implementation
@@ -468,6 +540,7 @@ Before submitting a new CRUD module, verify:
 - [ ] Responsive design
 
 ### Form View
+
 - [ ] PageHeader with dynamic title (shows name in edit mode)
 - [ ] Breadcrumbs: Parent > Module > Action
 - [ ] Card with `max-w-2xl` class
@@ -480,6 +553,7 @@ Before submitting a new CRUD module, verify:
 - [ ] Success/error toast notifications
 
 ### Code Quality
+
 - [ ] All imports present
 - [ ] Translation keys in es.json and en.json
 - [ ] Permission checks with `<Can>` component
@@ -502,20 +576,29 @@ Use these as templates when creating new modules.
 
 ## Last Updated
 
-Date: 2026-05-11
-Version: 1.2
+Date: 2026-05-21
+Version: 1.3
 Author: Development Team
 
+### Changes in v1.3:
+
+- Added `AdminTableShell` as the standard visual frame for CRUD list tables.
+- Documented editable table shell and stripe variables in `admin/frontend/src/skins.css`.
+- Clarified that custom list tables must use the shared shell while nested detail tables may keep local framing.
+
 ### Changes in v1.2:
+
 - Added `CrudInlineOrderEditor` as the standard component for editable order fields in CRUD lists.
 - Documented explicit save behavior for order edits.
 
 ### Changes in v1.1:
+
 - Added explicit requirement for CardTitle in form views (must match PageHeader title)
 - Updated all examples to show CardTitle usage
 - Updated checklist to require CardHeader with CardTitle
 
 ### Changes in v1.0:
+
 - Initial CRUD standards documentation
 - Defined List View and Form View patterns
 - Created useCrudList and useCrudForm hooks

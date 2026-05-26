@@ -392,7 +392,7 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
         <LoadingDots className="bg-white" />
       ) : (
         <>
-          Iniciar Pago
+          Continuar
           <ArrowRightIcon className="h-4 w-4" />
         </>
       )}

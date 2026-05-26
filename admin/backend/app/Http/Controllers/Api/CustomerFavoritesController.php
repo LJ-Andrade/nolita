@@ -64,8 +64,8 @@ class CustomerFavoritesController extends Controller
             ];
         })->filter()->values()->toArray();
 
-        $coverMedia = $product->getFirstMedia('cover');
-        $gallery = $product->getMedia('gallery');
+        $gallery = $product->getMedia('gallery')->sortBy('order_column')->values();
+        $featuredImage = $gallery->first() ?? $product->getFirstMedia('cover');
 
         $colors = $product->variants->pluck('color')->filter()->unique('id');
         $sizes = $product->variants->pluck('size')->filter()->unique('id');
@@ -125,11 +125,11 @@ class CustomerFavoritesController extends Controller
                 'width' => $m->getCustomProperty('width') ?? 800,
                 'height' => $m->getCustomProperty('height') ?? 800,
             ])->values()->toArray(),
-            'featuredImage' => $coverMedia ? [
-                'url' => $coverMedia->getFullUrl(),
+            'featuredImage' => $featuredImage ? [
+                'url' => $featuredImage->getFullUrl(),
                 'altText' => $product->name,
-                'width' => $coverMedia->getCustomProperty('width') ?? 800,
-                'height' => $coverMedia->getCustomProperty('height') ?? 800,
+                'width' => $featuredImage->getCustomProperty('width') ?? 800,
+                'height' => $featuredImage->getCustomProperty('height') ?? 800,
             ] : null,
             'seo' => [
                 'title' => $product->name,

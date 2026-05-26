@@ -95,7 +95,7 @@ export default function ProductSizesList() {
 	};
 
 	const renderActions = (size, isDropdown = false) => (
-		<Can permission="manage product sizes">
+		<Can permission="manage products">
 			{isDropdown ? (
 				<>
 					<DropdownMenuItem onClick={() => navigate(`/productos-talles/editar/${size.id}`)}>
@@ -140,7 +140,7 @@ export default function ProductSizesList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="manage product sizes">
+					<Can permission="manage products">
 						<Button asChild>
 							<Link to="/productos-talles/crear">
 								<Plus className="mr-2 h-4 w-4" /> {"Crear Talla"}

@@ -100,6 +100,7 @@ export function ImageGallery({
 	onRemoveExisting,
 	aspect = 5 / 7,
 	outputSize = { width: 500, height: 700 },
+	gridClassName = "grid-cols-2 sm:grid-cols-3",
 }) {
 	const [isUploading, setIsUploading] = useState(false);
 	const [pendingFiles, setPendingFiles] = useState([]);
@@ -212,7 +213,7 @@ export function ImageGallery({
 		<div className="space-y-3">
 			<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
 				<SortableContext items={value.map((img) => img.id)} strategy={horizontalListSortingStrategy}>
-					<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+					<div className={`grid gap-3 ${gridClassName}`}>
 						{value.map((image) => (
 							<SortableImage key={image.id} image={image} onRemove={handleRemove} />
 						))}

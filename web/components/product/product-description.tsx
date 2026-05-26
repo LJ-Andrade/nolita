@@ -37,6 +37,17 @@ export function ProductDescription({
         />
       </div>
 
+      {product.fabric ? (
+        <div className="mb-5 -mt-2">
+          <dl>
+            <dt className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-black">
+              Tela
+            </dt>
+            <dd className="text-sm text-neutral-700">{product.fabric}</dd>
+          </dl>
+        </div>
+      ) : null}
+
       <div className="border-t border-neutral-200 pt-8">
         <AddToCart product={product} />
       </div>

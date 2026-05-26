@@ -20,18 +20,15 @@ final class OrderDocumentData
 
         $shippingAddress = self::arrayValue($order->shipping_address);
         $billingAddress = self::arrayValue($order->billing_address);
+        $customerData = self::arrayValue($order->customer_data);
         $customer = $order->customer;
 
         $items = $order->items->map(function ($item): array {
-            $variant = collect([
-                $item->variant?->color?->name,
-                $item->variant?->size?->name,
-            ])->filter()->implode(' / ');
-
             return [
                 'product_name' => $item->product_name,
                 'product_id' => $item->product_id,
-                'variant' => $variant,
+                'color' => $item->variant?->color?->name,
+                'size' => $item->variant?->size?->name,
                 'sku' => $item->variant?->sku,
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
@@ -49,6 +46,8 @@ final class OrderDocumentData
                 'id' => $order->id,
                 'status' => $order->status,
                 'status_label' => Translator::orderStatus($order->status),
+                'price_mode' => $order->price_mode,
+                'order_type_label' => self::orderTypeLabel($order->price_mode),
                 'created_at' => $order->created_at,
                 'updated_at' => $order->updated_at,
                 'payment_method' => $billingAddress['payment_method_name'] ?? $order->payment_method,
@@ -60,14 +59,16 @@ final class OrderDocumentData
             ],
             'customer' => [
                 'id' => $customer?->id,
-                'name' => $customer?->name ?? $shippingAddress['name'] ?? null,
+                'name' => $customer?->name ?? $customerData['name'] ?? $shippingAddress['name'] ?? null,
                 'dni' => $customer?->dni,
-                'email' => $customer?->email ?? $shippingAddress['email'] ?? null,
-                'phone' => $customer?->phone ?? $shippingAddress['phone'] ?? null,
-                'address' => $customer?->address ?? $shippingAddress['address'] ?? null,
-                'postal_code' => $customer?->postal_code ?? $shippingAddress['postal_code'] ?? null,
-                'province' => $customer?->province?->name ?? $shippingAddress['province'] ?? null,
-                'locality' => $customer?->locality?->name ?? $shippingAddress['locality'] ?? $shippingAddress['city'] ?? null,
+                'cuit' => $customerData['cuit'] ?? $shippingAddress['cuit'] ?? $billingAddress['cuit'] ?? null,
+                'dni_or_cuit' => $customerData['cuit'] ?? $shippingAddress['cuit'] ?? $billingAddress['cuit'] ?? $customer?->dni,
+                'email' => $customer?->email ?? $customerData['email'] ?? $shippingAddress['email'] ?? null,
+                'phone' => $customer?->phone ?? $customerData['phone'] ?? $shippingAddress['phone'] ?? null,
+                'address' => $customer?->address ?? $customerData['address'] ?? $shippingAddress['address'] ?? null,
+                'postal_code' => $customer?->postal_code ?? $customerData['postal_code'] ?? $shippingAddress['postal_code'] ?? null,
+                'province' => $customer?->province?->name ?? $customerData['province'] ?? $shippingAddress['province'] ?? null,
+                'locality' => $customer?->locality?->name ?? $customerData['locality'] ?? $customerData['city'] ?? $shippingAddress['locality'] ?? $shippingAddress['city'] ?? null,
             ],
             'shipping' => [
                 'name' => $shippingAddress['name'] ?? null,
@@ -104,5 +105,10 @@ final class OrderDocumentData
     private static function arrayValue(mixed $value): array
     {
         return is_array($value) ? $value : [];
+    }
+
+    private static function orderTypeLabel(?string $priceMode): string
+    {
+        return $priceMode === 'wholesale' ? 'Mayorista' : 'Minorista';
     }
 }

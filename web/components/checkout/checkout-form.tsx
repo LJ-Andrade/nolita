@@ -284,17 +284,6 @@ export default function CheckoutForm({
             />
           </Field>
 
-          <Field id="phone" label="Teléfono">
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              required
-              className={fieldClassName}
-              defaultValue={initialData?.phone || ""}
-            />
-          </Field>
-
           <Field id="whatsapp" label="WhatsApp">
             <input
               id="whatsapp"

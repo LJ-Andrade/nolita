@@ -139,8 +139,8 @@
     <table class="summary-grid">
         <tr>
             <td>
-                <span class="summary-label">{{ $label('status') }}</span>
-                <span class="summary-value">{{ $plain($order['status_label']) }}</span>
+                <span class="summary-label">{{ $label('order_type') }}</span>
+                <span class="summary-value">{{ $plain($order['order_type_label']) }}</span>
             </td>
             <td>
                 <span class="summary-label">{{ $label('created_at') }}</span>
@@ -173,13 +173,13 @@
             <tr>
                 <th>{{ $label('customer_id') }}</th>
                 <th>{{ $label('name') }}</th>
-                <th>{{ $label('dni') }}</th>
+                <th>{{ $label('dni_cuit') }}</th>
                 <th>{{ $label('email') }}</th>
             </tr>
             <tr>
                 <td>{{ $plain($customer['id']) }}</td>
                 <td>{{ $plain($customer['name']) }}</td>
-                <td>{{ $plain($customer['dni']) }}</td>
+                <td>{{ $plain($customer['dni_or_cuit']) }}</td>
                 <td>{{ $plain($customer['email']) }}</td>
             </tr>
             <tr>
@@ -198,45 +198,13 @@
     </div>
 
     <div class="section">
-        <div class="section-title">{{ $label('shipping_and_billing') }}</div>
-        <table>
-            <tr>
-                <th>{{ $label('shipping_name') }}</th>
-                <th>{{ $label('shipping_contact') }}</th>
-                <th>{{ $label('shipping_address') }}</th>
-                <th>{{ $label('billing_contact') }}</th>
-            </tr>
-            <tr>
-                <td>{{ $plain($shipping['name']) }}</td>
-                <td>
-                    {{ $plain($shipping['email']) }}<br>
-                    <span class="muted">{{ $plain($shipping['phone']) }}</span>
-                </td>
-                <td>
-                    {{ $plain($shipping['address']) }}<br>
-                    <span class="muted">
-                        {{ $plain($shipping['locality']) }},
-                        {{ $plain($shipping['province']) }}
-                        {{ $plain($shipping['postal_code']) }}
-                    </span>
-                </td>
-                <td>
-                    {{ $plain($billing['name']) }}<br>
-                    <span class="muted">{{ $plain($billing['email']) }}</span><br>
-                    <span class="muted">{{ $plain($billing['phone']) }}</span>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
         <div class="section-title">{{ $label('items') }}</div>
         <table>
             <thead>
                 <tr>
                     <th>{{ $label('product') }}</th>
-                    <th>{{ $label('variant') }}</th>
-                    <th>{{ $label('sku') }}</th>
+                    <th>{{ $label('color') }}</th>
+                    <th>{{ $label('size') }}</th>
                     <th class="numeric">{{ $label('quantity') }}</th>
                     <th class="numeric">{{ $label('unit_price') }}</th>
                     <th class="numeric">{{ $label('subtotal') }}</th>
@@ -249,8 +217,8 @@
                             {{ $plain($item['product_name']) }}<br>
                             <span class="muted">{{ $label('product') }} #{{ $plain($item['product_id']) }}</span>
                         </td>
-                        <td>{{ $plain($item['variant']) }}</td>
-                        <td>{{ $plain($item['sku']) }}</td>
+                        <td>{{ $plain($item['color']) }}</td>
+                        <td>{{ $plain($item['size']) }}</td>
                         <td class="numeric">{{ $item['quantity'] }}</td>
                         <td class="numeric">{{ $money($item['unit_price']) }}</td>
                         <td class="numeric">{{ $money($item['subtotal']) }}</td>

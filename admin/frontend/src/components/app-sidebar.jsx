@@ -85,19 +85,19 @@ const items = [
 				title: "Categorías",
 				url: "/productos-categorias",
 				icon: Layers,
-				permission: "users.view",
+				permission: "view products",
 			},
 			{
 				title: "Colores",
 				url: "/productos-colores",
 				icon: Palette,
-				permission: "users.view",
+				permission: "view products",
 			},
 			{
 				title: "Talles",
 				url: "/productos-talles",
 				icon: Ruler,
-				permission: "users.view",
+				permission: "view products",
 			},
 			{
 				title: "Cupones",

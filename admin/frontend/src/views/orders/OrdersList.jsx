@@ -5,7 +5,6 @@ import {
 	Search,
 	Trash2,
 	Eye,
-	ShoppingBag,
 	Clock,
 	CheckCircle,
 	XCircle,
@@ -13,7 +12,9 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronDown,
-	FileDown
+	FileDown,
+	ReceiptText,
+	Check
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -38,6 +39,10 @@ import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useBulkSelect } from '@/hooks/use-bulk-select';
 import { PageHeader } from "@/components/page-header";
+import { cn } from "@/lib/utils";
+import ManualOrderForm from './ManualOrderForm';
+
+const showPaymentStatus = false;
 
 const orderStatuses = [
 	{ value: 'pending', label: 'Pendiente' },
@@ -52,17 +57,39 @@ const paymentStatuses = [
 	{ value: 'paid', label: 'Pagado' },
 ];
 
+const priceModeFilters = [
+	{ value: 'wholesale', label: 'Mayorista' },
+	{ value: 'retail', label: 'Minorista' },
+];
+
+const statusFilterStyles = {
+	pending: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-700 hover:bg-yellow-500/15 dark:text-yellow-400',
+	processing: 'border-blue-500/30 bg-blue-500/10 text-blue-700 hover:bg-blue-500/15 dark:text-blue-400',
+	completed: 'border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:text-green-400',
+	cancelled: 'border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/15 dark:text-red-400',
+};
+
+const ActiveFilterCheck = () => (
+	<span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white">
+		<Check className="h-3 w-3" />
+	</span>
+);
+
 export default function OrdersList() {
 	const [orders, setOrders] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [search, setSearch] = useState('');
 	const [debouncedSearch, setDebouncedSearch] = useState('');
+	const [activePriceMode, setActivePriceMode] = useState('');
+	const [activeStatus, setActiveStatus] = useState('');
 	const [meta, setMeta] = useState({});
 	const [page, setPage] = useState(1);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [exportingFormat, setExportingFormat] = useState(null);
+	const [exportingOrderPdfId, setExportingOrderPdfId] = useState(null);
 	const [updatingStatusId, setUpdatingStatusId] = useState(null);
 	const [updatingPaymentStatusId, setUpdatingPaymentStatusId] = useState(null);
+	const [showManualOrderForm, setShowManualOrderForm] = useState(false);
 
 	const {
 		selectedIds,
@@ -83,15 +110,15 @@ export default function OrdersList() {
 
 	useEffect(() => {
 		setPage(1);
-	}, [debouncedSearch]);
+	}, [debouncedSearch, activePriceMode, activeStatus]);
 
 	useEffect(() => {
 		fetchOrders();
-	}, [page, debouncedSearch]);
+	}, [page, debouncedSearch, activePriceMode, activeStatus]);
 
 	useEffect(() => {
 		clearSelection();
-	}, [page, debouncedSearch]);
+	}, [page, debouncedSearch, activePriceMode, activeStatus]);
 
 	const fetchOrders = async () => {
 		setLoading(true);
@@ -100,6 +127,8 @@ export default function OrdersList() {
 				params: {
 					page,
 					search: debouncedSearch,
+					price_mode: activePriceMode || undefined,
+					status: activeStatus || undefined,
 					perPage: 10
 				}
 			});
@@ -153,6 +182,8 @@ export default function OrdersList() {
 				params: {
 					format,
 					search: debouncedSearch,
+					price_mode: activePriceMode || undefined,
+					status: activeStatus || undefined,
 				},
 				responseType: 'blob',
 			});
@@ -170,6 +201,30 @@ export default function OrdersList() {
 			toast.error('Error al exportar pedidos');
 		} finally {
 			setExportingFormat(null);
+		}
+	};
+
+	const handleOrderPdfExport = async (orderId) => {
+		setExportingOrderPdfId(orderId);
+		try {
+			const response = await axiosClient.get(`admin/orders/${orderId}/export`, {
+				params: { format: 'pdf' },
+				responseType: 'blob',
+			});
+
+			const blobUrl = URL.createObjectURL(response.data);
+			const link = document.createElement('a');
+			link.href = blobUrl;
+			link.download = `order-${orderId}.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			URL.revokeObjectURL(blobUrl);
+			toast.success('PDF del pedido generado');
+		} catch (error) {
+			toast.error('Error al exportar el pedido en PDF');
+		} finally {
+			setExportingOrderPdfId(null);
 		}
 	};
 
@@ -314,6 +369,14 @@ export default function OrdersList() {
 		);
 	};
 
+	const togglePriceModeFilter = (value) => {
+		setActivePriceMode((current) => current === value ? '' : value);
+	};
+
+	const toggleStatusFilter = (value) => {
+		setActiveStatus((current) => current === value ? '' : value);
+	};
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
@@ -347,13 +410,78 @@ export default function OrdersList() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>{"Gestionar Pedidos"}</CardTitle>
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						{/* <Button
+							type="button"
+							onClick={() => setShowManualOrderForm((current) => !current)}
+							aria-expanded={showManualOrderForm}
+						>
+							Cargar pedido
+						</Button> */}
+						{showManualOrderForm && (
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setShowManualOrderForm(false)}
+							>
+								Cerrar carga
+							</Button>
+						)}
+					</div>
 				</CardHeader>
 
 
 				<CardContent className="space-y-4">
-					<div className="flex items-center gap-2 max-w-sm">
-						<div className="relative w-full">
+					{showManualOrderForm && (
+						<ManualOrderForm
+							onCreated={() => {
+								fetchOrders();
+								setShowManualOrderForm(false);
+							}}
+						/>
+					)}
+
+					<div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+						<div className="space-y-3">
+							<div className="grid grid-cols-4 gap-2">
+							{priceModeFilters.map((filter) => (
+								<Button
+									key={filter.value}
+									type="button"
+									variant={activePriceMode === filter.value ? 'default' : 'outline'}
+									size="sm"
+									onClick={() => togglePriceModeFilter(filter.value)}
+									aria-pressed={activePriceMode === filter.value}
+									className="col-span-2 w-full justify-center"
+								>
+									{activePriceMode === filter.value && <ActiveFilterCheck />}
+									{filter.label}
+								</Button>
+							))}
+							</div>
+							<div className="grid grid-cols-4 gap-2">
+							{orderStatuses.map((status) => (
+								<Button
+									key={status.value}
+									type="button"
+									variant="outline"
+									size="sm"
+									onClick={() => toggleStatusFilter(status.value)}
+									aria-pressed={activeStatus === status.value}
+									className={cn(
+										'w-full justify-center',
+										statusFilterStyles[status.value],
+										activeStatus === status.value && 'ring-2 ring-offset-2 ring-current'
+									)}
+								>
+									{activeStatus === status.value && <ActiveFilterCheck />}
+									{status.label}
+								</Button>
+							))}
+							</div>
+						</div>
+						<div className="flex w-full items-center gap-2 lg:max-w-sm lg:justify-end">
+							<div className="relative w-full">
 							<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 							<Input
 								placeholder="Buscar orden o cliente..."
@@ -361,6 +489,7 @@ export default function OrdersList() {
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
 							/>
+							</div>
 						</div>
 					</div>
 
@@ -374,7 +503,7 @@ export default function OrdersList() {
 								<TableHead>Cliente</TableHead>
 								<TableHead>Fecha</TableHead>
 								<TableHead>Estado</TableHead>
-								<TableHead>Pago</TableHead>
+								{showPaymentStatus && <TableHead>Pago</TableHead>}
 								<TableHead className="text-right">Total</TableHead>
 								<TableHead className="text-right w-[150px]">Acciones</TableHead>
 							</TableRow>
@@ -382,12 +511,12 @@ export default function OrdersList() {
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
 							{loading && orders.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={8} className="text-center">Cargando...</TableCell>
+									<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center">Cargando...</TableCell>
 								</TableRow>
 							)}
 							{!loading && orders.length === 0 && (
 								<TableRow>
-									<TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+									<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center py-8 text-muted-foreground">
 										No se encontraron órdenes.
 									</TableCell>
 								</TableRow>
@@ -412,9 +541,9 @@ export default function OrdersList() {
 									<TableCell>
 										{renderStatusDropdown(order)}
 									</TableCell>
-									<TableCell>
+									{showPaymentStatus && <TableCell>
 										{renderPaymentStatusDropdown(order)}
-									</TableCell>
+									</TableCell>}
 									<TableCell className="text-right font-medium">
 										${parseFloat(order.total_amount).toFixed(2)} {order.currency}
 									</TableCell>
@@ -432,6 +561,13 @@ export default function OrdersList() {
 															<Eye className="mr-2 h-4 w-4" /> Ver Detalles
 														</Link>
 													</DropdownMenuItem>
+													<DropdownMenuItem
+														disabled={exportingOrderPdfId === order.id}
+														onClick={() => handleOrderPdfExport(order.id)}
+													>
+														<ReceiptText className="mr-2 h-4 w-4" />
+														{exportingOrderPdfId === order.id ? 'Exportando...' : 'Exportar PDF'}
+													</DropdownMenuItem>
 													<DropdownMenuItem onClick={() => handleDeleteClick(order)} className="text-red-500">
 														<Trash2 className="mr-2 h-4 w-4" /> Eliminar
 													</DropdownMenuItem>
@@ -442,6 +578,17 @@ export default function OrdersList() {
 													<Link to={`/pedidos/${order.id}`}>
 														<Eye className="h-4 w-4" />
 													</Link>
+												</Button>
+												<Button
+													type="button"
+													variant="ghost"
+													size="icon"
+													className="h-8 w-8"
+													onClick={() => handleOrderPdfExport(order.id)}
+													disabled={exportingOrderPdfId === order.id}
+													aria-label={`Exportar pedido #${order.id} en PDF`}
+												>
+													<ReceiptText className="h-4 w-4" />
 												</Button>
 												<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteClick(order)}>
 													<Trash2 className="h-4 w-4" />

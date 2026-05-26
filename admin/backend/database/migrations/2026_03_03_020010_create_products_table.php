@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('sale_price', 15, 2)->default(0);
             $table->decimal('wholesale_price', 15, 2)->nullable();
             $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('wholesale_discount', 10, 2)->default(0);
 
             // Stock
             $table->integer('stock')->default(0);

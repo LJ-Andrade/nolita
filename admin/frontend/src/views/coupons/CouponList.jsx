@@ -172,7 +172,7 @@ export default function CouponList() {
 	};
 
 	const renderActions = (coupon, isDropdown = false) => (
-		<Can permission="manage coupons">
+		<Can permission="users.view">
 			{isDropdown ? (
 				<>
 					<DropdownMenuItem onClick={() => navigate(`/cupones/editar/${coupon.id}`)}>
@@ -217,7 +217,7 @@ export default function CouponList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="manage coupons">
+					<Can permission="users.view">
 						<Button asChild>
 							<Link to="/cupones/crear">
 								<Plus className="mr-2 h-4 w-4" /> {"Crear Cupón"}

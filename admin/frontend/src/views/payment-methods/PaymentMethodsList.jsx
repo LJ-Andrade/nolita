@@ -114,7 +114,7 @@ export default function PaymentMethodsList() {
 	};
 
 	const renderActions = (method, isDropdown = false) => (
-		<Can permission="manage payment methods">
+		<Can permission="users.view">
 			{isDropdown ? (
 				<>
 					<DropdownMenuItem onClick={() => navigate(`/metodos-pago/editar/${method.id}`)}>
@@ -159,7 +159,7 @@ export default function PaymentMethodsList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="manage payment methods">
+					<Can permission="users.view">
 						<Button asChild>
 							<Link to="/metodos-pago/crear">
 								<Plus className="mr-2 h-4 w-4" /> {'Crear Método de Pago'}

@@ -51,6 +51,13 @@ function calculateItemCost(quantity: number, price: string): string {
   return (Number(price) * quantity).toString();
 }
 
+function calculateDiscountedPrice(price: string | null | undefined, discount: number | null | undefined): string {
+  const numericPrice = Number(price ?? 0);
+  const safeDiscount = Math.min(Math.max(Number(discount ?? 0), 0), 100);
+
+  return String(Math.round(numericPrice * (1 - safeDiscount / 100) * 100) / 100);
+}
+
 function updateCartItem(
   item: CartItem,
   updateType: UpdateType,
@@ -155,6 +162,8 @@ function createOrUpdateCartItem(
         salePrice: product.salePrice,
         retailPrice: product.priceRange.minVariantPrice.amount,
         wholesalePrice: product.wholesalePrice,
+        retailDiscount: product.retailDiscount ?? product.discount,
+        wholesaleDiscount: product.wholesaleDiscount,
         hideOnWholesale: product.hideOnWholesale,
       },
     },
@@ -322,14 +331,23 @@ export function CartProvider({
       const updatedLines = currentCart.lines
         .map((item) => {
           const product = item.merchandise.product as CartItem["merchandise"]["product"];
-          const unitAmount =
+          const discount =
+            priceMode === "wholesale"
+              ? product.wholesaleDiscount ?? 0
+              : product.retailDiscount ?? item.discount ?? 0;
+          const baseAmount =
             priceMode === "wholesale"
               ? product.wholesalePrice ?? "0"
-              : product.retailPrice ?? String(Number(item.cost.totalAmount.amount) / item.quantity);
+              : product.salePrice ?? product.retailPrice ?? String(Number(item.cost.totalAmount.amount) / item.quantity);
+          const unitAmount =
+            priceMode === "wholesale"
+              ? calculateDiscountedPrice(baseAmount, discount)
+              : product.retailPrice ?? calculateDiscountedPrice(baseAmount, discount);
           if (Number(unitAmount) <= 0) {
             return null;
           }
           const totalAmount = calculateItemCost(item.quantity, unitAmount);
+          const hasDiscount = Number(discount) > 0 && Number(unitAmount) < Number(baseAmount);
 
           return {
             ...item,
@@ -339,10 +357,15 @@ export function CartProvider({
                 ...item.cost.totalAmount,
                 amount: totalAmount,
               },
-              compareAtTotalAmount: priceMode === "retail" ? item.cost.compareAtTotalAmount : null,
+              compareAtTotalAmount: hasDiscount
+                ? {
+                    amount: calculateItemCost(item.quantity, baseAmount),
+                    currencyCode: item.cost.totalAmount.currencyCode,
+                  }
+                : null,
             },
-            discount: priceMode === "retail" ? item.discount : 0,
-            hasDiscount: priceMode === "retail" ? item.hasDiscount : false,
+            discount,
+            hasDiscount,
           };
         })
         .filter(Boolean) as CartItem[];

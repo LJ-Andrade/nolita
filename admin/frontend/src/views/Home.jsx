@@ -2,25 +2,77 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '@/lib/axios';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { User, Users, FileText, PlusCircle, Tag, Layers, Ruler, Palette, Ticket } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, PlusCircle, Ticket, User, Layers, Palette, Ruler } from "lucide-react";
+
+const orderStatusLabels = {
+	pending: 'Pendiente',
+	processing: 'Procesando',
+	completed: 'Completada',
+	cancelled: 'Cancelada',
+};
+
+const formatOrderTotal = (amount, currency) => {
+	const numericAmount = Number(amount || 0);
+	return `$${numericAmount.toFixed(2)} ${currency || ''}`.trim();
+};
+
+const formatOrderDate = (value) => {
+	if (!value) return '';
+
+	return new Date(value).toLocaleDateString('es-AR', {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+	});
+};
+
+const OrderListCard = ({ title, description, items, emptyMessage }) => (
+	<Card>
+		<CardHeader className="space-y-1">
+			<CardTitle className="text-base">{title}</CardTitle>
+			<p className="text-sm text-muted-foreground">{description}</p>
+		</CardHeader>
+		<CardContent>
+			{items.length === 0 ? (
+				<p className="text-sm text-muted-foreground">{emptyMessage}</p>
+			) : (
+				<div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
+					{items.map((order) => (
+						<Link
+							key={order.id}
+							to={`/pedidos/${order.id}`}
+							className="flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+						>
+							<div className="space-y-1">
+								<div className="flex items-center gap-2">
+									<span className="font-medium">#{order.id}</span>
+									<Badge variant="outline">{orderStatusLabels[order.status] || order.status}</Badge>
+								</div>
+								<p className="text-sm font-medium">{order.customer_name}</p>
+								{order.customer_email && (
+									<p className="text-sm text-muted-foreground">{order.customer_email}</p>
+								)}
+								<p className="text-xs text-muted-foreground">{formatOrderDate(order.created_at)}</p>
+							</div>
+							<div className="flex items-center gap-3 text-right">
+								<div>
+									<p className="font-medium">{formatOrderTotal(order.total_amount, order.currency)}</p>
+									<p className="text-xs text-muted-foreground">Ver pedido</p>
+								</div>
+								<ArrowRight className="mt-1 h-4 w-4 text-muted-foreground" />
+							</div>
+						</Link>
+					))}
+				</div>
+			)}
+		</CardContent>
+	</Card>
+);
+
 export default function Home() {
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(true);
-
-	const getStatLabel = (key) => {
-		const labels = {
-			'total_users': "Total Usuarios",
-			'total_posts': "Total Artículos",
-		};
-		return labels[key] || key;
-	};
-
-	const getIcon = (key) => {
-		const k = key.toLowerCase();
-		if (k.includes('users')) return <Users className="h-5 w-5 text-primary" />;
-		if (k.includes('posts')) return <FileText className="h-5 w-5 text-primary" />;
-		return <User className="h-5 w-5 text-primary" />;
-	};
 
 	useEffect(() => {
 		const fetchDashboard = async () => {
@@ -29,10 +81,7 @@ export default function Home() {
 				setData(data);
 			} catch (err) {
 				console.error("Dashboard fetch error:", err);
-				// If the error isn't handled by the global interceptor (e.g. 404 or other)
-				// ensure we stop loading and perhaps show an error state if needed.
 				if (err.response?.status === 403) {
-					// Forbidden - maybe user lost permissions
 					window.location.href = '/vadmin/login';
 				}
 			} finally {
@@ -52,88 +101,74 @@ export default function Home() {
 		</div>
 	);
 
+	const pendingOrders = data?.pending_orders || [];
 	return (
 		<div className="space-y-8 animate-in fade-in duration-700">
 			<div className="flex flex-col gap-2">
 				<h1 className="text-4xl font-extrabold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
 					{"Bienvenido de nuevo"}
 				</h1>
-				<p className="text-muted-foreground text-lg">{"Esto es lo que está pasando en tu sistema hoy."}</p>
+				<p className="text-lg text-muted-foreground">{"Hoy el foco está en pedidos por resolver."}</p>
 			</div>
-			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-				<Card className="premium-card group overflow-hidden relative">
-					<div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+			<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+				<Card>
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{"Usuario Activo"}</CardTitle>
+						<CardTitle className="text-sm font-medium">{"Usuario Activo"}</CardTitle>
 						<User className="h-5 w-5 text-primary" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold text-primary drop-shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_40%,transparent)]">
+						<div className="text-2xl font-bold">
 							{data?.user?.name}
 						</div>
-						<p className="text-sm text-muted-foreground/80 mt-1">{data?.user?.email}</p>
+						<p className="mt-1 text-sm text-muted-foreground">{data?.user?.email}</p>
 						{data?.user?.roles?.length > 0 && (
-							<p className="text-sm text-muted-foreground/60 mt-1">
-								{data.user.roles.map(r => r.name).join(', ')}
+							<p className="mt-1 text-sm text-muted-foreground">
+								{data.user.roles.map((role) => role.name).join(', ')}
 							</p>
 						)}
 					</CardContent>
 				</Card>
 
-				{data?.stats && Object.entries(data.stats).map(([key, value]) => (
-					<Card key={key} className="premium-card group overflow-hidden relative">
-						<div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-								{getStatLabel(key)}
-							</CardTitle>
-							{getIcon(key)}
-						</CardHeader>
-						<CardContent>
-							<div className="text-4xl font-black tracking-tighter drop-shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_30%,transparent)]">
-								{value}
-							</div>
-							<div className="h-1 w-12 bg-primary/40 rounded-full mt-4 group-hover:w-24 transition-all duration-500" />
-						</CardContent>
-					</Card>
-				))}
-			</div>
-
-			<Card className="premium-card group overflow-hidden relative border-primary/20 bg-primary/5">
-				<div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-transparent opacity-50 transition-opacity duration-500 pointer-events-none" />
+				<Card>
 				<CardHeader className="pb-2">
-					<CardTitle className="text-lg font-bold tracking-tight flex items-center gap-2 text-primary">
+					<CardTitle className="flex items-center gap-2 text-lg">
 						<PlusCircle className="h-5 w-5" />
 						Acciones Rápidas
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-						<Link to="/productos-etiquetas/crear" className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all group/item">
-							<Tag className="h-6 w-6 text-primary mb-2 group-hover/item:scale-110 transition-transform" />
-							<span className="text-sm font-medium text-center">{"Crear Etiqueta"}</span>
+					<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+						<Link to="/productos-categorias/crear" className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50">
+							<Layers className="h-4 w-4 shrink-0 text-primary" />
+							<span>{"Crear Categoría"}</span>
 						</Link>
-						<Link to="/productos-categorias/crear" className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all group/item">
-							<Layers className="h-6 w-6 text-primary mb-2 group-hover/item:scale-110 transition-transform" />
-							<span className="text-sm font-medium text-center">{"Crear Categoría"}</span>
+						<Link to="/productos-talles/crear" className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50">
+							<Ruler className="h-4 w-4 shrink-0 text-primary" />
+							<span>{"Crear Talle"}</span>
 						</Link>
-						<Link to="/productos-talles/crear" className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all group/item">
-							<Ruler className="h-6 w-6 text-primary mb-2 group-hover/item:scale-110 transition-transform" />
-							<span className="text-sm font-medium text-center">{"Crear Talle"}</span>
+						<Link to="/productos-colores/crear" className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50">
+							<Palette className="h-4 w-4 shrink-0 text-primary" />
+							<span>{"Crear Color"}</span>
 						</Link>
-						<Link to="/productos-colores/crear" className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all group/item">
-							<Palette className="h-6 w-6 text-primary mb-2 group-hover/item:scale-110 transition-transform" />
-							<span className="text-sm font-medium text-center">{"Crear Color"}</span>
-						</Link>
-						<Link to="/cupones/crear" className="flex flex-col items-center justify-center p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all group/item col-span-2 md:col-span-1 lg:col-span-1">
-							<Ticket className="h-6 w-6 text-primary mb-2 group-hover/item:scale-110 transition-transform" />
-							<span className="text-sm font-medium text-center">{"Crear Cupón"}</span>
+						<Link to="/cupones/crear" className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50">
+							<Ticket className="h-4 w-4 shrink-0 text-primary" />
+							<span>{"Crear Cupón"}</span>
 						</Link>
 					</div>
 				</CardContent>
 			</Card>
 
+			</div>
 
+			<div className="grid gap-6">
+				<OrderListCard
+					title="Pedidos nuevos pendientes"
+					description="Lista rápida de pedidos que todavía esperan gestión."
+					items={pendingOrders}
+					emptyMessage="No hay pedidos pendientes en este momento."
+				/>
+			</div>
 		</div>
 	);
 }

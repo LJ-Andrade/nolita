@@ -1,5 +1,36 @@
 # Technical Specifications
 
+## Guest Customers (Anonymous Orders)
+
+Anonymous orders (`orders.customer_id IS NULL`) must persist their buyer information in a dedicated `guest_customers` table so the admin panel can list and filter them alongside registered customers.
+
+### Storage
+
+- Table `guest_customers` holds one row per unique buyer email coming from anonymous checkouts. Fields: `name`, `email` (unique, stored lowercase trimmed), `phone`, `whatsapp`, `cuit`, `address`, `city`, `postal_code`, `province_id`, `locality_id`, `bought_wholesale` (bool), `bought_retail` (bool), `orders_count` (uint), `last_order_at` (timestamp), `total_spent` (decimal).
+- `orders` has a nullable `guest_customer_id` foreign key (set null on delete). It is populated only for anonymous orders. Orders from registered customers leave it null and keep using `customer_id`.
+
+### Upsert Contract
+
+On every anonymous checkout, after the order is marked `completed`, the system must:
+
+1. Normalize the email to lowercase trimmed.
+2. Locate the matching `guest_customer` by normalized email. If none exists, create one.
+3. Overwrite the contact fields (name, phone, whatsapp, cuit, address, city, postal_code, province_id, locality_id) with the values from the new order. Empty values from the new order do not overwrite previous non-empty values.
+4. Set `bought_wholesale = true` when the order `price_mode` is `wholesale`, and `bought_retail = true` when it is `retail`. Flags never turn back off.
+5. Increment `orders_count` by 1, add the order `total_amount` to `total_spent`, and update `last_order_at` with the order timestamp.
+6. Attach the resulting `guest_customer_id` to the order.
+
+The upsert must never block the checkout. Any failure during the upsert is logged but the order completion is preserved.
+
+If a buyer registers later using the same email, a registered `customers` row is created normally. The `guest_customers` row is preserved as historical anonymous data and is not merged automatically.
+
+### Admin Listing
+
+- The admin Customers view shows two tabs: `Registrados` (existing customers) and `Invitados` (guest customers). Filter, search, and pagination state are independent per tab.
+- The Invitados tab supports search by name, email or phone, and toggle filters for `Mayorista` / `Minorista` that match the `bought_wholesale` and `bought_retail` flags.
+- Columns: Nombre, Email, Teléfono, Modo (badges Mayorista / Minorista based on flags), Pedidos, Último pedido, Total gastado.
+- Admins can delete guest customer records individually or in bulk. Deleting a guest customer sets `guest_customer_id` to null on its orders without removing the orders themselves.
+
 ## 0. Documentation Governance
 
 ### 0.1 Source of Truth
@@ -141,10 +172,37 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 - Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
 
+### Admin Product List
+
+- The admin product list must not show the category or created-at columns.
+- The admin product list must show product search by name and product code through the shared `search` filter.
+- The admin product list must expose a retail/wholesale visibility filter so staff can narrow products intended for retail or wholesale workflows.
+- The admin product list pricing columns must appear in this order:
+  - retail base price
+  - retail discount percentage
+  - retail final price
+  - wholesale base price
+  - wholesale discount percentage
+  - wholesale final price
+- Retail final price must apply the product `discount` percentage over `sale_price`.
+- Wholesale final price must apply the product `wholesale_discount` percentage over `wholesale_price`.
+- The admin product list must not expose the `archived` status option in filters or inline status controls.
+- The default admin product list dataset must exclude archived products from the visible table.
+
+### Admin Product Pricing Form
+
+- The product form must keep separate discount inputs for retail and wholesale pricing.
+- The retail discount applies only to `sale_price`; the wholesale discount applies only to `wholesale_price`.
+- The product form must preview the final customer price for each pricing mode while staff edit prices or discounts.
+- The product form must expose nullable `fabric` text metadata as `Tela`, grouped with category and wholesale visibility controls.
+
 ### Product Media
 
-- Product cover, gallery, and color images are managed through Spatie Media Library on the public disk.
-- Product cover and gallery uploads in the admin product form must be cropped to a 5:7 portrait ratio and exported at approximately 500 x 700 pixels before upload.
+- Product gallery and color images are the active product image sources managed through Spatie Media Library on the public disk.
+- The legacy product cover collection may remain readable for backward compatibility, but the admin product form must not expose a separate cover upload control.
+- The first ordered gallery image is the product cover image for admin thumbnails, storefront catalog cards, product detail media, cart summaries, and any `cover_url` or `featuredImage` compatibility fields.
+- If an existing production product has no gallery image, compatibility fields may fall back to the legacy cover media so older products do not render broken thumbnails.
+- Product gallery uploads in the admin product form must be cropped to a 5:7 portrait ratio and exported at approximately 500 x 700 pixels before upload.
 - Product media filenames must be unique per upload so browsers and CDNs do not reuse stale images after product edits or database resets.
 - Deleting one product or bulk deleting products must delete the related media records and stored product media files through model-aware deletion.
 - Product gallery order updates must only affect media records owned by the product being updated.
@@ -155,6 +213,18 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The admin orders list must allow changing an order status directly from the status column, using the same inline dropdown interaction pattern as product status changes.
 - Inline order status changes must use the existing VADMIN admin order update endpoint and support only `pending`, `processing`, `completed`, and `cancelled`.
 - After a successful inline status change, the list should show the updated status without requiring the admin to open the order detail page.
+- The admin orders card header must expose a primary `Cargar pedido` action in place of the previous static "Gestionar Pedidos" title.
+- `Cargar pedido` opens an in-card manual order section so staff can create an order without leaving the orders list.
+- Manual order creation must start by selecting an existing customer. Until a customer is selected, all remaining manual order fields must be disabled.
+- Once a customer is selected, the manual order form must allow staff to set order type (`retail` or `wholesale`), order status, customer contact/address data, delivery method, payment method, coupon code, notes, and product variant lines with quantities.
+- Manual order pricing must be recalculated by VADMIN from current product retail/wholesale prices and discounts, not trusted from the admin frontend.
+- Manual order creation must validate stock and reduce stock only when the created order status is `completed`; draft/pending/processing manual orders must not reduce stock.
+- Manual order creation must preserve the existing order schema (`customer_data`, `shipping_address`, `billing_address`, `price_mode`, items, totals) so exports and existing order detail screens remain compatible.
+- The admin orders UI must hide payment-status controls and payment-status badges while keeping the backend `payment_status` contract available for production compatibility.
+- The admin orders list must expose toggleable filter buttons above the table, separate from the standard CRUD filter layout.
+- Order type filters must support toggling between all orders, wholesale orders (`price_mode = wholesale`), and retail orders (`price_mode = retail`).
+- Order status filters must support toggling each status on and off with distinct status-colored buttons for `pending`, `processing`, `completed`, and `cancelled`.
+- Admin order list exports must include the currently active search, order type, and order status filters.
 
 ### Admin User Role Management
 
@@ -346,17 +416,21 @@ The catalog API product contract must expose enough pricing metadata for the sto
 - `wholesalePrice`: current wholesale base price, nullable or zero when unavailable.
 - `hideOnWholesale`: whether the product is hidden from the wholesale catalog.
 - `priceRange` and `compareAtPriceRange`: active response price range for the requested mode when a mode is provided.
-- `discount` and `hasDiscount`: discount metadata for retail `sale_price`.
+- `discount` and `hasDiscount`: discount metadata for the active response mode.
+- `retailDiscount`: discount metadata for retail `sale_price`.
+- `wholesaleDiscount`: discount metadata for wholesale `wholesale_price`.
 
 ### 6.3 Product Discounts
 
-VADMIN product `discount` is a percentage applied to `sale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator. Cart and checkout calculations must use the discounted final unit price.
+VADMIN product `discount` is a percentage applied to `sale_price`. VADMIN product `wholesale_discount` is a percentage applied to `wholesale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator for the active pricing mode. Cart and checkout calculations must use the discounted final unit price for the active pricing mode.
 
 The catalog API product contract must expose enough pricing metadata for the storefront:
 
 - `priceRange.minVariantPrice` and `priceRange.maxVariantPrice`: discounted final price.
-- `compareAtPriceRange.minVariantPrice` and `compareAtPriceRange.maxVariantPrice`: original `sale_price` when a discount applies.
-- `discount`: discount percentage.
+- `compareAtPriceRange.minVariantPrice` and `compareAtPriceRange.maxVariantPrice`: original active-mode price when a discount applies.
+- `discount`: active-mode discount percentage.
+- `retailDiscount`: retail discount percentage.
+- `wholesaleDiscount`: wholesale discount percentage.
 - `hasDiscount`: whether the product has an active discount.
 
 The checkout backend must recalculate item `unit_price` and `subtotal` from current VADMIN product pricing before completing the order, so frontend totals and persisted order totals stay aligned.
@@ -570,6 +644,10 @@ Supported filters must match the admin orders list where applicable:
 - PDF responses are generated from Blade templates through DomPDF.
 - Single-order PDF and XLSX exports must include a complete header with order data, customer data, shipping data, and billing/payment data before item rows.
 - Single-order PDF exports must not include images.
+- Single-order PDF exports must show the order type (`Mayorista` or `Minorista`) in the summary instead of the order status.
+- Single-order PDF exports must show customer DNI or CUIT when available.
+- Single-order PDF exports must not show the separate "Envío y facturación" section.
+- Single-order PDF item rows must show `Color` and `Talle` columns instead of generic variant and SKU columns.
 - Export documents must display all user-facing labels in Spanish while keeping code identifiers in English.
 - Shared backend translations and formatting helpers live under `App\Support\Localization`.
 - Large exports should later move to queued jobs and stored files.
@@ -577,7 +655,8 @@ Supported filters must match the admin orders list where applicable:
 ### 13.6 Frontend Rules
 
 - The orders list displays export actions for XLSX, CSV, and PDF.
-- The order detail page displays separate buttons for XLSX and PDF exports.
+- Each order row in the orders list must provide a direct PDF export action for that order.
+- The order detail page displays a PDF export action and must not expose the single-order XLS export action in the UI.
 - Export requests include the current search filter.
 - Downloads use authenticated Axios requests with `blob` response type.
 
@@ -647,3 +726,38 @@ VADMIN must include an administrative statistics section for future business met
 - The admin UI must show opportunity cards for best-selling products with low stock.
 - The database must index sales statistics access paths, including order status/date and order item order/product lookups, directly in the base order table migrations for fresh installs.
 - Demo seed data may create completed, processing, pending, and cancelled orders for local analytics testing, but only completed orders should affect sales totals.
+
+---
+
+## 15. Admin Dashboard
+
+### 15.1 Overview
+
+The admin dashboard home must prioritize operational information that helps staff act on orders quickly, instead of generic totals such as total users or total blog posts.
+
+### 15.2 Dashboard Contract
+
+- `GET /api/dashboard` remains the source for the admin home dashboard.
+- The response must continue to include the authenticated admin user summary.
+- The dashboard payload must include order-focused summary cards and actionable lists.
+
+### 15.3 Order-Focused Content
+
+- The dashboard must show a summary card for orders with `status = pending`.
+- The dashboard must hide payment-status cards, badges, and follow-up lists while payment status is not part of the active operational flow.
+- The dashboard must not show the previous generic cards for total users or total posts.
+- The dashboard payload must include a recent list of pending orders for quick review.
+- Each dashboard order list item must include at least:
+  - order ID
+  - customer display name
+  - customer email when available
+  - order total
+  - currency
+  - order status
+  - creation timestamp
+- The dashboard UI must link each listed order to the admin order detail route.
+- Empty dashboard order lists must show a clear no-pending-items message.
+
+### 15.4 Future Dashboard Candidates
+
+- A low-stock variants card is the next preferred dashboard enhancement, using variant `min_stock` and current stock to surface urgent replenishment needs.

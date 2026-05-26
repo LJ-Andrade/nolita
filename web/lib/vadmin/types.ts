@@ -46,6 +46,7 @@ export type Product = {
   title: string;
   description: string;
   descriptionHtml: string;
+  fabric?: string | null;
   options: ProductOption[];
   priceRange: {
     maxVariantPrice: Money;
@@ -60,6 +61,8 @@ export type Product = {
   wholesalePrice?: string | null;
   hideOnWholesale?: boolean;
   discount?: number;
+  retailDiscount?: number;
+  wholesaleDiscount?: number;
   hasDiscount?: boolean;
   variants: ProductVariant[];
   featuredImage: Image;
@@ -109,6 +112,8 @@ export type CartItem = {
       salePrice?: string | null;
       retailPrice?: string | null;
       wholesalePrice?: string | null;
+      retailDiscount?: number;
+      wholesaleDiscount?: number;
       hideOnWholesale?: boolean;
       featuredImage: Image;
       colorImages?: { color: string; hex?: string; url: string }[];

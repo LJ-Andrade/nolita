@@ -183,14 +183,12 @@ export default async function HomePage(props: {
   const [
     products,
     collections,
-    featuredCollections,
     content,
     session,
     categoryFilterProducts,
   ] = await Promise.all([
     getProducts({ category, mode }),
     getCollections(),
-    getCollections({ listed: true }),
     getSiteContent("home"),
     getSession(),
     category ? getProducts({ mode }) : Promise.resolve(null),
@@ -212,7 +210,7 @@ export default async function HomePage(props: {
     (collection) =>
       collection.handle && categoryProductHandles.has(collection.handle),
   );
-  const featuredFilterCategories = featuredCollections.filter(
+  const allFilterCategories = collections.filter(
     (collection) => collection.handle,
   );
   const heroImage = getVadminImageUrl(
@@ -262,11 +260,11 @@ export default async function HomePage(props: {
 
       <Suspense fallback={null}>
         <EditorialFilterControls
-          categories={featuredFilterCategories}
+          categories={allFilterCategories}
           colors={allColors}
           sizes={allSizes}
           total={sortedProducts.length}
-          showAllCategoryNav={false}
+          showAllCategoryNav={true}
         />
       </Suspense>
 

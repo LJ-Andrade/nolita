@@ -166,19 +166,22 @@ export function getVadminImageUrl(path: string | null | undefined): string {
 }
 
 function normalizeProductImageUrls(product: Product): Product {
+  const images =
+    product.images?.map((image) => ({
+      ...image,
+      url: getVadminImageUrl(image.url),
+    })) ?? [];
+  const legacyFeaturedImage = product.featuredImage
+    ? {
+        ...product.featuredImage,
+        url: getVadminImageUrl(product.featuredImage.url),
+      }
+    : product.featuredImage;
+
   return {
     ...product,
-    featuredImage: product.featuredImage
-      ? {
-          ...product.featuredImage,
-          url: getVadminImageUrl(product.featuredImage.url),
-        }
-      : product.featuredImage,
-    images:
-      product.images?.map((image) => ({
-        ...image,
-        url: getVadminImageUrl(image.url),
-      })) ?? [],
+    featuredImage: images[0] ?? legacyFeaturedImage,
+    images,
     colorImages: product.colorImages?.map((image) => ({
       ...image,
       url: getVadminImageUrl(image.url),

@@ -61,11 +61,15 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['author', 'category', 'tags', 'variants.color', 'variants.size']);
+        $query = Product::with(['author', 'category', 'tags', 'variants.color', 'variants.size'])
+            ->where('status', '!=', 'archived');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
         }
 
         if ($request->filled('category_id')) {
@@ -74,6 +78,17 @@ class ProductController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('mode')) {
+            if ($request->input('mode') === 'wholesale') {
+                $query->where('hide_on_wholesale', false)
+                    ->where('wholesale_price', '>', 0);
+            }
+
+            if ($request->input('mode') === 'retail') {
+                $query->where('sale_price', '>', 0);
+            }
         }
 
         $sortBy = $request->input('sort_by', 'created_at');
@@ -94,12 +109,14 @@ class ProductController extends Controller
             'code' => 'required|string|max:100|unique:products,code',
             'slug' => 'nullable|string|max:255|unique:products,slug,' . ($id ?? 'NULL') . ',id',
             'description' => 'nullable|string',
+            'fabric' => 'nullable|string|max:255',
             'cost_price' => 'required|numeric|min:0',
             'sale_price' => 'required|numeric|min:0',
             'status' => 'required|in:draft,published,archived',
             'category_id' => 'nullable|exists:product_categories,id',
             'wholesale_price' => 'nullable|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'wholesale_discount' => 'nullable|numeric|min:0|max:100',
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:product_tags,id',
             'size_ids' => 'nullable|array',
@@ -278,12 +295,14 @@ class ProductController extends Controller
             'code' => 'required|string|max:100|unique:products,code,' . $product->id,
             'slug' => 'nullable|string|max:255|unique:products,slug,' . $product->id,
             'description' => 'nullable|string',
+            'fabric' => 'nullable|string|max:255',
             'cost_price' => 'required|numeric|min:0',
             'sale_price' => 'required|numeric|min:0',
             'status' => 'required|in:draft,published,archived',
             'category_id' => 'nullable|exists:product_categories,id',
             'wholesale_price' => 'nullable|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'wholesale_discount' => 'nullable|numeric|min:0|max:100',
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:product_tags,id',
             'size_ids' => 'nullable|array',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Locality;
 use App\Models\DeliveryMethod;
+use App\Models\GuestCustomer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Coupon;
@@ -201,7 +202,7 @@ class OrderController extends Controller
 		$validated = $request->validate([
 			'name' => ['required', 'string', 'max:255'],
 			'email' => ['required', 'email', 'max:255'],
-			'phone' => ['required', 'string', 'max:50'],
+			'phone' => ['nullable', 'string', 'max:50'],
 			'whatsapp' => ['required', 'string', 'max:50'],
 			'cuit' => ['required', 'string', 'max:50'],
 			'address' => ['required', 'string', 'max:1000'],
@@ -344,7 +345,7 @@ class OrderController extends Controller
 			$customerData = [
 				'name' => $validated['name'],
 				'email' => $validated['email'],
-				'phone' => $validated['phone'],
+				'phone' => $validated['phone'] ?? null,
 				'whatsapp' => $validated['whatsapp'],
 				'cuit' => $validated['cuit'],
 				'address' => $validated['address'],
@@ -367,7 +368,7 @@ class OrderController extends Controller
 				'shipping_address' => [
 					'name' => $validated['name'],
 					'email' => $validated['email'],
-					'phone' => $validated['phone'],
+					'phone' => $validated['phone'] ?? null,
 					'whatsapp' => $validated['whatsapp'],
 					'cuit' => $validated['cuit'],
 					'address' => $validated['address'],
@@ -384,7 +385,7 @@ class OrderController extends Controller
 				'billing_address' => [
 					'name' => $validated['name'],
 					'email' => $validated['email'],
-					'phone' => $validated['phone'],
+					'phone' => $validated['phone'] ?? null,
 					'whatsapp' => $validated['whatsapp'],
 					'cuit' => $validated['cuit'],
 					'address' => $validated['address'],
@@ -404,7 +405,7 @@ class OrderController extends Controller
 				$customer->update([
 				'name' => $validated['name'],
 				'email' => $validated['email'],
-				'phone' => $validated['phone'],
+				'phone' => $validated['phone'] ?? null,
 				'address' => $validated['address'],
 				'postal_code' => $validated['postal_code'],
 				'province_id' => $validated['province_id'],
@@ -415,6 +416,23 @@ class OrderController extends Controller
 			});
 		} catch (\RuntimeException $exception) {
 			return response()->json(['message' => $exception->getMessage()], 422);
+		}
+
+		// Persist guest customer for anonymous checkouts. Must never block the order.
+		if ($completedOrder && $completedOrder->customer_id === null) {
+			$guest = GuestCustomer::upsertFromCheckout(
+				is_array($completedOrder->customer_data) ? $completedOrder->customer_data : [],
+				(string) $completedOrder->price_mode,
+				(float) $completedOrder->total_amount,
+				$completedOrder->created_at
+			);
+			if ($guest) {
+				try {
+					$completedOrder->update(['guest_customer_id' => $guest->id]);
+				} catch (\Throwable $e) {
+					report($e);
+				}
+			}
 		}
 
 		$this->notifyOrderCreated($completedOrder);
@@ -508,12 +526,10 @@ class OrderController extends Controller
 			return 0.0;
 		}
 
-		if ($priceMode === 'wholesale') {
-			return round((float) ($variant->product->wholesale_price ?? 0), 2);
-		}
-
-		$originalPrice = round((float) $variant->product->sale_price, 2);
-		$discount = max(min((float) ($variant->product->discount ?? 0), 100), 0);
+		$originalPrice = $priceMode === 'wholesale'
+			? round((float) ($variant->product->wholesale_price ?? 0), 2)
+			: round((float) $variant->product->sale_price, 2);
+		$discount = $this->getVariantDiscountPercent($variant, $priceMode);
 
 		if ($discount <= 0) {
 			return $originalPrice;
@@ -528,23 +544,23 @@ class OrderController extends Controller
 			return null;
 		}
 
-		if ($priceMode === 'wholesale') {
-			return null;
-		}
-
-		$originalPrice = round((float) $variant->product->sale_price, 2);
+		$originalPrice = $priceMode === 'wholesale'
+			? round((float) ($variant->product->wholesale_price ?? 0), 2)
+			: round((float) $variant->product->sale_price, 2);
 		$unitPrice = $this->getVariantUnitPrice($variant, $priceMode);
 
 		return $unitPrice < $originalPrice ? $originalPrice : null;
 	}
 
-	private function getVariantDiscountPercent(?ProductVariant $variant): float
+	private function getVariantDiscountPercent(?ProductVariant $variant, string $priceMode = 'retail'): float
 	{
 		if (!$variant || !$variant->product) {
 			return 0.0;
 		}
 
-		return max(min((float) ($variant->product->discount ?? 0), 100), 0);
+		$field = $priceMode === 'wholesale' ? 'wholesale_discount' : 'discount';
+
+		return max(min((float) ($variant->product->{$field} ?? 0), 100), 0);
 	}
 
 	private function resolvePriceMode(?string $mode): string
@@ -599,7 +615,7 @@ class OrderController extends Controller
 				}
 				$priceMode = $item->order->price_mode ?? 'retail';
 				$compareAtPrice = $this->getVariantCompareAtPrice($item->variant, $priceMode);
-				$discount = $priceMode === 'retail' ? $this->getVariantDiscountPercent($item->variant) : 0;
+				$discount = $this->getVariantDiscountPercent($item->variant, $priceMode);
 				$hasDiscount = $compareAtPrice !== null && $discount > 0;
 				return [
 					'id' => (string) $item->id,
@@ -625,8 +641,15 @@ class OrderController extends Controller
 							'handle' => $item->variant->product->slug,
 							'title' => $item->variant->product->name,
 							'stock' => $item->variant->stock,
+							'salePrice' => (string) round((float) $item->variant->product->sale_price, 2),
+							'retailPrice' => (string) $this->getVariantUnitPrice($item->variant, 'retail'),
+							'wholesalePrice' => $item->variant->product->wholesale_price !== null
+								? (string) round((float) $item->variant->product->wholesale_price, 2)
+								: null,
+							'retailDiscount' => $this->getVariantDiscountPercent($item->variant, 'retail'),
+							'wholesaleDiscount' => $this->getVariantDiscountPercent($item->variant, 'wholesale'),
 							'featuredImage' => [
-								'url' => $item->variant->product->getFirstMediaUrl('cover'),
+								'url' => $this->getProductCoverUrl($item->variant->product),
 								'altText' => $item->variant->product->name,
 							],
 							'colorImages' => $item->variant->product->getMedia('color_images')->map(function ($media) use ($item) {
@@ -659,5 +682,14 @@ class OrderController extends Controller
 			$options[] = ['name' => 'Talle', 'value' => $variant->size->name];
 		}
 		return $options;
+	}
+
+	private function getProductCoverUrl($product): string
+	{
+		$galleryCover = $product->getMedia('gallery')
+			->sortBy('order_column')
+			->first();
+
+		return $galleryCover?->getFullUrl() ?: $product->getFirstMediaUrl('cover');
 	}
 }

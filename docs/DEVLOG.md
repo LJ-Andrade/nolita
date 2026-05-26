@@ -2,6 +2,88 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 87: Guest Customers for Anonymous Orders
+
+1. [x] `docs/SPECS.md`: Document guest customers table, upsert contract, and admin listing.
+2. [x] `admin/backend/database/migrations`: Create `guest_customers` table and add `guest_customer_id` to `orders`.
+3. [x] `admin/backend/app/Models/GuestCustomer.php`: Add model with email normalization and `upsertFromCheckout` helper.
+4. [x] `admin/backend/app/Models/Order.php`: Add `guest_customer_id` to fillable and `guestCustomer` relation.
+5. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Call the guest upsert on anonymous checkouts without blocking the order.
+6. [x] `admin/backend/app/Http/Controllers/Api/Admin/GuestCustomerController.php` and `app/Http/Resources/Admin/GuestCustomerResource.php`: Provide admin list, show, destroy and bulk-delete endpoints with search and price-mode filters.
+7. [x] `admin/backend/routes/api.php`: Register guest customer admin routes guarded by the customers permission.
+8. [x] `admin/frontend/src/views/customers/CustomersList.jsx`: Add Registrados / Invitados tab switch and the guest customers tab UI.
+9. [x] Validation: PHP `-l` checks, `route:list` confirmation, and admin frontend `vite build` all passed.
+
+## Phase 84: Admin Order Filters and Payment Status Hide
+
+1. [x] `docs/SPECS.md`: Document hidden payment-status UI and toggle-button order filters.
+2. [x] `admin/backend/app/Support/Exports/OrderExportQuery.php`: Support `price_mode` and `status` filters for the orders list and exports.
+3. [x] `admin/frontend/src/views/orders` and dashboard: Add toggle filters and hide payment-status controls without removing compatibility code.
+4. [x] Validation: Run focused backend syntax checks and admin frontend build or lint.
+
+## Phase 85: Order PDF Export Layout
+
+1. [x] `docs/SPECS.md`: Document single-order PDF content and UI export action changes.
+2. [x] `admin/backend/app/Support/Exports` and PDF view: Add DNI/CUIT, order type, color/size columns, and remove shipping/billing section.
+3. [x] `admin/frontend/src/views/orders`: Remove the detail XLS action and add per-row PDF export from the list.
+4. [x] Validation: Run focused PHP syntax checks and admin frontend lint/build.
+
+## Phase 86: Manual Admin Order Creation
+
+1. [x] `docs/SPECS.md`: Document the manual order creation flow and compatibility rules.
+2. [x] `admin/backend/app/Http/Controllers/Api/Admin/OrderController.php`: Add manual order options and creation endpoints with VADMIN-owned pricing and stock rules.
+3. [x] `admin/backend/routes/api.php`: Register the manual order options route before the resource routes.
+4. [x] `admin/frontend/src/views/orders`: Replace the card title with `Cargar pedido` and add the in-card manual order form gated by customer selection.
+5. [x] Validation: Run focused PHP syntax, route check, and admin frontend lint/build.
+
+## Phase 83: Product Fabric Field and Pricing Layout
+
+1. [x] `docs/SPECS.md`: Document nullable product fabric metadata in the admin product form.
+2. [x] `admin/backend`: Ensure `fabric` exists safely and flows through model validation and product resources.
+3. [x] `admin/frontend/src/views/products/ProductForm.jsx`: Add the fabric input and reorder the pricing/category rows.
+4. [x] Validation: Run focused PHP syntax checks and the admin frontend build.
+
+## Phase 82: Wholesale Product Discount
+
+1. [x] `docs/SPECS.md`: Document separate retail and wholesale discount behavior plus final customer price previews.
+2. [x] `admin/backend/database/migrations`: Add a production-safe `wholesale_discount` field with a zero default for existing products.
+3. [x] `admin/backend/app`: Persist, expose, and apply wholesale discounts in admin resources, catalog pricing, cart, and checkout totals.
+4. [x] `admin/frontend/src/views/products`: Add wholesale discount inputs, final customer price previews, and update list pricing.
+5. [x] `web/lib`: Extend storefront product types and client-side price-mode recalculation for wholesale discounts.
+6. [x] Validation: Run focused PHP syntax checks and frontend build/type checks where practical.
+
+## Phase 81: Gallery-First Product Cover
+
+1. [x] `docs/SPECS.md`: Document gallery-first product image behavior and legacy cover fallback.
+2. [x] `admin/backend/app/Http/Resources/ProductResource.php`: Resolve admin `cover_url` from the first ordered gallery image with legacy cover fallback.
+3. [x] `admin/backend/app/Http/Controllers/Api/CatalogController.php` and `web/lib/vadmin/index.ts`: Resolve storefront `featuredImage` and image arrays from ordered gallery first.
+4. [x] `admin/frontend/src/views/products/ProductForm.jsx`: Hide separate cover upload and stop submitting cover media for new product saves.
+5. [x] `admin/frontend/src/views/products/ProductsList.jsx`, `ProductsShow.jsx`, and image settings: Use the gallery-derived thumbnail/cover behavior in admin views and hide product cover settings.
+6. [x] Validation: Run focused PHP syntax and frontend build/type checks where practical.
+
+## Phase 80: Product List Pricing and Filter Cleanup
+
+1. [x] `docs/SPECS.md`: Document product list column order, code search, retail/wholesale filter, and archived hiding rules.
+2. [x] `admin/backend/app/Http/Controllers/ProductController.php`: Support code-aware search, retail/wholesale list filtering, and exclude archived items from the admin list.
+3. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Remove category/created columns, add code and mode filters, reorder pricing columns, and hide archived UI options.
+4. [x] Validation: Run focused backend syntax and admin frontend build checks.
+
+## Phase 79: Admin Dashboard Order Focus
+
+1. [x] `docs/SPECS.md`: Document the admin dashboard as an order-focused operational view.
+2. [x] `admin/backend/app/Http/Controllers/AuthController.php`: Replace generic totals with pending/unpaid order summary data and actionable lists.
+3. [x] `admin/frontend/src/views/Home.jsx`: Remove total users/posts cards and render pending/unpaid order cards plus order lists.
+4. [x] Validation: Run focused backend and admin frontend checks.
+
+## Phase 78: Admin Table Shell Standard
+
+1. [x] `admin/frontend/src/components/admin-table-shell.jsx`: Create a reusable visual frame for admin list tables.
+2. [x] `admin/frontend/src/components/crud-table.jsx`: Wrap shared CRUD tables with the admin table shell.
+3. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Wrap the custom products table with the same admin table shell.
+4. [x] `admin/frontend/src/skins.css`: Add editable table shell variables for light and dark skins.
+5. [x] `docs/standards/CRUD_STANDARDS.md`: Document the table shell and skin variables as the CRUD table standard.
+6. [x] Validation: Run the admin frontend build.
+
 ## Phase 77: Reusable Sentry Implementation Standard
 
 1. [x] `docs/standards/SENTRY_IMPLEMENTATION_STANDARDS.md`: Document reusable Sentry implementation steps for Laravel, React/Vite, Next.js, env variables, setup scripts, alerts, source maps, validation, and common failures.

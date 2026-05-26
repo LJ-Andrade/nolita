@@ -7,6 +7,10 @@ import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
 import Code from '@tiptap/extension-code'
 import Blockquote from '@tiptap/extension-blockquote'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
 import { 
   Bold, 
   Italic, 
@@ -26,7 +30,9 @@ import {
   Quote,
   Undo,
   Redo,
-  Palette
+  Palette,
+  Table as TableIcon,
+  Trash2
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -171,6 +177,10 @@ export function RichTextEditor({ value, onChange, placeholder }) {
       Underline,
       Code,
       Blockquote,
+      Table.configure({ resizable: true, HTMLAttributes: { class: 'rte-table' } }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     editorProps: {
@@ -335,6 +345,27 @@ export function RichTextEditor({ value, onChange, placeholder }) {
         >
           <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
+        <ToolbarButton
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+              .run()
+          }
+          isActive={editor.isActive('table')}
+          title="Insertar tabla"
+        >
+          <TableIcon className="h-4 w-4" />
+        </ToolbarButton>
+        {editor.isActive('table') && (
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            title="Eliminar tabla"
+          >
+            <Trash2 className="h-4 w-4" />
+          </ToolbarButton>
+        )}
 
         <div className="ml-auto flex gap-1">
           <ToolbarButton

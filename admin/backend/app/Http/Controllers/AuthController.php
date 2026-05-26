@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\User;
-use App\Models\Role;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -48,14 +48,47 @@ class AuthController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user()->load('roles');
+        $pendingOrders = Order::query()
+            ->with('customer:id,name,email')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $unpaidOrders = Order::query()
+            ->with('customer:id,name,email')
+            ->where('payment_status', 'unpaid')
+            ->latest()
+            ->get();
+
+        $mapDashboardOrder = static function (Order $order): array {
+            $customerData = is_array($order->customer_data) ? $order->customer_data : [];
+            $customerName = $order->customer?->name
+                ?? ($customerData['name'] ?? null)
+                ?? 'Invitado';
+            $customerEmail = $order->customer?->email
+                ?? ($customerData['email'] ?? null);
+
+            return [
+                'id' => $order->id,
+                'customer_name' => $customerName,
+                'customer_email' => $customerEmail,
+                'total_amount' => $order->total_amount,
+                'currency' => $order->currency,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+                'created_at' => optional($order->created_at)?->toISOString(),
+            ];
+        };
         
         return response()->json([
             'message' => 'Welcome to the dashboard!',
             'user' => $user,
             'stats' => [
-                'total_users' => User::count(),
-                'total_posts' => \App\Models\Post::count(),
-            ]
+                'pending_orders' => $pendingOrders->count(),
+                'unpaid_orders' => $unpaidOrders->count(),
+            ],
+            'pending_orders' => $pendingOrders->map($mapDashboardOrder)->values(),
+            'unpaid_orders' => $unpaidOrders->map($mapDashboardOrder)->values(),
         ]);
     }
 }

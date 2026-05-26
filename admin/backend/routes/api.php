@@ -137,19 +137,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/product-tags', [ProductTagController::class, 'index'])->middleware('permission:users.view');
     Route::get('/product-tags/{product_tag}', [ProductTagController::class, 'show'])->middleware('permission:users.view');
 
-    Route::get('/product-colors', [ProductColorController::class, 'index'])->middleware('permission:users.view');
-    Route::get('/product-colors/{product_color}', [ProductColorController::class, 'show'])->middleware('permission:users.view');
-    Route::post('/product-colors', [ProductColorController::class, 'store'])->middleware('permission:users.view');
-    Route::put('/product-colors/{product_color}', [ProductColorController::class, 'update'])->middleware('permission:users.view');
-    Route::delete('/product-colors/{product_color}', [ProductColorController::class, 'destroy'])->middleware('permission:users.view');
-    Route::post('/product-colors/bulk-delete', [ProductColorController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::get('/product-colors', [ProductColorController::class, 'index'])->middleware('permission:view products');
+    Route::get('/product-colors/{product_color}', [ProductColorController::class, 'show'])->middleware('permission:view products');
+    Route::post('/product-colors', [ProductColorController::class, 'store'])->middleware('permission:manage products');
+    Route::put('/product-colors/{product_color}', [ProductColorController::class, 'update'])->middleware('permission:manage products');
+    Route::delete('/product-colors/{product_color}', [ProductColorController::class, 'destroy'])->middleware('permission:manage products');
+    Route::post('/product-colors/bulk-delete', [ProductColorController::class, 'bulkDelete'])->middleware('permission:manage products');
 
-    Route::get('/product-sizes', [ProductSizeController::class, 'index'])->middleware('permission:users.view');
-    Route::get('/product-sizes/{product_size}', [ProductSizeController::class, 'show'])->middleware('permission:users.view');
-    Route::post('/product-sizes', [ProductSizeController::class, 'store'])->middleware('permission:users.view');
-    Route::put('/product-sizes/{product_size}', [ProductSizeController::class, 'update'])->middleware('permission:users.view');
-    Route::delete('/product-sizes/{product_size}', [ProductSizeController::class, 'destroy'])->middleware('permission:users.view');
-    Route::post('/product-sizes/bulk-delete', [ProductSizeController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::get('/product-sizes', [ProductSizeController::class, 'index'])->middleware('permission:view products');
+    Route::get('/product-sizes/{product_size}', [ProductSizeController::class, 'show'])->middleware('permission:view products');
+    Route::post('/product-sizes', [ProductSizeController::class, 'store'])->middleware('permission:manage products');
+    Route::put('/product-sizes/{product_size}', [ProductSizeController::class, 'update'])->middleware('permission:manage products');
+    Route::delete('/product-sizes/{product_size}', [ProductSizeController::class, 'destroy'])->middleware('permission:manage products');
+    Route::post('/product-sizes/bulk-delete', [ProductSizeController::class, 'bulkDelete'])->middleware('permission:manage products');
 
     Route::get('/coupons', [CouponController::class, 'index'])->middleware('permission:users.view');
     Route::get('/coupons/{coupon}', [CouponController::class, 'show'])->middleware('permission:users.view');
@@ -180,6 +180,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:users.view');
     Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:users.view');
 
+    // Guest Customers (anonymous order buyers)
+    Route::post('admin/guest-customers/bulk-delete', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'bulkDelete'])->middleware('permission:users.view');
+    Route::get('admin/guest-customers', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'index'])->middleware('permission:users.view');
+    Route::get('admin/guest-customers/{guestCustomer}', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'show'])->middleware('permission:users.view');
+    Route::delete('admin/guest-customers/{guestCustomer}', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'destroy'])->middleware('permission:users.view');
+
     // Provinces & Localities
     Route::get('admin/provinces', [ProvinceController::class, 'index'])->middleware('permission:users.view');
     Route::get('admin/provinces/{province}', [ProvinceController::class, 'show'])->middleware('permission:users.view');
@@ -193,9 +199,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Orders
     Route::post('admin/orders/bulk-delete', [\App\Http\Controllers\Api\Admin\OrderController::class, 'bulkDelete'])->middleware('permission:manage orders');
+    Route::post('admin/orders', [\App\Http\Controllers\Api\Admin\OrderController::class, 'store'])->middleware('permission:manage orders');
+    Route::get('admin/orders/manual-options', [\App\Http\Controllers\Api\Admin\OrderController::class, 'options'])->middleware('permission:view orders');
     Route::get('admin/orders/export', OrderExportController::class)->middleware('permission:view orders');
     Route::get('admin/orders/{order}/export', OrderDocumentExportController::class)->middleware('permission:view orders');
-    Route::apiResource('admin/orders', \App\Http\Controllers\Api\Admin\OrderController::class)->middleware('permission:view orders');
+    Route::apiResource('admin/orders', \App\Http\Controllers\Api\Admin\OrderController::class)->except(['store'])->middleware('permission:view orders');
 
     // Statistics
     Route::get('admin/statistics/favorites', [StatisticsController::class, 'favorites']);

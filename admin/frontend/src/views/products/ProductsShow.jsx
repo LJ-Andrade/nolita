@@ -83,10 +83,13 @@ export default function ProductsShow() {
 		return colorMap[colorName] || "#808080";
 	};
 
-	const allGalleryImages = [
-		...(product.cover_url ? [getMediaUrl(product.cover_url)] : []),
-		...(product.gallery?.map((img) => getMediaUrl(img.url)) || []),
-	];
+	const galleryImages = product.gallery?.map((img) => getMediaUrl(img.url)) || [];
+	const allGalleryImages = galleryImages.length > 0
+		? galleryImages
+		: product.cover_url
+			? [getMediaUrl(product.cover_url)]
+			: [];
+	const mainImage = allGalleryImages[0] || "";
 	const hasVariants = (product.variants?.length || 0) > 0;
 
 	return (
@@ -131,7 +134,7 @@ export default function ProductsShow() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-6">
-							<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div className="grid grid-cols-2 md:grid-cols-5 gap-4">
 								<div>
 									<p className="text-sm text-muted-foreground">ID</p>
 									<p className="font-semibold">#{product.id}</p>
@@ -172,9 +175,15 @@ export default function ProductsShow() {
 									<p className="font-semibold text-lg text-primary">{formatPrice(product.wholesale_price)}</p>
 								</div>
 								<div>
-									<p className="text-sm text-muted-foreground">Descuento</p>
+									<p className="text-sm text-muted-foreground">Descuento Minorista</p>
 									<p className="font-semibold">
 										{product.discount > 0 ? `${product.discount}%` : "-"}
+									</p>
+								</div>
+								<div>
+									<p className="text-sm text-muted-foreground">Descuento Mayorista</p>
+									<p className="font-semibold">
+										{product.wholesale_discount > 0 ? `${product.wholesale_discount}%` : "-"}
 									</p>
 								</div>
 							</div>
@@ -343,15 +352,17 @@ export default function ProductsShow() {
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
 								<ImageIcon className="h-5 w-5" />
-								Gallery
+								Galería
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							{product.cover_url ? (
+							{mainImage ? (
 								<div>
-									<p className="text-sm text-muted-foreground mb-2">Cover</p>
+									<p className="text-sm text-muted-foreground mb-2">
+										{"Portada (primera imagen de galería)"}
+									</p>
 									<img
-										src={getMediaUrl(product.cover_url)}
+										src={mainImage}
 										alt={product.name}
 										className="w-full h-64 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
 										onClick={() => openLightbox(allGalleryImages, 0)}
@@ -375,7 +386,7 @@ export default function ProductsShow() {
 												src={getMediaUrl(img.url)}
 												alt=""
 												className="w-full h-24 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-												onClick={() => openLightbox(allGalleryImages, index + 1)}
+												onClick={() => openLightbox(allGalleryImages, index)}
 											/>
 										))}
 									</div>

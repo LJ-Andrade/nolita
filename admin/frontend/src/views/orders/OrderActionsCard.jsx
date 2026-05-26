@@ -38,6 +38,7 @@ export default function OrderActionsCard({
   onUpdatePaymentStatus,
   updating,
   updatingPayment,
+  showPaymentStatus = false,
 }) {
   return (
     <Card>
@@ -71,7 +72,7 @@ export default function OrderActionsCard({
           </Button>
         </div>
 
-        <div className="space-y-2">
+        {showPaymentStatus && <div className="space-y-2">
           <label htmlFor="payment-status" className="text-sm font-medium">Estado de pago</label>
           <Select value={selectedPaymentStatus} onValueChange={onPaymentStatusChange}>
             <SelectTrigger id="payment-status">
@@ -90,7 +91,7 @@ export default function OrderActionsCard({
           >
             {updatingPayment ? "Actualizando..." : "Aplicar estado de pago"}
           </Button>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

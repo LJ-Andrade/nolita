@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import {
-  FileDown,
   Package,
   CreditCard,
   User,
@@ -38,6 +37,7 @@ import { SectionActionsBar } from "@/components/section-actions-bar";
 import OrderActionsCard from "./OrderActionsCard";
 
 const emptyValue = "-";
+const showPaymentStatus = false;
 
 function formatMoney(value) {
   const amount = Number.parseFloat(value);
@@ -199,7 +199,7 @@ export default function OrderDetails() {
             { label: 'PEDIDOS', href: '/pedidos' },
             { label: `Orden #${order.id}` },
           ]}
-          actions={<div className="flex items-center gap-2">{getStatusBadge(order.status)}{getPaymentStatusBadge(order.payment_status)}</div>}
+          actions={<div className="flex items-center gap-2">{getStatusBadge(order.status)}{showPaymentStatus && getPaymentStatusBadge(order.payment_status)}</div>}
         />
         <p className="text-sm text-muted-foreground -mt-3">
           Creada {formatDateTime(order.created_at)} · Actualizada {formatDateTime(order.updated_at)}
@@ -207,15 +207,6 @@ export default function OrderDetails() {
       </div>
 
       <SectionActionsBar>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => exportOrder("xls")}
-          disabled={Boolean(exportingFormat)}
-        >
-          <FileDown className="h-4 w-4" />
-          {exportingFormat === "xls" ? "Exportando..." : "Exportar a XLS"}
-        </Button>
         <Button
           type="button"
           variant="outline"
@@ -332,6 +323,7 @@ export default function OrderDetails() {
             onPaymentStatusChange={setSelectedPaymentStatus}
             onUpdatePaymentStatus={updatePaymentStatus}
             updatingPayment={updatingPayment}
+            showPaymentStatus={showPaymentStatus}
           />
 
           <Card>

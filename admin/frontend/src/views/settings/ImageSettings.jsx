@@ -23,7 +23,6 @@ import { Separator } from "@/components/ui/separator";
 const ALL_SECTIONS = [
 	{ value: 'blog_cover', label: 'Imagen de portada', section: 'blog' },
 	{ value: 'blog_gallery', label: 'Galería de imágenes', section: 'blog' },
-	{ value: 'product_cover', label: 'Imagen de portada', section: 'products' },
 	{ value: 'product_gallery', label: 'Galería de imágenes', section: 'products' },
 ];
 
@@ -57,7 +56,7 @@ export default function ImageSettings() {
 	const currentSection = sectionParam === 'products' ? 'products' : 'blog';
 	const SECTION_TYPES = ALL_SECTIONS.filter(s => s.section === currentSection);
 	
-	const defaultSection = sectionParam === 'products' ? 'product_cover' : 'blog_cover';
+	const defaultSection = sectionParam === 'products' ? 'product_gallery' : 'blog_cover';
 	const [selectedSection, setSelectedSection] = useState(defaultSection);
 
 	const formSchema = z.object({

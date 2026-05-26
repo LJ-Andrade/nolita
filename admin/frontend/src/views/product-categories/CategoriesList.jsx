@@ -143,7 +143,7 @@ export default function CategoriesList() {
   };
 
   const renderActions = (category, isDropdown = false) => (
-    <Can permission="manage product categories">
+    <Can permission="manage products">
       {isDropdown ? (
         <>
           <DropdownMenuItem
@@ -194,7 +194,7 @@ export default function CategoriesList() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-start gap-2">
-          <Can permission="manage product categories">
+          <Can permission="manage products">
             <Button asChild>
               <Link to="/productos-categorias/crear">
                 <Plus className="mr-2 h-4 w-4" /> {"Crear Categoría"}

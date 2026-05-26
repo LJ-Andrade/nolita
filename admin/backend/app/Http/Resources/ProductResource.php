@@ -17,6 +17,7 @@ class ProductResource extends JsonResource
             'code' => $this->code,
             'slug' => $this->slug,
             'description' => $this->description,
+            'fabric' => $this->fabric,
             'cost_price' => $this->cost_price,
             'sale_price' => $this->sale_price,
             'status' => $this->status,
@@ -27,6 +28,7 @@ class ProductResource extends JsonResource
             'category_id' => $this->category_id,
             'wholesale_price' => $this->wholesale_price,
             'discount' => $this->discount,
+            'wholesale_discount' => $this->wholesale_discount,
             'stock' => $this->stock,
             'min_stock' => $this->min_stock,
             'author' => new UserResource($this->whenLoaded('author')),
@@ -35,7 +37,7 @@ class ProductResource extends JsonResource
             'sizes' => ProductSizeResource::collection($this->whenLoaded('sizes')),
             'colors' => ProductColorResource::collection($this->whenLoaded('colors')),
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
-            'cover_url' => $this->firstExistingMediaUrl('cover'),
+            'cover_url' => $this->productCoverUrl(),
             'gallery' => $this->loadMedia('gallery')
                 ->filter(fn (Media $media): bool => $this->mediaExists($media))
                 ->sortBy('order_column')
@@ -69,6 +71,16 @@ class ProductResource extends JsonResource
             ->first(fn (Media $media): bool => $this->mediaExists($media));
 
         return $media?->getUrl();
+    }
+
+    private function productCoverUrl(): ?string
+    {
+        $galleryCover = $this->loadMedia('gallery')
+            ->filter(fn (Media $media): bool => $this->mediaExists($media))
+            ->sortBy('order_column')
+            ->first();
+
+        return $galleryCover?->getUrl() ?? $this->firstExistingMediaUrl('cover');
     }
 
     private function mediaExists(Media $media): bool

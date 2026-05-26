@@ -17,6 +17,8 @@ final class OrderExportQuery
             ->latest();
 
         $search = trim((string) $request->input('search', ''));
+        $priceMode = $request->input('price_mode');
+        $status = $request->input('status');
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search): void {
@@ -28,6 +30,14 @@ final class OrderExportQuery
                             ->orWhere('email', 'like', "%{$search}%");
                     });
             });
+        }
+
+        if (in_array($priceMode, ['retail', 'wholesale'], true)) {
+            $query->where('price_mode', $priceMode);
+        }
+
+        if (in_array($status, ['pending', 'processing', 'completed', 'cancelled'], true)) {
+            $query->where('status', $status);
         }
 
         return $query;

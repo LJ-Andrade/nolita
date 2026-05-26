@@ -216,19 +216,19 @@ function App() {
 				} />
 
 				<Route path="/productos-categorias" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="view products">
 						<ProductCategoriesList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-categorias/crear" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductCategoryForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-categorias/editar/:id" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductCategoryForm />
 					</ProtectedRoute>
 				} />
@@ -403,37 +403,37 @@ function App() {
 				} />
 
 				<Route path="/productos-colores" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="view products">
 						<ProductColorsList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-colores/crear" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductColorForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-colores/editar/:id" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductColorForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="view products">
 						<ProductSizesList />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles/crear" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductSizeForm />
 					</ProtectedRoute>
 				} />
 
 				<Route path="/productos-talles/editar/:id" element={
-					<ProtectedRoute permission="users.view">
+					<ProtectedRoute permission="manage products">
 						<ProductSizeForm />
 					</ProtectedRoute>
 				} />

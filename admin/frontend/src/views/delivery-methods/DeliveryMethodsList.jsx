@@ -104,7 +104,7 @@ export default function DeliveryMethodsList() {
 	};
 
 	const renderActions = (method, isDropdown = false) => (
-		<Can permission="manage delivery methods">
+		<Can permission="users.view">
 			{isDropdown ? (
 				<>
 					<DropdownMenuItem onClick={() => navigate(`/metodos-envio/editar/${method.id}`)}>
@@ -149,7 +149,7 @@ export default function DeliveryMethodsList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="manage delivery methods">
+					<Can permission="users.view">
 						<Button asChild>
 							<Link to="/metodos-envio/crear">
 								<Plus className="mr-2 h-4 w-4" /> {'Crear Método de Envío'}

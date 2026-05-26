@@ -18,7 +18,7 @@ class CatalogController extends Controller
 	{
 		$mode = $this->resolvePriceMode($request->query('mode'));
 		$query = Product::where('status', 'published')
-			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'media']);
+			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'sizes', 'media']);
 
 		if ($request->has('category')) {
 			$query->whereHas('category', function ($q) use ($request) {
@@ -65,7 +65,7 @@ class CatalogController extends Controller
 			->where(function ($q) use ($slug) {
 				$q->where('slug', $slug)->orWhere('id', $slug);
 			})
-			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'media'])
+			->with(['category', 'tags', 'variants.color', 'variants.size', 'colors', 'sizes', 'media'])
 			->firstOrFail();
 
 		return response()->json($this->transformProduct($product, $mode));
@@ -94,8 +94,10 @@ class CatalogController extends Controller
 	{
 		$originalPrice = $this->getOriginalPrice($product, $mode);
 		$finalPrice = $this->getFinalPrice($product, $mode);
-		$discount = $mode === 'retail' ? $this->getDiscountPercent($product) : 0;
-		$hasDiscount = $mode === 'retail' && $discount > 0 && $finalPrice < $originalPrice;
+		$discount = $this->getDiscountPercent($product, $mode);
+		$retailDiscount = $this->getDiscountPercent($product, 'retail');
+		$wholesaleDiscount = $this->getDiscountPercent($product, 'wholesale');
+		$hasDiscount = $discount > 0 && $finalPrice < $originalPrice;
 		$compareAtPrice = $hasDiscount ? [
 			'amount' => (string) $originalPrice,
 			'currencyCode' => '$',
@@ -112,6 +114,7 @@ class CatalogController extends Controller
 			'title' => $product->name,
 			'description' => $product->description,
 			'descriptionHtml' => $product->description,
+			'fabric' => $product->fabric,
 			'options' => $this->getProductOptions($product),
 			'priceRange' => [
 				'maxVariantPrice' => $finalPricePayload,
@@ -126,6 +129,8 @@ class CatalogController extends Controller
 			'wholesalePrice' => $product->wholesale_price !== null ? (string) round((float) $product->wholesale_price, 2) : null,
 			'hideOnWholesale' => (bool) $product->hide_on_wholesale,
 			'discount' => $discount,
+			'retailDiscount' => $retailDiscount,
+			'wholesaleDiscount' => $wholesaleDiscount,
 			'hasDiscount' => $hasDiscount,
 			'variants' => $product->variants->map(function ($variant) use ($finalPricePayload, $compareAtPrice, $discount, $hasDiscount) {
 				return [
@@ -174,18 +179,17 @@ class CatalogController extends Controller
 		return round((float) $product->sale_price, 2);
 	}
 
-	private function getDiscountPercent(Product $product): float
+	private function getDiscountPercent(Product $product, string $mode = 'retail'): float
 	{
-		return max(min((float) ($product->discount ?? 0), 100), 0);
+		$field = $mode === 'wholesale' ? 'wholesale_discount' : 'discount';
+
+		return max(min((float) ($product->{$field} ?? 0), 100), 0);
 	}
 
 	private function getFinalPrice(Product $product, string $mode = 'retail'): float
 	{
 		$originalPrice = $this->getOriginalPrice($product, $mode);
-		if ($mode === 'wholesale') {
-			return $originalPrice;
-		}
-		$discount = $this->getDiscountPercent($product);
+		$discount = $this->getDiscountPercent($product, $mode);
 
 		if ($discount <= 0) {
 			return $originalPrice;
@@ -204,6 +208,9 @@ class CatalogController extends Controller
 		$options = [];
 
 		$colors = $product->variants->pluck('color')->filter()->unique('id');
+		if ($colors->isEmpty() && $product->relationLoaded('colors')) {
+			$colors = $product->colors->filter()->unique('id');
+		}
 		if ($colors->isNotEmpty()) {
 			$options[] = [
 				'id' => 'color',
@@ -214,6 +221,9 @@ class CatalogController extends Controller
 		}
 
 		$sizes = $product->variants->pluck('size')->filter()->unique('id');
+		if ($sizes->isEmpty() && $product->relationLoaded('sizes')) {
+			$sizes = $product->sizes->filter()->unique('id');
+		}
 		if ($sizes->isNotEmpty()) {
 			$options[] = [
 				'id' => 'size',
@@ -249,41 +259,36 @@ class CatalogController extends Controller
 
 	private function getProductImages(Product $product)
 	{
-		$images = [];
-		foreach ($product->getMedia('gallery') as $media) {
-			$images[] = [
-				'url' => $media->getFullUrl(),
-				'width' => 1000,
-				'height' => 1000,
-				'altText' => $product->name,
-			];
+		$images = $product->getMedia('gallery')
+			->sortBy('order_column')
+			->values()
+			->map(fn ($media) => $this->imagePayload($media->getFullUrl(), $product->name))
+			->toArray();
+
+		if (empty($images)) {
+			$legacyCover = $product->getFirstMediaUrl('cover');
+			if ($legacyCover) {
+				$images[] = $this->imagePayload($legacyCover, $product->name);
+			}
 		}
-		// Also include cover if not in gallery
-		$cover = $product->getFirstMediaUrl('cover');
-		if ($cover) {
-			// Check if already in gallery (simplistic check)
-			$images = array_merge([
-				[
-					'url' => $cover,
-					'width' => 1000,
-					'height' => 1000,
-					'altText' => $product->name,
-				]
-			], $images);
-		}
+
 		return $images;
 	}
 
 	private function getProductCover(Product $product)
 	{
-		$url = $product->getFirstMediaUrl('cover');
-		if (!$url)
-			return null;
+		$images = $this->getProductImages($product);
+
+		return $images[0] ?? null;
+	}
+
+	private function imagePayload(string $url, string $altText): array
+	{
 		return [
 			'url' => $url,
 			'width' => 1000,
 			'height' => 1000,
-			'altText' => $product->name,
+			'altText' => $altText,
 		];
 	}
 }

@@ -21,6 +21,7 @@ class Product extends Model implements HasMedia
         'code',
         'slug',
         'description',
+        'fabric',
         'cost_price',
         'sale_price',
         'status',
@@ -32,6 +33,7 @@ class Product extends Model implements HasMedia
         'category_id',
         'wholesale_price',
         'discount',
+        'wholesale_discount',
         'stock',
         'min_stock',
     ];
@@ -41,6 +43,7 @@ class Product extends Model implements HasMedia
         'sale_price' => 'decimal:2',
         'wholesale_price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'wholesale_discount' => 'decimal:2',
         'order' => 'integer',
         'featured' => 'boolean',
         'hide_on_wholesale' => 'boolean',

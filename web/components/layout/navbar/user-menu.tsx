@@ -35,14 +35,7 @@ export default function UserMenu({ customer }: { customer: any }) {
   );
 
   if (!customer) {
-    return (
-      <Link
-        href="/ingreso"
-        className="flex h-10 w-10 items-center justify-center rounded-[12px] text-black transition-colors hover:bg-black/5"
-      >
-        <UserIcon />
-      </Link>
-    );
+    return null;
   }
 
   // Prevent hydration mismatch by not rendering Menu until mounted

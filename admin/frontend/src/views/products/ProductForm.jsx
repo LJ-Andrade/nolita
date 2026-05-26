@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save, X, Plus, Trash2, List, Wand2, Check } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ImageUpload } from "@/components/ui/image-upload";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ImageGallery } from "@/components/ui/image-gallery";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -42,9 +41,6 @@ export default function ProductForm() {
 	const [tags, setTags] = useState([]);
 	const [sizes, setSizes] = useState([]);
 	const [colors, setColors] = useState([]);
-	const [coverUrl, setCoverUrl] = useState(null);
-	const [pendingCover, setPendingCover] = useState(null);
-	const [removeCover, setRemoveCover] = useState(false);
 	const [gallery, setGallery] = useState([]);
 	const [productName, setProductName] = useState("");
 	const [fillingFakeData, setFillingFakeData] = useState(false);
@@ -59,6 +55,7 @@ export default function ProductForm() {
 		code: z.string().min(1, "Este campo es requerido" || 'Campo requerido'),
 		slug: z.string().nullable(),
 		description: z.string().nullable(),
+		fabric: z.string().nullable().optional(),
 		cost_price: z.coerce.number({
 			invalid_type_error: "Debe ser un número válido",
 			required_error: "El precio de costo es requerido"
@@ -71,6 +68,9 @@ export default function ProductForm() {
 			invalid_type_error: "Debe ser un número válido"
 		}).min(0, "El valor no puede ser menor a 0").optional().nullable().default(0),
 		discount: z.coerce.number({
+			invalid_type_error: "Debe ser un número válido"
+		}).min(0, "El valor no puede ser menor a 0").max(100).optional().nullable().default(0),
+		wholesale_discount: z.coerce.number({
 			invalid_type_error: "Debe ser un número válido"
 		}).min(0, "El valor no puede ser menor a 0").max(100).optional().nullable().default(0),
 		category_id: z.string().min(1, "La categoría es requerida"),
@@ -101,10 +101,12 @@ export default function ProductForm() {
 			code: "",
 			slug: "",
 			description: "",
+			fabric: "",
 			cost_price: 0,
 			sale_price: 0,
 			wholesale_price: 0,
 			discount: 0,
+			wholesale_discount: 0,
 			category_id: "",
 			tag_ids: [],
 			size_ids: [],
@@ -120,6 +122,22 @@ export default function ProductForm() {
 	});
 	const variants = form.watch('variants') || [];
 	const hasVariants = variants.length > 0;
+	const salePrice = Number(form.watch("sale_price") || 0);
+	const retailDiscount = Number(form.watch("discount") || 0);
+	const wholesalePrice = Number(form.watch("wholesale_price") || 0);
+	const wholesaleDiscount = Number(form.watch("wholesale_discount") || 0);
+	const calculateFinalPrice = (price, discount) => {
+		const safePrice = Number.isFinite(price) ? Math.max(price, 0) : 0;
+		const safeDiscount = Number.isFinite(discount) ? Math.min(Math.max(discount, 0), 100) : 0;
+
+		return safePrice * (1 - safeDiscount / 100);
+	};
+	const formatPrice = (value) => new Intl.NumberFormat("es-AR", {
+		style: "currency",
+		currency: "ARS",
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 2,
+	}).format(Number(value) || 0);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -151,10 +169,12 @@ export default function ProductForm() {
 						code: data.data.code || "",
 						slug: data.data.slug || "",
 						description: data.data.description || "",
+						fabric: data.data.fabric || "",
 						cost_price: data.data.cost_price || 0,
 						sale_price: data.data.sale_price || 0,
 						wholesale_price: data.data.wholesale_price || 0,
 						discount: data.data.discount || 0,
+						wholesale_discount: data.data.wholesale_discount || 0,
 						stock: data.data.stock || 0,
 						min_stock: data.data.min_stock || 0,
 						category_id: data.data.category_id?.toString() || "",
@@ -175,7 +195,6 @@ export default function ProductForm() {
 						featured: data.data.featured || false,
 						hide_on_wholesale: data.data.hide_on_wholesale || false,
 					});
-					setCoverUrl(data.data.cover_url);
 					setGallery(data.data.gallery || []);
 					setProductName(data.data.name);
 
@@ -220,10 +239,12 @@ export default function ProductForm() {
 				name: fakeName,
 				code: "PROD-" + Math.floor(Math.random() * 10000),
 				description: "<p>Esta es una descripción generada automáticamente para pruebas con imágenes de Picsum.</p>",
+				fabric: "Algodón",
 				cost_price: 1500,
 				sale_price: 3500,
 				wholesale_price: 2800,
 				discount: 5,
+				wholesale_discount: 0,
 				category_id: randomCat.toString(),
 				tag_ids: randomTags,
 				size_ids: randomSizes,
@@ -233,10 +254,6 @@ export default function ProductForm() {
 				hide_on_wholesale: false,
 			});
 			setProductName(fakeName);
-
-			// Cover
-			const coverFile = await fetchFakeImage(500, 700, 'cover.jpg');
-			if (coverFile) handleCoverChange(coverFile);
 
 			// Gallery
 			const g1 = await fetchFakeImage(500, 700, 'gal1.jpg');
@@ -257,17 +274,6 @@ export default function ProductForm() {
 			toast.error("Hubo un error al generar fotos falsas.");
 		} finally {
 			setFillingFakeData(false);
-		}
-	};
-
-	const handleCoverChange = (file) => {
-		setPendingCover(file);
-		if (file) {
-			setCoverUrl(URL.createObjectURL(file));
-			setRemoveCover(false);
-		} else {
-			setCoverUrl(null);
-			setRemoveCover(true);
 		}
 	};
 
@@ -383,12 +389,6 @@ export default function ProductForm() {
 		}
 		if (!formData.has('hide_on_wholesale')) {
 			formData.append('hide_on_wholesale', '0');
-		}
-
-		if (pendingCover) {
-			formData.append("cover", pendingCover);
-		} else if (removeCover) {
-			formData.append("remove_cover", "1");
 		}
 
 		// Send gallery images with their order
@@ -522,8 +522,8 @@ export default function ProductForm() {
 								/>
 							</div>
 
-							{/* Row 3: Prices */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+							{/* Row 3: Cost */}
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 								<FormField
 									control={form.control}
 									name="cost_price"
@@ -537,57 +537,104 @@ export default function ProductForm() {
 										</FormItem>
 									)}
 								/>
-
-								<FormField
-									control={form.control}
-									name="sale_price"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Precio Minorista"}</FormLabel>
-											<FormControl>
-												<Input type="number" step="0.01" {...field} placeholder="0.00" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="wholesale_price"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Precio Mayorista"}</FormLabel>
-											<FormControl>
-												<Input type="number" step="0.01" {...field} placeholder="0.00" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="discount"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{"Descuento"}</FormLabel>
-											<FormControl>
-												<Input type="number" step="0.01" {...field} placeholder="0%" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
 							</div>
 
-							{/* Row 3b: Category | Wholesale visibility */}
-							<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+							{/* Row 3b: Prices */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<FormField
+											control={form.control}
+											name="sale_price"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>{"Precio Minorista"}</FormLabel>
+													<FormControl>
+														<Input type="number" step="0.01" {...field} placeholder="0.00" />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="discount"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>{"% Descuento"}</FormLabel>
+													<FormControl>
+														<Input type="number" step="0.01" {...field} placeholder="0%" />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+									<div className="rounded-md border bg-background/50 px-3 py-2 text-sm">
+										<span className="text-muted-foreground">{"Precio final: "}</span>
+										<span className="font-semibold">{formatPrice(calculateFinalPrice(salePrice, retailDiscount))}</span>
+									</div>
+								</div>
+
+								<div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<FormField
+											control={form.control}
+											name="wholesale_price"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>{"Precio Mayorista"}</FormLabel>
+													<FormControl>
+														<Input type="number" step="0.01" {...field} placeholder="0.00" />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="wholesale_discount"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>{"% Descuento"}</FormLabel>
+													<FormControl>
+														<Input type="number" step="0.01" {...field} placeholder="0%" />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+									<div className="rounded-md border bg-background/50 px-3 py-2 text-sm">
+										<span className="text-muted-foreground">{"Precio final: "}</span>
+										<span className="font-semibold">{formatPrice(calculateFinalPrice(wholesalePrice, wholesaleDiscount))}</span>
+									</div>
+								</div>
+							</div>
+
+							{/* Row 3c: Fabric | Category | Wholesale visibility */}
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<FormField
+									control={form.control}
+									name="fabric"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>{"Tela"}</FormLabel>
+											<FormControl>
+												<Input {...field} value={field.value || ""} placeholder="Ej: Algodón" />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
 								<FormField
 									control={form.control}
 									name="category_id"
 									render={({ field }) => (
-										<FormItem className="md:col-span-3">
+										<FormItem>
 											<FormLabel>{"Categoría"}</FormLabel>
 											<FormControl>
 												<select
@@ -627,7 +674,7 @@ export default function ProductForm() {
 								/>
 							</div>
 
-							{/* Row 3c: Stock | Min */}
+							{/* Row 3d: Stock | Min */}
 							<div className="grid grid-cols-1 md:grid-cols-6 gap-4">
 								{!hasVariants && (
 									<FormField
@@ -874,41 +921,25 @@ export default function ProductForm() {
 						</CardContent>
 					</Card>
 
-					{/* Row 2: Cover + Gallery */}
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						<div className="md:col-span-1">
-							<Card className="h-full">
-								<CardHeader>
-									<CardTitle>{"Portada"}</CardTitle>
-								</CardHeader>
-								<CardContent className="h-[calc(100%-2rem)]">
-									<ImageUpload
-										value={coverUrl}
-										onChange={handleCoverChange}
-										onRemove={() => handleCoverChange(null)}
-										aspect={5 / 7}
-										outputSize={{ width: 500, height: 700 }}
-									/>
-								</CardContent>
-							</Card>
-						</div>
-						<div className="md:col-span-2">
-							<Card className="h-full">
-								<CardHeader>
-									<CardTitle>{"Galería"}</CardTitle>
-								</CardHeader>
-								<CardContent className="h-[calc(100%-2rem)]">
-									<ImageGallery
-										value={gallery}
-										onChange={setGallery}
-										onRemoveExisting={id ? handleRemoveGalleryImage : undefined}
-										aspect={5 / 7}
-										outputSize={{ width: 500, height: 700 }}
-									/>
-								</CardContent>
-							</Card>
-						</div>
-					</div>
+					{/* Row 2: Gallery */}
+					<Card>
+						<CardHeader>
+							<CardTitle>{"Galería"}</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<p className="mb-4 text-sm text-muted-foreground">
+								{"La primera imagen de la galería se usa como portada del producto."}
+							</p>
+							<ImageGallery
+								value={gallery}
+								onChange={setGallery}
+								onRemoveExisting={id ? handleRemoveGalleryImage : undefined}
+								aspect={5 / 7}
+								outputSize={{ width: 500, height: 700 }}
+								gridClassName="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"
+							/>
+						</CardContent>
+					</Card>
 
 					{/* Row 5: Description - Full width */}
 					<FormField
@@ -942,7 +973,6 @@ export default function ProductForm() {
 												>
 													<option value="draft">{"Borrador"}</option>
 													<option value="published">{"Publicado"}</option>
-													<option value="archived">{"Archivado"}</option>
 												</select>
 											</FormControl>
 											<FormMessage />

@@ -2,14 +2,12 @@ import React, {
   useEffect,
   useState,
   useCallback,
-  useMemo,
   Fragment,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
 import { getMediaUrl } from "@/lib/media-url";
-import { formatDate } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -43,7 +41,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ChevronRight,
   Check,
   Loader2,
 } from "lucide-react";
@@ -67,7 +64,6 @@ export default function ProductsList() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [expandedProductId, setExpandedProductId] = useState(null);
   const [variantChanges, setVariantChanges] = useState({});
   const [savingVariantId, setSavingVariantId] = useState(null);
 
@@ -94,7 +90,7 @@ export default function ProductsList() {
     fetchItems,
   } = useCrudList({
     endpoint: "products",
-    filterKeys: ["search", "category_id", "status"],
+    filterKeys: ["search", "category_id", "status", "mode"],
     defaultSort: { column: "id", direction: "desc" },
   });
 
@@ -130,10 +126,6 @@ export default function ProductsList() {
   const handleStatusChange = (product, newStatus) => {
     quickUpdate(product.id, "status", newStatus);
   };
-
-  const hasVariantChanges = useMemo(() => {
-    return Object.keys(variantChanges).length > 0;
-  }, [variantChanges]);
 
   const handleVariantFieldChange = (productId, variantId, field, value) => {
     setVariantChanges((prev) => ({
@@ -180,13 +172,17 @@ export default function ProductsList() {
     }
   };
 
-  const toggleExpandProduct = (productId) => {
-    setExpandedProductId((prev) => (prev === productId ? null : productId));
-    setVariantChanges({});
-  };
-
   const getVariantChangesForProduct = (productId) => {
     return variantChanges[productId] || {};
+  };
+
+  const getVariantFieldValue = (productId, variant, field, fallback = "") => {
+    const changes = getVariantChangesForProduct(productId);
+    if (changes?.[variant.id] && field in changes[variant.id]) {
+      return changes[variant.id][field];
+    }
+
+    return variant[field] ?? fallback;
   };
 
   const renderSortIcon = (column) => {
@@ -211,6 +207,34 @@ export default function ProductsList() {
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const formatPrice = (value) => {
+    const numericValue = Number(value ?? 0);
+
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(numericValue);
+  };
+
+  const getRetailDiscount = (product) => Number(product.discount ?? 0);
+  const getWholesaleDiscount = (product) => Number(product.wholesale_discount ?? 0);
+
+  const getRetailFinalPrice = (product) => {
+    const salePrice = Number(product.sale_price ?? 0);
+    const discount = getRetailDiscount(product);
+
+    return salePrice * (1 - discount / 100);
+  };
+
+  const getWholesaleFinalPrice = (product) => {
+    const wholesalePrice = Number(product.wholesale_price ?? 0);
+    const discount = getWholesaleDiscount(product);
+
+    return wholesalePrice * (1 - discount / 100);
   };
 
   const onDeleteClick = (product) => {
@@ -274,7 +298,7 @@ export default function ProductsList() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder={"Buscar productos..."}
+                  placeholder={"Buscar por nombre o código..."}
                   className="pl-8"
                   value={filters.search}
                   onChange={(e) => setFilter("search", e.target.value)}
@@ -292,7 +316,7 @@ export default function ProductsList() {
             </div>
 
             <CollapsibleContent className="space-y-4 overflow-visible">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-2">
                   <label
                     htmlFor="filterCategory"
@@ -315,6 +339,21 @@ export default function ProductsList() {
                   </select>
                 </div>
                 <div className="space-y-2">
+                  <label htmlFor="filterMode" className="text-sm font-medium">
+                    {"Canal"}
+                  </label>
+                  <select
+                    id="filterMode"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={filters.mode}
+                    onChange={(e) => setFilter("mode", e.target.value)}
+                  >
+                    <option value="">{"Todos"}</option>
+                    <option value="retail">{"Minorista"}</option>
+                    <option value="wholesale">{"Mayorista"}</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
                   <label htmlFor="filterStatus" className="text-sm font-medium">
                     {"Estado"}
                   </label>
@@ -327,7 +366,6 @@ export default function ProductsList() {
                     <option value="">{"Todos los Estados"}</option>
                     <option value="draft">{"Borrador"}</option>
                     <option value="published">{"Publicado"}</option>
-                    <option value="archived">{"Archivado"}</option>
                   </select>
                 </div>
               </div>
@@ -368,9 +406,15 @@ export default function ProductsList() {
                       {"Nombre"} {renderSortIcon("name")}
                     </div>
                   </TableHead>
-                  <TableHead>{"Categoría"}</TableHead>
+                  <TableHead className="min-w-[320px]">
+                    {"Variantes / Stock"}
+                  </TableHead>
                   <TableHead>{"Precio Minorista"}</TableHead>
+                  <TableHead>{"% Desc."}</TableHead>
+                  <TableHead>{"Precio Final"}</TableHead>
                   <TableHead>{"Precio Mayorista"}</TableHead>
+                  <TableHead>{"% Desc."}</TableHead>
+                  <TableHead>{"Precio Final"}</TableHead>
                   <TableHead>{"Estado"}</TableHead>
                   <TableHead
                     className="cursor-pointer select-none w-[120px]"
@@ -378,14 +422,6 @@ export default function ProductsList() {
                   >
                     <div className="flex items-center">
                       {"Destacado"} {renderSortIcon("featured")}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none text-right w-[130px]"
-                    onClick={() => handleSort("created_at")}
-                  >
-                    <div className="flex items-center justify-end">
-                      {"Creado el"} {renderSortIcon("created_at")}
                     </div>
                   </TableHead>
                   <TableHead className="text-right w-[150px]">
@@ -398,7 +434,7 @@ export default function ProductsList() {
               >
                 {loading && products.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center">
+                    <TableCell colSpan={14} className="text-center">
                       {"Cargando..."}
                     </TableCell>
                   </TableRow>
@@ -406,7 +442,7 @@ export default function ProductsList() {
                 {!loading && products.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={11}
+                      colSpan={14}
                       className="text-center py-8 text-muted-foreground"
                     >
                       {"No se encontraron datos."}
@@ -437,15 +473,122 @@ export default function ProductsList() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">
-                        {product.name}
+                        <div className="space-y-1">
+                          <div>{product.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {product.code || "-"}
+                          </div>
+                        </div>
                       </TableCell>
-                      <TableCell>{product.category?.name}</TableCell>
-                      <TableCell>
-                        <div className="font-medium">{product.sale_price}</div>
+                      <TableCell className="align-top">
+                        {product.variants && product.variants.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                              {product.variants.map((variant) => {
+                                const stockValue = getVariantFieldValue(
+                                  product.id,
+                                  variant,
+                                  "stock",
+                                  0,
+                                );
+
+                                return (
+                                  <Badge
+                                    key={variant.id}
+                                    variant="outline"
+                                    className="h-auto gap-2 rounded-full border-border/80 bg-background px-2 py-1 text-xs font-normal"
+                                  >
+                                    <span className="inline-flex items-center gap-1.5 text-foreground">
+                                      {variant.color?.hex_color && (
+                                        <span
+                                          className="h-2.5 w-2.5 rounded-full border border-border/80"
+                                          style={{
+                                            backgroundColor:
+                                              variant.color.hex_color,
+                                          }}
+                                        />
+                                      )}
+                                      <span className="font-medium">
+                                        {variant.size?.name || "Sin talle"}
+                                      </span>
+                                      <span className="text-muted-foreground">
+                                        /
+                                      </span>
+                                      <span>
+                                        {variant.color?.name || "Sin color"}
+                                      </span>
+                                    </span>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      className="h-6 w-14 rounded-full border-border/80 bg-muted/40 px-2 text-center text-xs font-semibold"
+                                      value={stockValue}
+                                      onChange={(e) =>
+                                        handleVariantFieldChange(
+                                          product.id,
+                                          variant.id,
+                                          "stock",
+                                          parseInt(e.target.value, 10) || 0,
+                                        )
+                                      }
+                                    />
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                            {Object.keys(getVariantChangesForProduct(product.id))
+                              .length > 0 && (
+                              <div className="flex justify-start pt-1">
+                                <Button
+                                  size="sm"
+                                  className="min-w-[140px] border-emerald-600 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 hover:border-emerald-700"
+                                  onClick={() => handleSaveVariants(product.id)}
+                                  disabled={savingVariantId === product.id}
+                                >
+                                  {savingVariantId === product.id ? (
+                                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Check className="mr-1 h-4 w-4" />
+                                  )}
+                                  {"Guardar stock"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            {"Sin variantes"}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {product.wholesale_price}
+                          {formatPrice(product.sale_price)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {getRetailDiscount(product)}%
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {formatPrice(getRetailFinalPrice(product))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {formatPrice(product.wholesale_price)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {getWholesaleDiscount(product)}%
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {formatPrice(getWholesaleFinalPrice(product))}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -473,13 +616,6 @@ export default function ProductsList() {
                             >
                               {"Publicado"}
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatusChange(product, "archived")
-                              }
-                            >
-                              {"Archivado"}
-                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -503,22 +639,8 @@ export default function ProductsList() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="text-right w-[130px]">
-                        {formatDate(product.created_at)}
-                      </TableCell>
                       <TableCell className="text-right w-[150px]">
                         <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() => toggleExpandProduct(product.id)}
-                            title={"Ver variantes"}
-                          >
-                            <ChevronRight
-                              className={`h-4 w-4 transition-transform ${expandedProductId === product.id ? "rotate-90" : ""}`}
-                            />
-                          </Button>
                           <Can permission="view products">
                             <Button
                               variant="ghost"
@@ -556,174 +678,6 @@ export default function ProductsList() {
                         </div>
                       </TableCell>
                     </TableRow>
-                    {expandedProductId === product.id &&
-                      product.variants &&
-                      product.variants.length > 0 && (
-                        <TableRow className="bg-muted/30 hover:bg-muted/30">
-                          <TableCell colSpan={10} className="p-4">
-                            <div className="space-y-3">
-                              <div className="max-w-3xl ml-auto">
-                                <div className="flex items-center justify-between mb-3">
-                                  <h4 className="font-medium text-sm">
-                                    {"Talles, colores y variantes"}
-                                  </h4>
-                                </div>
-                                <Table className="border rounded-lg">
-                                  <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                      <TableHead className="w-[100px] text-left">
-                                        {"SKU"}
-                                      </TableHead>
-                                      <TableHead className="text-left">
-                                        {"Color"}
-                                      </TableHead>
-                                      <TableHead className="text-left">
-                                        {"Talle"}
-                                      </TableHead>
-                                      <TableHead className="text-right">
-                                        {"Stock"}
-                                      </TableHead>
-                                      <TableHead className="text-right">
-                                        {"Stock Mínimo"}
-                                      </TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {product.variants.map((variant) => {
-                                      const changes =
-                                        getVariantChangesForProduct(product.id);
-                                      const hasChanges =
-                                        changes && changes[variant.id];
-                                      return (
-                                        <TableRow
-                                          key={variant.id}
-                                          className={
-                                            hasChanges
-                                              ? "bg-yellow-50 dark:bg-yellow-900/30"
-                                              : ""
-                                          }
-                                        >
-                                          <TableCell className="w-[100px]">
-                                            <Input
-                                              className="h-8 text-sm"
-                                              value={
-                                                hasChanges
-                                                  ? (changes[variant.id].sku ??
-                                                    variant.sku)
-                                                  : (variant.sku ?? "")
-                                              }
-                                              onChange={(e) =>
-                                                handleVariantFieldChange(
-                                                  product.id,
-                                                  variant.id,
-                                                  "sku",
-                                                  e.target.value,
-                                                )
-                                              }
-                                              placeholder="-"
-                                            />
-                                          </TableCell>
-                                          <TableCell className="text-left">
-                                            <div className="flex items-center gap-2">
-                                              {variant.color?.hex_color && (
-                                                <span
-                                                  className="h-4 w-4 rounded-full border shrink-0"
-                                                  style={{
-                                                    backgroundColor:
-                                                      variant.color.hex_color,
-                                                  }}
-                                                />
-                                              )}
-                                              <span>
-                                                {variant.color?.name || "-"}
-                                              </span>
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className="text-left">
-                                            {variant.size?.name || "-"}
-                                          </TableCell>
-                                          <TableCell className="text-right">
-                                            <div className="flex justify-end">
-                                              <Input
-                                                type="number"
-                                                className="h-8 w-[80px] text-sm text-right"
-                                                value={
-                                                  hasChanges
-                                                    ? (changes[variant.id]
-                                                        .stock ?? variant.stock)
-                                                    : (variant.stock ?? 0)
-                                                }
-                                                onChange={(e) =>
-                                                  handleVariantFieldChange(
-                                                    product.id,
-                                                    variant.id,
-                                                    "stock",
-                                                    parseInt(e.target.value) ||
-                                                      0,
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                          </TableCell>
-                                          <TableCell className="text-right">
-                                            <div className="flex justify-end">
-                                              <Input
-                                                type="number"
-                                                className="h-8 w-[80px] text-sm text-right"
-                                                value={
-                                                  hasChanges
-                                                    ? (changes[variant.id]
-                                                        .min_stock ??
-                                                      variant.min_stock)
-                                                    : (variant.min_stock ?? 0)
-                                                }
-                                                onChange={(e) =>
-                                                  handleVariantFieldChange(
-                                                    product.id,
-                                                    variant.id,
-                                                    "min_stock",
-                                                    parseInt(e.target.value) ||
-                                                      0,
-                                                  )
-                                                }
-                                              />
-                                            </div>
-                                          </TableCell>
-                                        </TableRow>
-                                      );
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                              {(() => {
-                                const changes = getVariantChangesForProduct(
-                                  product.id,
-                                );
-                                const hasChanges =
-                                  changes && Object.keys(changes).length > 0;
-                                return hasChanges ? (
-                                  <div className="flex justify-end mt-3">
-                                    <Button
-                                      size="sm"
-                                      onClick={() =>
-                                        handleSaveVariants(product.id)
-                                      }
-                                      disabled={savingVariantId === product.id}
-                                    >
-                                      {savingVariantId === product.id ? (
-                                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                                      ) : (
-                                        <Check className="h-4 w-4 mr-1" />
-                                      )}
-                                      {"Guardar"}
-                                    </Button>
-                                  </div>
-                                ) : null;
-                              })()}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
                   </Fragment>
                 ))}
               </TableBody>

@@ -114,7 +114,7 @@ export default function ProductColorsList() {
 	};
 
 	const renderActions = (color, isDropdown = false) => (
-		<Can permission="manage product colors">
+		<Can permission="manage products">
 			{isDropdown ? (
 				<>
 					<DropdownMenuItem onClick={() => navigate(`/productos-colores/editar/${color.id}`)}>
@@ -159,7 +159,7 @@ export default function ProductColorsList() {
 
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-start gap-2">
-					<Can permission="manage product colors">
+					<Can permission="manage products">
 						<Button asChild>
 							<Link to="/productos-colores/crear">
 								<Plus className="mr-2 h-4 w-4" /> {"Crear Color"}
