@@ -30,11 +30,12 @@ export async function completeOrder(
     }
   }
 
+  const whatsapp = getRequiredString(formData, "whatsapp");
   const data = {
     name: getRequiredString(formData, "name"),
     email: getRequiredString(formData, "email"),
-    phone: getRequiredString(formData, "phone"),
-    whatsapp: getRequiredString(formData, "whatsapp"),
+    phone: getRequiredString(formData, "phone") || whatsapp,
+    whatsapp,
     cuit: getRequiredString(formData, "cuit"),
     address: getRequiredString(formData, "address"),
     city: getRequiredString(formData, "city") || localityName,
