@@ -42,6 +42,16 @@ Act as the project orchestrator for this repository. Use delegation when it adds
 
 ## Workflow
 
+### Efficiency and Context Budget
+
+- Keep context usage proportional to the task risk and scope.
+- Prefer targeted file reads and searches over loading whole large files when the relevant section is known.
+- Avoid printing or reviewing long diffs unless the change is risky, cross-cutting, or the user asks for a detailed review.
+- Summarize findings and decisions instead of carrying large command outputs forward.
+- For small UI polish or copy/layout tweaks, avoid documentation updates unless behavior, workflow, API contracts, or project knowledge changes.
+- For micro-adjustments, do not repeat full validation after every edit. Run focused checks only when they are likely to catch mistakes, and reserve lint/build/test suites for the end of a meaningful batch or when the user asks.
+- Preserve quality by increasing discovery, documentation, and validation again when touching production-sensitive behavior, backend contracts, data persistence, auth, checkout, exports, or shared components.
+
 ### New or Complex Features
 
 1. Discovery
