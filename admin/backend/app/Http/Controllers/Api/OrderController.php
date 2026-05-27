@@ -358,7 +358,7 @@ class OrderController extends Controller
 			];
 
 			$order->update([
-				'status' => 'completed',
+				'status' => 'pending',
 				'total_amount' => max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee,
 				'price_mode' => $priceMode,
 				'payment_method' => (string) $validated['payment_method_id'],
