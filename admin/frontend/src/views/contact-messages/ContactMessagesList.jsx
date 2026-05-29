@@ -21,6 +21,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -182,6 +183,7 @@ export default function ContactMessagesList() {
             </div>
           </div>
 
+          <AdminTableShell>
           <Table>
             <TableHeader>
               <TableRow>
@@ -194,7 +196,7 @@ export default function ContactMessagesList() {
                 <TableHead>Mensaje</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="text-right w-[150px]">Acciones</TableHead>
+                <TableHead data-sticky="right" className="text-right w-[150px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -247,12 +249,12 @@ export default function ContactMessagesList() {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell data-sticky="right" className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-                            <ChevronDown className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+                            <ChevronDown className="h-5 w-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -265,10 +267,10 @@ export default function ContactMessagesList() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                       <div className="hidden lg:flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewMessage(message)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewMessage(message)} title={`Ver mensaje de ${message.name}`} aria-label={`Ver mensaje de ${message.name}`}>
                           <MessageSquare className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteClick(message)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteClick(message)} title={`Eliminar mensaje de ${message.name}`} aria-label={`Eliminar mensaje de ${message.name}`}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -278,6 +280,7 @@ export default function ContactMessagesList() {
               ))}
             </TableBody>
           </Table>
+          </AdminTableShell>
 
           {selectedCount > 0 && (
             <div className="flex items-center justify-between py-4 border-t">

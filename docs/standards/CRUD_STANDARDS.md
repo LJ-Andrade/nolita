@@ -301,11 +301,15 @@ CRUD list tables must use the shared table frame so every list has the same radi
 Required behavior:
 
 - Standard list modules should render data through `CrudTable`; it already includes `AdminTableShell`.
-- Custom list tables, such as Products, must wrap the top-level `<Table>` with `AdminTableShell`.
+- Custom list tables must wrap the top-level `<Table>` with `AdminTableShell`.
 - Nested detail tables may use a local frame only when they are visually subordinate to a row expansion or form section.
 - Row striping is controlled globally by `TableBody`; do not add per-screen stripe classes unless the table has a special state.
 - Tables should not render visible borders or row dividers; the header cells carry the darker header background.
 - Table shell and stripe colors must be changed in `admin/frontend/src/skins.css`, not inside individual list views.
+- Tables with row actions must make the action header and action cell sticky with `data-sticky="right"`.
+- Sticky action columns must live inside `AdminTableShell`; do not rely on page-level horizontal scrolling for list actions.
+- Collapsed row action dropdown triggers must use a minimum `h-10 w-10` touch target and a `ChevronDown` icon sized `h-5 w-5`.
+- `DropdownMenuItem` icons are intentionally larger on mobile and return to compact sizing from the `sm` breakpoint.
 
 Editable skin variables:
 
@@ -510,12 +514,15 @@ views/
 - Tables should be horizontally scrollable: `overflow-x-auto`
 - Filters collapse into single column
 - Action buttons in dropdown menu (not visible inline)
+- Row action dropdown triggers must remain at least 40 x 40 and action menu icons must be large enough for touch input
+- Row actions must remain sticky on the right while the table is horizontally scrolled
 - BulkActionsBar sticks to bottom of viewport
 
 ### Desktop (≥ 768px)
 
 - Full table with all columns visible
 - Inline action buttons (Edit/Delete)
+- Row actions may remain sticky during horizontal overflow and should visually return to the normal table edge when scrolled fully right
 - Filters in multi-column grid
 - BulkActionsBar floating above content
 
@@ -533,6 +540,8 @@ Before submitting a new CRUD module, verify:
 - [ ] Collapsible filters section
 - [ ] Data table with sortable columns
 - [ ] Data table uses `CrudTable` or wraps the top-level custom `<Table>` in `AdminTableShell`
+- [ ] Row action header and cells use `data-sticky="right"` when the list has actions
+- [ ] Collapsed/mobile row action dropdown trigger uses `h-10 w-10` with a `h-5 w-5` chevron
 - [ ] Order fields use `CrudInlineOrderEditor` when inline ordering is available
 - [ ] Bulk selection checkboxes
 - [ ] BulkActionsBar implementation
@@ -576,9 +585,15 @@ Use these as templates when creating new modules.
 
 ## Last Updated
 
-Date: 2026-05-21
-Version: 1.3
+Date: 2026-05-29
+Version: 1.4
 Author: Development Team
+
+### Changes in v1.4:
+
+- Standardized sticky row action columns for horizontally scrollable admin list tables.
+- Required larger collapsed action dropdown triggers and mobile menu icons for touch usability.
+- Clarified that custom list tables must use `AdminTableShell` with `data-sticky="right"` action columns.
 
 ### Changes in v1.3:
 

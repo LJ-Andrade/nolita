@@ -112,6 +112,8 @@ export default function ProductSizesList() {
 						size="icon"
 						className="h-8 w-8"
 						onClick={() => navigate(`/productos-talles/editar/${size.id}`)}
+						title={`Editar talle ${size.name}`}
+						aria-label={`Editar talle ${size.name}`}
 					>
 						<Edit className="h-4 w-4" />
 					</Button>
@@ -120,6 +122,8 @@ export default function ProductSizesList() {
 						size="icon"
 						className="h-8 w-8 text-red-500"
 						onClick={() => handleDeleteClick(size)}
+						title={`Eliminar talle ${size.name}`}
+						aria-label={`Eliminar talle ${size.name}`}
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>

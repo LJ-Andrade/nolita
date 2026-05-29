@@ -27,6 +27,7 @@ import { CrudPagination } from '@/components/crud-pagination';
 import { BulkActionsBar } from '@/components/bulk-actions-bar';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { PageHeader } from '@/components/page-header';
+import { RichTextPreview } from '@/components/rich-text-preview';
 
 export default function DeliveryMethodsList() {
 	const navigate = useNavigate();
@@ -63,7 +64,12 @@ export default function DeliveryMethodsList() {
 	const columns = [
 		{ key: 'id', label: 'ID', sortable: true, width: 'w-[60px]' },
 		{ key: 'name', label: 'Nombre', sortable: true },
-		{ key: 'description', label: 'Descripción', sortable: false },
+		{
+			key: 'description',
+			label: 'Descripción',
+			sortable: false,
+			render: (value) => <RichTextPreview html={value} />,
+		},
 		{
 			key: 'fee',
 			label: 'Tarifa',
@@ -121,6 +127,8 @@ export default function DeliveryMethodsList() {
 						size="icon"
 						className="h-8 w-8"
 						onClick={() => navigate(`/metodos-envio/editar/${method.id}`)}
+						title={`Editar método de envío ${method.name}`}
+						aria-label={`Editar método de envío ${method.name}`}
 					>
 						<Edit className="h-4 w-4" />
 					</Button>
@@ -129,6 +137,8 @@ export default function DeliveryMethodsList() {
 						size="icon"
 						className="h-8 w-8 text-red-500"
 						onClick={() => handleDeleteClick(method)}
+						title={`Eliminar método de envío ${method.name}`}
+						aria-label={`Eliminar método de envío ${method.name}`}
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>

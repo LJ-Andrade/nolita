@@ -14,7 +14,8 @@ import {
 	ChevronDown,
 	FileDown,
 	ReceiptText,
-	Check
+	Check,
+	ExternalLink
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ import { useBulkSelect } from '@/hooks/use-bulk-select';
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 import ManualOrderForm from './ManualOrderForm';
+import { AdminTableShell } from "@/components/admin-table-shell";
 
 const showPaymentStatus = false;
 
@@ -225,6 +227,33 @@ export default function OrdersList() {
 			toast.error('Error al exportar el pedido en PDF');
 		} finally {
 			setExportingOrderPdfId(null);
+		}
+	};
+
+	const handleOrderPdfPreview = async (orderId) => {
+		const previewWindow = window.open('', '_blank');
+
+		if (!previewWindow) {
+			toast.error('El navegador bloqueó la vista previa del PDF');
+			return;
+		}
+
+		previewWindow.opener = null;
+		previewWindow.document.title = `Pedido #${orderId}`;
+		previewWindow.document.body.innerHTML = '<p style="font-family: sans-serif; padding: 16px;">Generando PDF...</p>';
+
+		try {
+			const response = await axiosClient.get(`admin/orders/${orderId}/export`, {
+				params: { format: 'pdf' },
+				responseType: 'blob',
+			});
+
+			const blobUrl = URL.createObjectURL(response.data);
+			previewWindow.location.href = blobUrl;
+			window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+		} catch (error) {
+			previewWindow.close();
+			toast.error('Error al abrir el PDF del pedido');
 		}
 	};
 
@@ -493,113 +522,131 @@ export default function OrdersList() {
 						</div>
 					</div>
 
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead className="w-10">
-									<Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
-								</TableHead>
-								<TableHead className="w-[80px]">Order ID</TableHead>
-								<TableHead>Cliente</TableHead>
-								<TableHead>Fecha</TableHead>
-								<TableHead>Estado</TableHead>
-								{showPaymentStatus && <TableHead>Pago</TableHead>}
-								<TableHead className="text-right">Total</TableHead>
-								<TableHead className="text-right w-[150px]">Acciones</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
-							{loading && orders.length === 0 && (
+					<AdminTableShell>
+						<Table>
+							<TableHeader>
 								<TableRow>
-									<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center">Cargando...</TableCell>
+									<TableHead className="w-10">
+										<Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
+									</TableHead>
+									<TableHead className="w-[80px]">Order ID</TableHead>
+									<TableHead>Cliente</TableHead>
+									<TableHead>Fecha</TableHead>
+									<TableHead>Estado</TableHead>
+									{showPaymentStatus && <TableHead>Pago</TableHead>}
+									<TableHead className="text-right">Total</TableHead>
+									<TableHead data-sticky="right" className="text-right w-[150px]">Acciones</TableHead>
 								</TableRow>
-							)}
-							{!loading && orders.length === 0 && (
-								<TableRow>
-									<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center py-8 text-muted-foreground">
-										No se encontraron órdenes.
-									</TableCell>
-								</TableRow>
-							)}
-							{orders.map((order) => (
-								<TableRow key={order.id}>
-									<TableCell>
-										<Checkbox checked={isSelected(order.id)} onCheckedChange={() => toggleSelect(order.id)} />
-									</TableCell>
-									<TableCell className="font-medium text-muted-foreground">
-										#{order.id}
-									</TableCell>
-									<TableCell>
-										<div className="flex flex-col">
-											<span className="font-medium">{order.customer?.name || order.customer_data?.name || 'Invitado'}</span>
-											<span className="text-xs text-muted-foreground">{order.customer?.email || order.customer_data?.email}</span>
-										</div>
-									</TableCell>
-									<TableCell>
-										{new Date(order.created_at).toLocaleDateString()}
-									</TableCell>
-									<TableCell>
-										{renderStatusDropdown(order)}
-									</TableCell>
-									{showPaymentStatus && <TableCell>
-										{renderPaymentStatusDropdown(order)}
-									</TableCell>}
-									<TableCell className="text-right font-medium">
-										${parseFloat(order.total_amount).toFixed(2)} {order.currency}
-									</TableCell>
-									<TableCell className="text-right">
-										<div className="flex items-center justify-end gap-1">
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-														<ChevronDown className="h-4 w-4" />
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem asChild>
-														<Link to={`/pedidos/${order.id}`}>
-															<Eye className="mr-2 h-4 w-4" /> Ver Detalles
-														</Link>
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														disabled={exportingOrderPdfId === order.id}
-														onClick={() => handleOrderPdfExport(order.id)}
-													>
-														<ReceiptText className="mr-2 h-4 w-4" />
-														{exportingOrderPdfId === order.id ? 'Exportando...' : 'Exportar PDF'}
-													</DropdownMenuItem>
-													<DropdownMenuItem onClick={() => handleDeleteClick(order)} className="text-red-500">
-														<Trash2 className="mr-2 h-4 w-4" /> Eliminar
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-											<div className="hidden lg:flex items-center gap-1">
-												<Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-													<Link to={`/pedidos/${order.id}`}>
-														<Eye className="h-4 w-4" />
-													</Link>
-												</Button>
-												<Button
-													type="button"
-													variant="ghost"
-													size="icon"
-													className="h-8 w-8"
-													onClick={() => handleOrderPdfExport(order.id)}
-													disabled={exportingOrderPdfId === order.id}
-													aria-label={`Exportar pedido #${order.id} en PDF`}
-												>
-													<ReceiptText className="h-4 w-4" />
-												</Button>
-												<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteClick(order)}>
-													<Trash2 className="h-4 w-4" />
-												</Button>
+							</TableHeader>
+							<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
+								{loading && orders.length === 0 && (
+									<TableRow>
+										<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center">Cargando...</TableCell>
+									</TableRow>
+								)}
+								{!loading && orders.length === 0 && (
+									<TableRow>
+										<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center py-8 text-muted-foreground">
+											No se encontraron órdenes.
+										</TableCell>
+									</TableRow>
+								)}
+								{orders.map((order) => (
+									<TableRow key={order.id}>
+										<TableCell>
+											<Checkbox checked={isSelected(order.id)} onCheckedChange={() => toggleSelect(order.id)} />
+										</TableCell>
+										<TableCell className="font-medium text-muted-foreground">
+											#{order.id}
+										</TableCell>
+										<TableCell>
+											<div className="flex flex-col">
+												<span className="font-medium">{order.customer?.name || order.customer_data?.name || 'Invitado'}</span>
+												<span className="text-xs text-muted-foreground">{order.customer?.email || order.customer_data?.email}</span>
 											</div>
-										</div>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+										</TableCell>
+										<TableCell>
+											{new Date(order.created_at).toLocaleDateString()}
+										</TableCell>
+										<TableCell>
+											{renderStatusDropdown(order)}
+										</TableCell>
+										{showPaymentStatus && <TableCell>
+											{renderPaymentStatusDropdown(order)}
+										</TableCell>}
+										<TableCell className="text-right font-medium">
+											${parseFloat(order.total_amount).toFixed(2)} {order.currency}
+										</TableCell>
+										<TableCell data-sticky="right" className="text-right">
+											<div className="flex items-center justify-end gap-1">
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+															<ChevronDown className="h-5 w-5" />
+														</Button>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end">
+														<DropdownMenuItem asChild>
+															<Link to={`/pedidos/${order.id}`}>
+																<Eye className="mr-2 h-4 w-4" /> Ver Detalles
+															</Link>
+														</DropdownMenuItem>
+														<DropdownMenuItem onClick={() => handleOrderPdfPreview(order.id)}>
+															<ExternalLink className="mr-2 h-4 w-4" />
+															Ver PDF
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															disabled={exportingOrderPdfId === order.id}
+															onClick={() => handleOrderPdfExport(order.id)}
+														>
+															<ReceiptText className="mr-2 h-4 w-4" />
+															{exportingOrderPdfId === order.id ? 'Exportando...' : 'Exportar PDF'}
+														</DropdownMenuItem>
+														<DropdownMenuItem onClick={() => handleDeleteClick(order)} className="text-red-500">
+															<Trash2 className="mr-2 h-4 w-4" /> Eliminar
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
+												<div className="hidden lg:flex items-center gap-1">
+													<Button variant="ghost" size="icon" className="h-8 w-8" title={`Ver pedido #${order.id}`} aria-label={`Ver pedido #${order.id}`} asChild>
+														<Link to={`/pedidos/${order.id}`} title={`Ver pedido #${order.id}`} aria-label={`Ver pedido #${order.id}`}>
+															<Eye className="h-4 w-4" />
+														</Link>
+													</Button>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														className="h-8 w-8"
+														onClick={() => handleOrderPdfPreview(order.id)}
+														title={`Ver PDF del pedido #${order.id}`}
+														aria-label={`Ver PDF del pedido #${order.id}`}
+													>
+														<ExternalLink className="h-4 w-4" />
+													</Button>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														className="h-8 w-8"
+														onClick={() => handleOrderPdfExport(order.id)}
+														disabled={exportingOrderPdfId === order.id}
+														title={`Descargar PDF del pedido #${order.id}`}
+														aria-label={`Exportar pedido #${order.id} en PDF`}
+													>
+														<ReceiptText className="h-4 w-4" />
+													</Button>
+													<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDeleteClick(order)} title={`Eliminar pedido #${order.id}`} aria-label={`Eliminar pedido #${order.id}`}>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
+											</div>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</AdminTableShell>
 
 					{meta.last_page > 1 && (
 						<div className="flex items-center justify-end space-x-2 py-4">

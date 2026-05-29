@@ -131,6 +131,8 @@ export default function ProductColorsList() {
 						size="icon"
 						className="h-8 w-8"
 						onClick={() => navigate(`/productos-colores/editar/${color.id}`)}
+						title={`Editar color ${color.name}`}
+						aria-label={`Editar color ${color.name}`}
 					>
 						<Edit className="h-4 w-4" />
 					</Button>
@@ -139,6 +141,8 @@ export default function ProductColorsList() {
 						size="icon"
 						className="h-8 w-8 text-red-500"
 						onClick={() => handleDeleteClick(color)}
+						title={`Eliminar color ${color.name}`}
+						aria-label={`Eliminar color ${color.name}`}
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>

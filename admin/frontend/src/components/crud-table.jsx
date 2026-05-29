@@ -114,7 +114,7 @@ export function CrudTable({
                 </div>
               </TableHead>
             ))}
-            <TableHead className="text-right w-[120px]">Actions</TableHead>
+            <TableHead data-sticky="right" className="text-right w-[120px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -157,7 +157,7 @@ export function CrudTable({
                   {renderCell(item, column)}
                 </TableCell>
               ))}
-              <TableCell className="text-right py-2 w-[120px]">
+              <TableCell data-sticky="right" className="text-right py-2 w-[120px]">
                 <div className="flex items-center justify-end gap-1">
                   {actions && (
                     <>
@@ -166,9 +166,9 @@ export function CrudTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 lg:hidden"
+                            className="h-10 w-10 lg:hidden"
                           >
-                            <ChevronDown className="h-4 w-4" />
+                            <ChevronDown className="h-5 w-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">

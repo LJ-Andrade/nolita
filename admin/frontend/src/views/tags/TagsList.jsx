@@ -115,6 +115,8 @@ export default function TagsList() {
             size="icon"
             className="h-8 w-8"
             onClick={() => navigate(`/etiquetas/editar/${tag.id}`)}
+            title={`Editar etiqueta ${tag.name}`}
+            aria-label={`Editar etiqueta ${tag.name}`}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -123,6 +125,8 @@ export default function TagsList() {
             size="icon"
             className="h-8 w-8 text-red-500"
             onClick={() => handleDeleteClick(tag)}
+            title={`Eliminar etiqueta ${tag.name}`}
+            aria-label={`Eliminar etiqueta ${tag.name}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

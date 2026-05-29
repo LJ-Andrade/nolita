@@ -424,7 +424,7 @@ export default function ProductsList() {
                       {"Destacado"} {renderSortIcon("featured")}
                     </div>
                   </TableHead>
-                  <TableHead className="text-right w-[150px]">
+                  <TableHead data-sticky="right" className="text-right w-[150px]">
                     {"Acciones"}
                   </TableHead>
                 </TableRow>
@@ -639,42 +639,74 @@ export default function ProductsList() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="text-right w-[150px]">
+                      <TableCell data-sticky="right" className="text-right w-[150px]">
                         <div className="flex items-center justify-end gap-1">
-                          <Can permission="view products">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 cursor-pointer"
-                              onClick={() =>
-                                navigate(`/productos/${product.id}`)
-                              }
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Can>
-                          <Can permission="edit products">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 cursor-pointer"
-                              onClick={() =>
-                                navigate(`/productos/editar/${product.id}`)
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Can>
-                          <Can permission="delete products">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500 cursor-pointer"
-                              onClick={() => onDeleteClick(product)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </Can>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+                                <ChevronDown className="h-5 w-5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <Can permission="view products">
+                                <DropdownMenuItem onClick={() => navigate(`/productos/${product.id}`)}>
+                                  <Eye className="mr-2 h-4 w-4" /> Ver
+                                </DropdownMenuItem>
+                              </Can>
+                              <Can permission="edit products">
+                                <DropdownMenuItem onClick={() => navigate(`/productos/editar/${product.id}`)}>
+                                  <Edit className="mr-2 h-4 w-4" /> Editar
+                                </DropdownMenuItem>
+                              </Can>
+                              <Can permission="delete products">
+                                <DropdownMenuItem onClick={() => onDeleteClick(product)} className="text-red-500">
+                                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                                </DropdownMenuItem>
+                              </Can>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <div className="hidden lg:flex items-center gap-1">
+                            <Can permission="view products">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 cursor-pointer"
+                                onClick={() =>
+                                  navigate(`/productos/${product.id}`)
+                                }
+                                title={`Ver producto ${product.name}`}
+                                aria-label={`Ver producto ${product.name}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Can>
+                            <Can permission="edit products">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 cursor-pointer"
+                                onClick={() =>
+                                  navigate(`/productos/editar/${product.id}`)
+                                }
+                                title={`Editar producto ${product.name}`}
+                                aria-label={`Editar producto ${product.name}`}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Can>
+                            <Can permission="delete products">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 cursor-pointer"
+                                onClick={() => onDeleteClick(product)}
+                                title={`Eliminar producto ${product.name}`}
+                                aria-label={`Eliminar producto ${product.name}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </Can>
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>

@@ -189,6 +189,8 @@ export default function CouponList() {
 						size="icon"
 						className="h-8 w-8"
 						onClick={() => navigate(`/cupones/editar/${coupon.id}`)}
+						title={`Editar cupón ${coupon.code}`}
+						aria-label={`Editar cupón ${coupon.code}`}
 					>
 						<Edit className="h-4 w-4" />
 					</Button>
@@ -197,6 +199,8 @@ export default function CouponList() {
 						size="icon"
 						className="h-8 w-8 text-red-500"
 						onClick={() => handleDeleteClick(coupon)}
+						title={`Eliminar cupón ${coupon.code}`}
+						aria-label={`Eliminar cupón ${coupon.code}`}
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>

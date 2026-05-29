@@ -2,6 +2,15 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 88: Admin List Sticky Actions Standard
+
+1. [x] `docs/SPECS.md`: Document sticky row actions, mobile action menu sizing, and rich text list previews.
+2. [x] `docs/DEVLOG.md`: Track the standardization rollout.
+3. [x] `docs/standards/CRUD_STANDARDS.md`: Document reusable implementation rules for `AdminTableShell`, sticky actions, and mobile dropdown targets.
+4. [x] `admin/frontend/src/components`: Standardize shared table and dropdown primitives for sticky actions and mobile tap targets.
+5. [x] `admin/frontend/src/views`: Apply the shared table shell and larger collapsed action dropdown trigger to custom list tables.
+6. [x] Validation: Run the admin frontend build.
+
 ## Phase 87: Guest Customers for Anonymous Orders
 
 1. [x] `docs/SPECS.md`: Document guest customers table, upsert contract, and admin listing.

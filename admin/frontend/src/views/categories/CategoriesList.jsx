@@ -114,6 +114,8 @@ export default function CategoriesList() {
             size="icon"
             className="h-8 w-8"
             onClick={() => navigate(`/categorias/editar/${category.id}`)}
+            title={`Editar categoría ${category.name}`}
+            aria-label={`Editar categoría ${category.name}`}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -122,6 +124,8 @@ export default function CategoriesList() {
             size="icon"
             className="h-8 w-8 text-red-500"
             onClick={() => handleDeleteClick(category)}
+            title={`Eliminar categoría ${category.name}`}
+            aria-label={`Eliminar categoría ${category.name}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

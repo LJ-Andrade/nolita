@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -294,6 +295,7 @@ export default function ProvincesList() {
 						</CollapsibleContent>
 					</Collapsible>
 
+					<AdminTableShell>
 					<Table>
 						<TableHeader>
 							<TableRow>
@@ -321,7 +323,7 @@ export default function ProvincesList() {
 									</div>
 								</TableHead>
 								<TableHead className="text-right w-[100px]">{"Costo"}</TableHead>
-								<TableHead className="text-right w-[120px]">{"Acciones"}</TableHead>
+								<TableHead data-sticky="right" className="text-right w-[120px]">{"Acciones"}</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -393,12 +395,12 @@ export default function ProvincesList() {
 											</div>
 										)}
 									</TableCell>
-									<TableCell className="text-right w-[120px]">
-										<div className="flex items-center justify-end gap-1">
+												<TableCell data-sticky="right" className="text-right w-[120px]">
+													<div className="flex items-center justify-end gap-1">
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-														<ChevronDown className="h-4 w-4" />
+													<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+														<ChevronDown className="h-5 w-5" />
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
@@ -424,6 +426,7 @@ export default function ProvincesList() {
 							))}
 						</TableBody>
 					</Table>
+					</AdminTableShell>
 
 					{meta.last_page > 1 && (
 						<div className="flex items-center justify-end space-x-2 py-4">

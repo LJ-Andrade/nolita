@@ -25,6 +25,7 @@ import {
 	TableHeader,
 	TableRow
 } from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -164,6 +165,7 @@ export default function RegisteredCustomersTab() {
 				</div>
 			</div>
 
+			<AdminTableShell>
 			<Table>
 				<TableHeader>
 					<TableRow>
@@ -177,7 +179,7 @@ export default function RegisteredCustomersTab() {
 						<TableHead>{"Dirección"}</TableHead>
 						<TableHead>{"CP"}</TableHead>
 						<TableHead>{"Estado"}</TableHead>
-						<TableHead className="text-right w-[150px]">{"Acciones"}</TableHead>
+						<TableHead data-sticky="right" className="text-right w-[150px]">{"Acciones"}</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -249,12 +251,12 @@ export default function RegisteredCustomersTab() {
 									</Badge>
 								)}
 							</TableCell>
-							<TableCell className="text-right">
+							<TableCell data-sticky="right" className="text-right">
 								<div className="flex items-center justify-end gap-1">
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-												<ChevronDown className="h-4 w-4" />
+											<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+												<ChevronDown className="h-5 w-5" />
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
@@ -284,6 +286,7 @@ export default function RegisteredCustomersTab() {
 					))}
 				</TableBody>
 			</Table>
+			</AdminTableShell>
 
 			{meta.last_page > 1 && (
 				<div className="flex items-center justify-end space-x-2 py-4">

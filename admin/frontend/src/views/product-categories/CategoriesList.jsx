@@ -31,7 +31,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Can from "@/components/can";
 import { useCrudList } from "@/hooks/use-crud-list";
 import { CrudPagination } from "@/components/crud-pagination";
@@ -169,6 +174,8 @@ export default function CategoriesList() {
             onClick={() =>
               navigate(`/productos-categorias/editar/${category.id}`)
             }
+            title={`Editar categoría ${category.name}`}
+            aria-label={`Editar categoría ${category.name}`}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -177,6 +184,8 @@ export default function CategoriesList() {
             size="icon"
             className="h-8 w-8 text-red-500"
             onClick={() => handleDeleteClick(category)}
+            title={`Eliminar categoría ${category.name}`}
+            aria-label={`Eliminar categoría ${category.name}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -303,7 +312,7 @@ export default function CategoriesList() {
                       {getSortIcon("created_at")}
                     </div>
                   </TableHead>
-                  <TableHead className="w-[100px] text-right">
+                  <TableHead data-sticky="right" className="w-[100px] text-right">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -356,9 +365,21 @@ export default function CategoriesList() {
                       <TableCell className="text-right w-[130px]">
                         {new Date(category.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-right w-[100px]">
+                      <TableCell data-sticky="right" className="text-right w-[100px]">
                         <div className="flex items-center justify-end gap-1">
-                          {renderActions(category)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+                                <ChevronDown className="h-5 w-5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {renderActions(category, true)}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <div className="hidden lg:flex items-center gap-1">
+                            {renderActions(category)}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>

@@ -8,6 +8,7 @@ import {
 	Phone,
 	ChevronLeft,
 	ChevronRight,
+	ChevronDown,
 	Check,
 	Eye,
 } from 'lucide-react';
@@ -21,8 +22,15 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
+import { AdminTableShell } from '@/components/admin-table-shell';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useBulkSelect } from '@/hooks/use-bulk-select';
@@ -198,6 +206,7 @@ export default function GuestCustomersTab() {
 				</div>
 			</div>
 
+			<AdminTableShell>
 			<Table>
 				<TableHeader>
 					<TableRow>
@@ -210,7 +219,7 @@ export default function GuestCustomersTab() {
 						<TableHead className="text-right">Pedidos</TableHead>
 						<TableHead>Último pedido</TableHead>
 						<TableHead className="text-right">Total gastado</TableHead>
-						<TableHead className="text-right w-[120px]">Acciones</TableHead>
+						<TableHead data-sticky="right" className="text-right w-[120px]">Acciones</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody className={loading ? 'opacity-50 pointer-events-none' : ''}>
@@ -262,28 +271,48 @@ export default function GuestCustomersTab() {
 							<TableCell className="text-right font-medium">{guest.orders_count}</TableCell>
 							<TableCell className="text-sm text-muted-foreground">{formatDate(guest.last_order_at)}</TableCell>
 							<TableCell className="text-right font-medium">{formatCurrency(guest.total_spent)}</TableCell>
-							<TableCell className="text-right">
+							<TableCell data-sticky="right" className="text-right">
 								<div className="flex items-center justify-end gap-1">
-									<Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Ver pedidos">
-										<Link to={`/pedidos?search=${encodeURIComponent(guest.email)}`}>
-											<Eye className="h-4 w-4" />
-										</Link>
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="h-8 w-8 text-red-500"
-										onClick={() => handleDeleteClick(guest)}
-										title="Eliminar"
-									>
-										<Trash2 className="h-4 w-4" />
-									</Button>
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+												<ChevronDown className="h-5 w-5" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end">
+											<DropdownMenuItem asChild>
+												<Link to={`/pedidos?search=${encodeURIComponent(guest.email)}`}>
+													<Eye className="mr-2 h-4 w-4" /> Ver pedidos
+												</Link>
+											</DropdownMenuItem>
+											<DropdownMenuItem onClick={() => handleDeleteClick(guest)} className="text-red-500">
+												<Trash2 className="mr-2 h-4 w-4" /> Eliminar
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
+									<div className="hidden lg:flex items-center gap-1">
+										<Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Ver pedidos">
+											<Link to={`/pedidos?search=${encodeURIComponent(guest.email)}`}>
+												<Eye className="h-4 w-4" />
+											</Link>
+										</Button>
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8 text-red-500"
+											onClick={() => handleDeleteClick(guest)}
+											title="Eliminar"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
 								</div>
 							</TableCell>
 						</TableRow>
 					))}
 				</TableBody>
 			</Table>
+			</AdminTableShell>
 
 			{meta.last_page > 1 && (
 				<div className="flex items-center justify-end space-x-2 py-4">

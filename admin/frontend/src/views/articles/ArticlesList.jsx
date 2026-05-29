@@ -11,6 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -177,6 +178,8 @@ export default function ArticlesList() {
 							setPreviewArticle(article);
 							setPreviewOpen(true);
 						}}
+						title={`Ver artículo ${article.title}`}
+						aria-label={`Ver artículo ${article.title}`}
 					>
 						<Eye className="h-4 w-4" />
 					</Button>
@@ -186,6 +189,8 @@ export default function ArticlesList() {
 							size="icon"
 							className="h-8 w-8"
 							onClick={() => navigate(`/articulos/editar/${article.id}`)}
+							title={`Editar artículo ${article.title}`}
+							aria-label={`Editar artículo ${article.title}`}
 						>
 							<Edit className="h-4 w-4" />
 						</Button>
@@ -196,6 +201,8 @@ export default function ArticlesList() {
 							size="icon"
 							className="h-8 w-8 text-red-500"
 							onClick={() => handleDeleteClick(article)}
+							title={`Eliminar artículo ${article.title}`}
+							aria-label={`Eliminar artículo ${article.title}`}
 						>
 							<Trash2 className="h-4 w-4" />
 						</Button>
@@ -298,6 +305,7 @@ export default function ArticlesList() {
 						</CollapsibleContent>
 					</Collapsible>
 
+					<AdminTableShell>
 					<Table>
 						<TableHeader>
 							<TableRow>
@@ -351,7 +359,7 @@ export default function ArticlesList() {
 										) : <ChevronDown className="ml-2 h-4 w-4 opacity-50" />}
 									</div>
 								</TableHead>
-								<TableHead className="text-right w-[150px]">{"Acciones"}</TableHead>
+								<TableHead data-sticky="right" className="text-right w-[150px]">{"Acciones"}</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -434,12 +442,12 @@ export default function ArticlesList() {
 										</div>
 									</TableCell>
 									<TableCell className="text-right w-[130px]">{formatDate(article.created_at)}</TableCell>
-									<TableCell className="text-right w-[150px]">
+									<TableCell data-sticky="right" className="text-right w-[150px]">
 										<div className="flex items-center justify-end gap-1">
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-														<ChevronDown className="h-4 w-4" />
+													<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+														<ChevronDown className="h-5 w-5" />
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
@@ -458,6 +466,7 @@ export default function ArticlesList() {
 							))}
 						</TableBody>
 					</Table>
+					</AdminTableShell>
 
 					<CrudPagination
 						meta={meta}

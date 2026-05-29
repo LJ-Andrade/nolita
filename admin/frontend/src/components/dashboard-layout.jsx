@@ -249,7 +249,7 @@ export default function DashboardLayout({ children }) {
 							</DropdownMenu>
 						</div>
 					</header>
-					<main className="flex-1 p-6 md:p-5">
+					<main className="min-w-0 flex-1 p-6 md:p-5">
 						{children}
 					</main>
 				</SidebarInset>

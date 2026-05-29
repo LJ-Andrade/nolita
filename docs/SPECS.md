@@ -189,6 +189,14 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - The admin product list must not expose the `archived` status option in filters or inline status controls.
 - The default admin product list dataset must exclude archived products from the visible table.
 
+### Admin CRUD List Tables
+
+- Admin list tables with row actions must keep the actions column visible during horizontal overflow.
+- Standard CRUD list modules should render through `CrudTable`; custom list tables must wrap the top-level `<Table>` in `AdminTableShell`.
+- Row action headers and cells must mark the actions column with `data-sticky="right"` so actions float on narrow scrollable tables and return to their normal position when the table is scrolled fully right.
+- Collapsed row action menus for narrow/mobile layouts must use at least a 40 x 40 trigger and larger menu icons/touch rows so actions remain easy to tap.
+- Admin list columns that display HTML saved from textarea/rich-text inputs must render through the shared rich text preview instead of showing raw HTML strings.
+
 ### Admin Product Pricing Form
 
 - The product form must keep separate discount inputs for retail and wholesale pricing.

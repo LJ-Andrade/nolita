@@ -11,6 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { AdminTableShell } from "@/components/admin-table-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -313,6 +314,7 @@ export default function UsersList() {
 							</div>
 						</CollapsibleContent>
 					</Collapsible>
+					<AdminTableShell>
 					<Table>
 						<TableHeader>
 							<TableRow>
@@ -356,7 +358,7 @@ export default function UsersList() {
 										{"Creado el"} {renderSortIcon("created_at")}
 									</div>
 								</TableHead>
-								<TableHead className="text-right w-[120px]">{"Acciones"}</TableHead>
+								<TableHead data-sticky="right" className="text-right w-[120px]">{"Acciones"}</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
@@ -396,12 +398,12 @@ export default function UsersList() {
 										</div>
 									</TableCell>
 									<TableCell className="text-right w-[130px]">{user.created_at ? formatDate(user.created_at) : ''}</TableCell>
-									<TableCell className="text-right w-[120px]">
+									<TableCell data-sticky="right" className="text-right w-[120px]">
 										<div className="flex items-center justify-end gap-1">
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
-														<ChevronDown className="h-4 w-4" />
+													<Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+														<ChevronDown className="h-5 w-5" />
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
@@ -424,14 +426,14 @@ export default function UsersList() {
 											<div className="hidden lg:flex items-center gap-1">
 												{canModifyUser(user) && (
 													<Can permission="users.edit">
-														<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/usuarios/editar/${user.id}`)}>
+														<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/usuarios/editar/${user.id}`)} title={`Editar usuario ${user.name}`} aria-label={`Editar usuario ${user.name}`}>
 															<Edit className="h-4 w-4" />
 														</Button>
 													</Can>
 												)}
 												{canModifyUser(user) && (
 													<Can permission="users.delete">
-														<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDeleteClick(user)}>
+														<Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDeleteClick(user)} title={`Eliminar usuario ${user.name}`} aria-label={`Eliminar usuario ${user.name}`}>
 															<Trash2 className="h-4 w-4" />
 														</Button>
 													</Can>
@@ -443,6 +445,7 @@ export default function UsersList() {
 							))}
 						</TableBody>
 					</Table>
+					</AdminTableShell>
 
 					{meta.last_page > 1 && (
 						<div className="flex items-center justify-end space-x-2 py-4">
