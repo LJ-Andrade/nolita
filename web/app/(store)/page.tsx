@@ -14,7 +14,6 @@ import { getSession } from "lib/vadmin/auth";
 import { getFavorites } from "lib/vadmin/favorites";
 import type { Product } from "lib/vadmin/types";
 import { COLOR_MAP } from "lib/constants";
-import { getServerPriceMode } from "lib/price-mode";
 import { Suspense } from "react";
 
 export const metadata = {
@@ -179,20 +178,14 @@ export default async function HomePage(props: {
       : [searchParams.color]
     : [];
   const sort = searchParams.sort ?? "featured";
-  const mode = await getServerPriceMode();
-  const [
-    products,
-    collections,
-    content,
-    session,
-    categoryFilterProducts,
-  ] = await Promise.all([
-    getProducts({ category, mode }),
-    getCollections(),
-    getSiteContent("home"),
-    getSession(),
-    category ? getProducts({ mode }) : Promise.resolve(null),
-  ]);
+  const [products, collections, content, session, categoryFilterProducts] =
+    await Promise.all([
+      getProducts({ category }),
+      getCollections(),
+      getSiteContent("home"),
+      getSession(),
+      category ? getProducts() : Promise.resolve(null),
+    ]);
 
   const favorites = session ? await getFavorites() : [];
   const favoriteIds = new Set(favorites.map((product) => product.id));

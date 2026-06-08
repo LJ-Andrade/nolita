@@ -1,7 +1,6 @@
 import { ProductGrid } from "components/catalog/product-grid";
 import { defaultSort, sorting } from "lib/constants";
 import { getProducts } from "lib/vadmin";
-import { getServerPriceMode } from "lib/price-mode";
 import { getFavorites } from "lib/vadmin/favorites";
 import { getSession } from "lib/vadmin/auth";
 
@@ -17,10 +16,9 @@ export default async function SearchPage(props: {
   const { sort, q: searchValue } = searchParams as { [key: string]: string };
   const { sortKey, reverse } =
     sorting.find((item) => item.slug === sort) || defaultSort;
-  const mode = await getServerPriceMode();
 
   const [products, session] = await Promise.all([
-    getProducts({ sortKey, reverse, query: searchValue, mode }),
+    getProducts({ sortKey, reverse, query: searchValue }),
     getSession(),
   ]);
 
@@ -40,7 +38,11 @@ export default async function SearchPage(props: {
         </p>
       ) : null}
       {products.length > 0 ? (
-        <ProductGrid products={products} favoriteIds={favoriteIds} isAuthenticated={isAuthenticated} />
+        <ProductGrid
+          products={products}
+          favoriteIds={favoriteIds}
+          isAuthenticated={isAuthenticated}
+        />
       ) : (
         <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 py-20">
           <p className="text-sm uppercase tracking-widest text-stone-brown">

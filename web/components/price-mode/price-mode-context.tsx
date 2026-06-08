@@ -16,26 +16,46 @@ type PriceModeContextType = {
   setPriceMode: (mode: PriceMode) => void;
 };
 
+const PRICE_MODE_COOKIE = "nolita_price_mode_v2";
+const PRICE_MODE_STORAGE_KEY = "nolita_price_mode";
+
 const PriceModeContext = createContext<PriceModeContextType | undefined>(
   undefined,
 );
 
 function normalizeMode(mode?: string | null): PriceMode {
-  return mode === "wholesale" ? "wholesale" : "retail";
+  return mode === "retail" ? "retail" : "wholesale";
 }
 
 function persistPriceMode(mode: PriceMode) {
   try {
-    window.localStorage.setItem("nolita_price_mode", mode);
+    window.localStorage.setItem(PRICE_MODE_STORAGE_KEY, mode);
   } catch {
-    // Cookie persistence is the source of truth for server-rendered data.
+    // Cookie persistence keeps server-rendered data in sync when storage is unavailable.
   }
 
-  document.cookie = `nolita_price_mode=${mode}; path=/; max-age=31536000; samesite=lax`;
+  document.cookie = `${PRICE_MODE_COOKIE}=${mode}; path=/; max-age=31536000; samesite=lax`;
+}
+
+function readClientStoredPriceMode(): PriceMode | null {
+  try {
+    const storedMode = window.localStorage.getItem(PRICE_MODE_STORAGE_KEY);
+    return storedMode ? normalizeMode(storedMode) : null;
+  } catch {
+    return null;
+  }
+}
+
+function readClientCookiePriceMode(): PriceMode | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(
+    new RegExp(`${PRICE_MODE_COOKIE}=([^;]+)`),
+  );
+  return match ? normalizeMode(match[1]) : null;
 }
 
 export function PriceModeProvider({
-  initialMode = "retail",
+  initialMode = "wholesale",
   children,
 }: {
   initialMode?: PriceMode | string;
@@ -44,26 +64,22 @@ export function PriceModeProvider({
   const [priceMode, setPriceModeState] = useState<PriceMode>(
     normalizeMode(initialMode),
   );
-  const normalizedInitialMode = normalizeMode(initialMode);
 
   useEffect(() => {
-    try {
-      const storedMode = window.localStorage.getItem("nolita_price_mode");
-      if (!storedMode) return;
+    const storedMode = readClientStoredPriceMode();
+    const persistedMode = storedMode ?? readClientCookiePriceMode();
+    const normalizedInitialMode = normalizeMode(initialMode);
+    const nextMode = persistedMode ?? normalizedInitialMode;
 
-      const normalizedStoredMode = normalizeMode(storedMode);
-      if (normalizedStoredMode === normalizedInitialMode) return;
+    persistPriceMode(nextMode);
 
-      setPriceModeState(normalizedStoredMode);
-      persistPriceMode(normalizedStoredMode);
-    } catch {
-      persistPriceMode(normalizedInitialMode);
+    if (nextMode !== normalizedInitialMode) {
+      setPriceModeState(nextMode);
     }
-  }, [normalizedInitialMode]);
+  }, [initialMode]);
 
   const setPriceMode = useCallback((mode: PriceMode) => {
     const normalizedMode = normalizeMode(mode);
-
     setPriceModeState(normalizedMode);
     persistPriceMode(normalizedMode);
   }, []);
