@@ -34,8 +34,21 @@ function sortProducts(products: Product[], sort: string): Product[] {
   const copy = [...products];
 
   switch (sort) {
-    case "featured":
-      return copy;
+    case "featured": {
+      const withDiscount = copy.filter(
+        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
+      );
+      const withoutDiscount = copy.filter(
+        (p) => (p.discount ?? 0) === 0 && !p.hasDiscount,
+      );
+      const sortByDate = (a: Product, b: Product) =>
+        new Date(b.createdAt || b.updatedAt).getTime() -
+        new Date(a.createdAt || a.updatedAt).getTime();
+      return [
+        ...withDiscount.sort(sortByDate),
+        ...withoutDiscount.sort(sortByDate),
+      ];
+    }
     case "price_asc":
       return copy.sort(
         (a, b) =>
@@ -48,8 +61,16 @@ function sortProducts(products: Product[], sort: string): Product[] {
           parseFloat(b.priceRange.minVariantPrice.amount) -
           parseFloat(a.priceRange.minVariantPrice.amount),
       );
-    case "discount_desc":
-      return copy.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+    case "discount_desc": {
+      const withDiscount = copy.filter(
+        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
+      );
+      return withDiscount.sort(
+        (a, b) =>
+          new Date(b.createdAt || b.updatedAt).getTime() -
+          new Date(a.createdAt || a.updatedAt).getTime(),
+      );
+    }
     case "newest":
     default:
       return copy.sort(

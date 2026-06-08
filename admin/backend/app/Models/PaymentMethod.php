@@ -16,6 +16,7 @@ class PaymentMethod extends Model
         'description',
         'status',
         'fee',
+        'price_mode_scope',
     ];
 
     protected $casts = [
@@ -28,5 +29,20 @@ class PaymentMethod extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('payment_method');
+    }
+
+    public function scopeForPriceMode($query, ?string $priceMode)
+    {
+        $mode = $priceMode === 'wholesale' ? 'wholesale' : 'retail';
+
+        return $query->whereIn('price_mode_scope', ['both', $mode]);
+    }
+
+    public function appliesToPriceMode(?string $priceMode): bool
+    {
+        $mode = $priceMode === 'wholesale' ? 'wholesale' : 'retail';
+        $scope = $this->price_mode_scope ?: 'both';
+
+        return $scope === 'both' || $scope === $mode;
     }
 }

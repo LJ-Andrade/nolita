@@ -15,6 +15,7 @@ class PaymentMethodResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status,
             'fee' => $this->fee,
+            'price_mode_scope' => $this->price_mode_scope ?: 'both',
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

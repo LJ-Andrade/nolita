@@ -74,6 +74,7 @@ export type Product = {
   } | null;
   tags: string[];
   updatedAt: string;
+  createdAt?: string;
   colorImages?: { color: string; hex?: string; url: string }[];
 };
 
@@ -155,6 +156,7 @@ export type DeliveryMethod = {
   name: string;
   description: string;
   fee: string;
+  price_mode_scope?: "both" | "retail" | "wholesale";
 };
 
 export type PaymentMethod = {
@@ -163,6 +165,7 @@ export type PaymentMethod = {
   description: string;
   status: 'active' | 'inactive';
   fee: string;
+  price_mode_scope?: "both" | "retail" | "wholesale";
 };
 
 export type ShopConfiguration = {

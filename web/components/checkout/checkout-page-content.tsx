@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import CheckoutForm from "./checkout-form";
 import OrderSummary from "./order-summary";
@@ -24,6 +31,14 @@ import { useRouter } from "next/navigation";
 const checkoutTexts = webTexts.checkoutProcessingNotice;
 const MIN_PROCESSING_MS = 1000;
 
+function methodAppliesToPriceMode(
+  method: DeliveryMethod | PaymentMethod,
+  priceMode: "retail" | "wholesale",
+) {
+  const scope = method.price_mode_scope ?? "both";
+  return scope === "both" || scope === priceMode;
+}
+
 function SubmitButton({
   pending,
   disabled,
@@ -37,7 +52,7 @@ function SubmitButton({
       disabled={pending || disabled}
       className="mt-8 flex w-full items-center justify-center bg-graphite py-4 text-xs font-bold uppercase tracking-[0.2em] text-parchment transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? <LoadingDots className="bg-parchment" /> : "Confirmar Pedido"}
+      {pending ? <LoadingDots className="bg-parchment" /> : "Finalizar compra"}
     </button>
   );
 }
@@ -71,13 +86,27 @@ export default function CheckoutPageContent({
   const [selectedDeliveryFee, setSelectedDeliveryFee] = useState(
     parseFloat(deliveryMethods[0]?.fee || "0"),
   );
-  const [selectedPaymentFee, setSelectedPaymentFee] = useState(
+  const [selectedPaymentFeePercent, setSelectedPaymentFeePercent] = useState(
     parseFloat(paymentMethods[0]?.fee || "0"),
   );
   const [showCompletion, setShowCompletion] = useState(false);
   const previousCartQuantity = useRef(currentCart.totalQuantity);
 
   const isWholesale = priceMode === "wholesale";
+  const availableDeliveryMethods = useMemo(
+    () =>
+      deliveryMethods.filter((method) =>
+        methodAppliesToPriceMode(method, priceMode),
+      ),
+    [deliveryMethods, priceMode],
+  );
+  const availablePaymentMethods = useMemo(
+    () =>
+      paymentMethods.filter((method) =>
+        methodAppliesToPriceMode(method, priceMode),
+      ),
+    [paymentMethods, priceMode],
+  );
   const qtyMet =
     !isWholesale ||
     !shopConfig.min_quantity ||
@@ -87,20 +116,27 @@ export default function CheckoutPageContent({
     !shopConfig.min_amount ||
     parseFloat(currentCart.cost.subtotalAmount.amount) >= shopConfig.min_amount;
   const canCheckout = currentCart.totalQuantity > 0 && qtyMet && amountMet;
-
   const handleDeliveryChange = (methodId: string) => {
-    const method = deliveryMethods.find((m) => m.id === methodId);
+    const method = availableDeliveryMethods.find((m) => m.id === methodId);
     if (method) {
       setSelectedDeliveryFee(parseFloat(method.fee));
     }
   };
 
   const handlePaymentChange = (methodId: string) => {
-    const method = paymentMethods.find((m) => m.id === methodId);
-    if (method) {
-      setSelectedPaymentFee(parseFloat(method.fee));
-    }
+    const method = availablePaymentMethods.find((m) => m.id === methodId);
+    setSelectedPaymentFeePercent(parseFloat(method?.fee || "0"));
   };
+
+  useEffect(() => {
+    setSelectedDeliveryFee(parseFloat(availableDeliveryMethods[0]?.fee || "0"));
+  }, [availableDeliveryMethods]);
+
+  useEffect(() => {
+    setSelectedPaymentFeePercent(
+      parseFloat(availablePaymentMethods[0]?.fee || "0"),
+    );
+  }, [availablePaymentMethods]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -188,8 +224,8 @@ export default function CheckoutPageContent({
               initialData={session}
               provinces={provinces}
               localities={localities}
-              deliveryMethods={deliveryMethods}
-              paymentMethods={paymentMethods}
+              deliveryMethods={availableDeliveryMethods}
+              paymentMethods={availablePaymentMethods}
               onDeliveryChange={handleDeliveryChange}
               onPaymentChange={handlePaymentChange}
             />
@@ -199,7 +235,7 @@ export default function CheckoutPageContent({
             <OrderSummary
               cart={currentCart}
               shippingFee={selectedDeliveryFee}
-              paymentFee={selectedPaymentFee}
+              paymentFeePercent={selectedPaymentFeePercent}
               shopConfig={shopConfig}
               priceMode={priceMode}
               qtyMet={qtyMet}

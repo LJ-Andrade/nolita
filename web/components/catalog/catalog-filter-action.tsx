@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const SORT_OPTIONS = [
   { label: "Destacados", value: "featured" },
   { label: "Últimos Ingresos", value: "newest" },
-  { label: "Mayor Descuento", value: "discount_desc" },
+  { label: "Con descuento", value: "discount_desc" },
   { label: "Precio: Menor a Mayor", value: "price_asc" },
   { label: "Precio: Mayor a Menor", value: "price_desc" },
 ] as const;

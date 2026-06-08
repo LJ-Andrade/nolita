@@ -7,7 +7,6 @@ use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductVariantResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Services\StorefrontRevalidationService;
@@ -224,13 +223,7 @@ class ProductController extends Controller
                 }
             }
 
-            // Update order_column based on custom properties
-            $product->getMedia('gallery')->each(function ($media) {
-                if (isset($media->custom_properties['order'])) {
-                    $media->order_column = $media->custom_properties['order'];
-                    $media->save();
-                }
-            });
+            $this->syncGalleryOrder($product);
         }
 
         if ($request->hasFile('document')) {
@@ -433,29 +426,7 @@ class ProductController extends Controller
             }
         }
 
-        // Update order for existing gallery items
-        foreach ($galleryOrder as $mediaId => $order) {
-            // Skip if it's a filename (new image), process only numeric IDs (existing)
-            if (is_numeric($mediaId)) {
-                $mediaIdInt = (int) $mediaId;
-                
-                // Update order_column directly in database
-                \DB::table('media')
-                    ->where('id', $mediaIdInt)
-                    ->where('model_type', Product::class)
-                    ->where('model_id', $product->id)
-                    ->where('collection_name', 'gallery')
-                    ->update(['order_column' => (int) $order]);
-            }
-        }
-
-        // Update order_column for new images based on custom properties
-        $product->getMedia('gallery')->each(function ($media) {
-            if (isset($media->custom_properties['order']) && $media->order_column !== $media->custom_properties['order']) {
-                $media->order_column = $media->custom_properties['order'];
-                $media->save();
-            }
-        });
+        $this->syncGalleryOrder($product, $galleryOrder);
 
         if ($request->has('remove_gallery')) {
             $mediaToRemove = $product->getMedia('gallery')
@@ -656,5 +627,20 @@ public function bulkDelete(Request $request)
     private function mediaFileName(string $prefix, string $extension): string
     {
         return Str::slug($prefix) . '-' . Str::uuid() . '.' . strtolower($extension);
+    }
+
+    private function syncGalleryOrder(Product $product, array $submittedOrder = []): void
+    {
+        $product->load('media');
+
+        $product->getMedia('gallery')->each(function ($media) use ($submittedOrder) {
+            $submittedKey = (string) $media->id;
+            $customOrder = $media->getCustomProperty('order');
+            $order = $submittedOrder[$submittedKey] ?? $customOrder ?? $media->order_column ?? 0;
+
+            $media->order_column = (int) $order;
+            $media->forgetCustomProperty('order');
+            $media->save();
+        });
     }
 }

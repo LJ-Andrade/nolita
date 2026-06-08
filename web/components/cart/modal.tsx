@@ -366,6 +366,13 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                     </div>
                   </div>
 
+                  <button
+                    onClick={closeCart}
+                    className="mb-3 flex w-full items-center justify-center gap-2 border border-black py-3 text-sm font-semibold tracking-wide text-black transition-opacity hover:opacity-80"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    Continuar comprando
+                  </button>
                   <form action={redirectToCheckout}>
                     <CheckoutButton disabled={canCheckout === false} />
                   </form>
@@ -392,7 +399,7 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
         <LoadingDots className="bg-white" />
       ) : (
         <>
-          Continuar
+          Finalizar compra
           <ArrowRightIcon className="h-4 w-4" />
         </>
       )}

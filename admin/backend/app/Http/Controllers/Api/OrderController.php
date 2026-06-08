@@ -227,12 +227,17 @@ class OrderController extends Controller
 			'coupon_code' => ['nullable', 'string', 'max:255'],
 		]);
 
-		$locality = Locality::findOrFail($validated['locality_id']);
-		$deliveryMethod = DeliveryMethod::findOrFail($validated['delivery_method_id']);
-		$paymentMethod = PaymentMethod::where('status', 'active')->findOrFail($validated['payment_method_id']);
-		$city = $validated['city'] ?: $locality->name;
-		$priceMode = $this->resolvePriceMode($validated['price_mode'] ?? null);
-		$customer = auth('customer')->user() ?: $request->user();
+        $priceMode = $this->resolvePriceMode($validated['price_mode'] ?? null);
+        $locality = Locality::findOrFail($validated['locality_id']);
+        $deliveryMethod = DeliveryMethod::query()
+            ->forPriceMode($priceMode)
+            ->findOrFail($validated['delivery_method_id']);
+        $paymentMethod = PaymentMethod::query()
+            ->where('status', 'active')
+            ->forPriceMode($priceMode)
+            ->findOrFail($validated['payment_method_id']);
+        $city = $validated['city'] ?: $locality->name;
+        $customer = auth('customer')->user() ?: $request->user();
 
 		$cart = $customer
 			? Order::where('customer_id', $customer->id)
@@ -250,7 +255,6 @@ class OrderController extends Controller
 		}
 
 		$deliveryFee = (float) $deliveryMethod->fee;
-		$paymentFee = (float) $paymentMethod->fee;
 		$checkoutLines = $cart
 			? $cart->items->map(fn (OrderItem $item): array => [
 				'variant_id' => (int) $item->product_variant_id,
@@ -279,13 +283,15 @@ class OrderController extends Controller
 		if ($couponCode !== '') {
 			$coupon = Coupon::whereRaw('LOWER(code) = ?', [strtolower($couponCode)])->first();
 
-			if (!$coupon || !$coupon->isValidForCheckout()) {
-				return response()->json(['message' => 'Cupon invalido o vencido'], 422);
-			}
+            if (!$coupon || !$coupon->isValidForCheckout($priceMode)) {
+                return response()->json(['message' => 'Cupon invalido o vencido'], 422);
+            }
 
 			$couponDiscountAmount = $coupon->discountForSubtotal($subtotal);
 			$appliedCouponCode = $coupon->code;
 		}
+
+		$paymentFee = $this->calculatePaymentFee($subtotal, $couponDiscountAmount, $paymentMethod);
 
 		try {
 			$completedOrder = DB::transaction(function () use (
@@ -518,6 +524,14 @@ class OrderController extends Controller
 		}
 
 		return null;
+	}
+
+	private function calculatePaymentFee(float $subtotal, float $couponDiscountAmount, PaymentMethod $paymentMethod): float
+	{
+		$commissionPercent = max((float) $paymentMethod->fee, 0);
+		$base = max($subtotal - $couponDiscountAmount, 0);
+
+		return round($base * $commissionPercent / 100, 2);
 	}
 
 	private function getVariantUnitPrice(?ProductVariant $variant, string $priceMode = 'retail'): float

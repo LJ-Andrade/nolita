@@ -8,6 +8,7 @@ class Coupon extends Model
 {
     protected $fillable = [
         'code',
+        'price_mode_scope',
         'discount_type',
         'amount',
         'expires_at',
@@ -20,9 +21,26 @@ class Coupon extends Model
         'amount' => 'decimal:2',
     ];
 
-    public function isValidForCheckout(): bool
+    public function scopeForPriceMode($query, ?string $priceMode)
     {
-        return $this->active && (!$this->expires_at || $this->expires_at->isFuture());
+        $mode = $priceMode === 'wholesale' ? 'wholesale' : 'retail';
+
+        return $query->whereIn('price_mode_scope', ['both', $mode]);
+    }
+
+    public function appliesToPriceMode(?string $priceMode): bool
+    {
+        $mode = $priceMode === 'wholesale' ? 'wholesale' : 'retail';
+        $scope = $this->price_mode_scope ?: 'both';
+
+        return $scope === 'both' || $scope === $mode;
+    }
+
+    public function isValidForCheckout(?string $priceMode = null): bool
+    {
+        return $this->active
+            && (!$this->expires_at || $this->expires_at->isFuture())
+            && $this->appliesToPriceMode($priceMode);
     }
 
     public function discountForSubtotal(float $subtotal): float

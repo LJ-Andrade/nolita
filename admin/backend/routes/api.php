@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Admin\ProvinceController;
 use App\Http\Controllers\Api\Admin\LocalityController;
+use App\Http\Controllers\Api\Admin\CustomerExportController;
 use App\Http\Controllers\Api\Admin\OrderDocumentExportController;
 use App\Http\Controllers\Api\Admin\OrderExportController;
 use App\Http\Controllers\Api\Admin\StatisticsController;
@@ -176,11 +177,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/shop-configuration', [ShopConfigurationController::class, 'update'])->middleware('permission:users.view');
 
         // Customers
+    Route::get('admin/customers/export', [CustomerExportController::class, 'registered'])->middleware('permission:users.view');
     Route::post('admin/customers/bulk-delete', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'bulkDelete'])->middleware('permission:users.view');
     Route::post('admin/customers/{customer}/avatar', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'uploadAvatar'])->middleware('permission:users.view');
     Route::apiResource('admin/customers', \App\Http\Controllers\Api\Admin\CustomerController::class)->middleware('permission:users.view');
 
     // Guest Customers (anonymous order buyers)
+    Route::get('admin/guest-customers/export', [CustomerExportController::class, 'guests'])->middleware('permission:users.view');
     Route::post('admin/guest-customers/bulk-delete', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'bulkDelete'])->middleware('permission:users.view');
     Route::get('admin/guest-customers', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'index'])->middleware('permission:users.view');
     Route::get('admin/guest-customers/{guestCustomer}', [\App\Http\Controllers\Api\Admin\GuestCustomerController::class, 'show'])->middleware('permission:users.view');

@@ -2,6 +2,43 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 92: Payment Percentage Fee and Product List Order Cleanup
+
+1. [x] `docs/SPECS.md`: Document payment method percentage commissions and hidden product order column.
+2. [x] `admin/backend/app`: Calculate payment method `fee` as a percentage commission in public and admin order creation.
+3. [x] `admin/frontend/src/views/payment-methods` and order forms: Show and estimate payment commission as a percentage.
+4. [x] `web/components/checkout`: Display and calculate payment commission as a percentage in checkout totals.
+5. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Remove the order column and inline order editor while keeping newest-first sorting.
+6. [x] Validation: Run focused PHP syntax checks and frontend builds.
+
+## Phase 91: Price Mode Scope for Checkout Methods
+
+1. [x] `docs/SPECS.md`: Document retail/wholesale scope for coupons, payment methods, and delivery methods.
+2. [x] `admin/backend/database/migrations`: Add `price_mode_scope` to coupons, payment methods, and delivery methods.
+3. [x] `admin/backend/app`: Expose, validate, filter, and enforce scoped checkout methods and coupons.
+4. [x] `admin/frontend/src/views`: Add channel selects and list columns for coupons, payment methods, and delivery methods.
+5. [x] `admin/frontend/src/views/orders` and `web/components/checkout`: Filter selectable methods by active price mode.
+6. [x] Validation: Run focused backend syntax checks and frontend lint/build checks.
+
+## Phase 90: Customer Exports and Guest Order Seeds
+
+1. [x] `docs/SPECS.md`: Document anonymous demo order seeding and customer export contracts.
+2. [x] `admin/backend/database/seeders/OrderSeeder.php`: Seed anonymous guest customers and orders idempotently.
+3. [x] `admin/backend/app/Support/Exports` and `app/Exports`: Add reusable customer export queries and XLSX mappers.
+4. [x] `admin/backend/app/Http/Controllers/Api/Admin` and routes: Add registered and guest customer export endpoints.
+5. [x] `admin/backend/resources/views/exports/customers.blade.php`: Add PDF export template.
+6. [x] `admin/frontend/src/views/customers`: Add XLSX/PDF export actions using current filters in both customer tabs.
+7. [x] Validation: Run focused backend syntax/route checks and admin frontend lint/build.
+
+## Phase 89: Admin Product List State and Gallery Ordering
+
+1. [x] `docs/SPECS.md`: Document hidden ID/featured columns, newest-first default sorting, persisted product filters, and gallery order persistence.
+2. [x] `admin/frontend/src/hooks/use-crud-list.js`: Add opt-in local storage persistence for list filters.
+3. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Persist advanced filters state, remove ID/featured columns, and default to newest products first.
+4. [x] `admin/frontend/src/components/ui/image-gallery.jsx` and `ProductForm.jsx`: Use stable unique upload filenames and submit complete gallery ordering.
+5. [x] `admin/backend/app/Http/Controllers/ProductController.php`: Persist gallery order consistently for owned product media.
+6. [x] Validation: Run focused frontend/backend checks.
+
 ## Phase 88: Admin List Sticky Actions Standard
 
 1. [x] `docs/SPECS.md`: Document sticky row actions, mobile action menu sizing, and rich text list previews.

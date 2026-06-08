@@ -7,7 +7,7 @@ import type { Collection } from "lib/vadmin/types";
 const SORT_LABELS: Record<string, string> = {
   featured: "Destacados",
   newest: "Últimos Ingresos",
-  discount_desc: "Mayor Descuento",
+  discount_desc: "Con descuento",
   price_asc: "Precio: Menor a Mayor",
   price_desc: "Precio: Mayor a Menor",
 };

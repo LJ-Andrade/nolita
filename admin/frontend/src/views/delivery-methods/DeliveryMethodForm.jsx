@@ -14,6 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2, Save, X } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -29,6 +36,7 @@ export default function DeliveryMethodForm() {
     name: z.string().min(1, 'El nombre es requerido'),
     description: z.string().optional(),
     fee: z.number().min(0, 'La tarifa debe ser mayor o igual a 0').default(0),
+    price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   });
 
   const { form, loading, fetching, entityName, setEntityName } = useCrudForm({
@@ -39,6 +47,7 @@ export default function DeliveryMethodForm() {
       name: '',
       description: '',
       fee: 0,
+      price_mode_scope: 'both',
     },
     onSuccess: () => {},
     messages: {
@@ -163,6 +172,29 @@ export default function DeliveryMethodForm() {
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price_mode_scope"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Canal *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar canal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="both">Mayorista y minorista</SelectItem>
+                          <SelectItem value="retail">Minorista</SelectItem>
+                          <SelectItem value="wholesale">Mayorista</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

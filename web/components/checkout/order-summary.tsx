@@ -39,7 +39,7 @@ function calculateCouponDiscount(
 export default function OrderSummary({
   cart,
   shippingFee = 0,
-  paymentFee = 0,
+  paymentFeePercent = 0,
   shopConfig,
   priceMode = "retail",
   qtyMet,
@@ -47,7 +47,7 @@ export default function OrderSummary({
 }: {
   cart: Cart;
   shippingFee?: number;
-  paymentFee?: number;
+  paymentFeePercent?: number;
   shopConfig: ShopConfiguration;
   priceMode?: "retail" | "wholesale";
   qtyMet: boolean;
@@ -63,6 +63,11 @@ export default function OrderSummary({
   const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
   const subtotal = parseFloat(cart.cost.subtotalAmount.amount);
   const couponDiscount = calculateCouponDiscount(appliedCoupon, subtotal);
+  const paymentFee =
+    Math.round(
+      ((Math.max(subtotal - couponDiscount, 0) * paymentFeePercent) / 100) *
+        100,
+    ) / 100;
   const total =
     Math.max(subtotal - couponDiscount, 0) + shippingFee + paymentFee;
   const hasConditions =
@@ -98,6 +103,7 @@ export default function OrderSummary({
         body: JSON.stringify({
           code: normalizedCouponCode,
           subtotal,
+          price_mode: priceMode,
         }),
       });
       const json = await response.json();

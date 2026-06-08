@@ -30,6 +30,7 @@ If a buyer registers later using the same email, a registered `customers` row is
 - The Invitados tab supports search by name, email or phone, and toggle filters for `Mayorista` / `Minorista` that match the `bought_wholesale` and `bought_retail` flags.
 - Columns: Nombre, Email, Teléfono, Modo (badges Mayorista / Minorista based on flags), Pedidos, Último pedido, Total gastado.
 - Admins can delete guest customer records individually or in bulk. Deleting a guest customer sets `guest_customer_id` to null on its orders without removing the orders themselves.
+- Demo seed data must include anonymous orders linked to `guest_customers` so the Invitados tab can be tested locally after database resets.
 
 ## 0. Documentation Governance
 
@@ -170,13 +171,18 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 ### Admin Product Ordering
 
-- Product order edits in the admin product list must use explicit inline editing. Typing in the order input must not send API requests until the user confirms with Enter or the save check action.
+- Product order edits are not exposed in the admin product list UI while the list is operated as newest-first by default.
 
 ### Admin Product List
 
 - The admin product list must not show the category or created-at columns.
+- The admin product list must not show the product ID or featured columns.
+- The admin product list must not show the product order column.
+- The admin product list must sort by newest loaded products by default, using `created_at` descending.
 - The admin product list must show product search by name and product code through the shared `search` filter.
 - The admin product list must expose a retail/wholesale visibility filter so staff can narrow products intended for retail or wholesale workflows.
+- The admin product list filters must persist in local storage so staff keep active filters when opening and returning from a product.
+- The advanced product filters expanded/collapsed state must persist in local storage until the user changes it.
 - The admin product list pricing columns must appear in this order:
   - retail base price
   - retail discount percentage
@@ -214,6 +220,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Product media filenames must be unique per upload so browsers and CDNs do not reuse stale images after product edits or database resets.
 - Deleting one product or bulk deleting products must delete the related media records and stored product media files through model-aware deletion.
 - Product gallery order updates must only affect media records owned by the product being updated.
+- Product gallery order updates must persist the complete submitted gallery order after uploads, removals, or drag-and-drop reordering.
 - Product data resets through the custom migrate command must delete product media records and the `storage/app/public/products` directory to prevent reused product IDs from inheriting stale images.
 
 ### Admin Order Management
@@ -305,9 +312,18 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
   "discount_type": "percentage",
   "amount": 20,
   "expires_at": "2026-12-31 23:59:59",
-  "active": true
+  "active": true,
+  "price_mode_scope": "both"
 }
 ```
+
+### 3.3 Retail and Wholesale Scope
+
+Coupons must include `price_mode_scope` so staff can define whether each coupon applies to retail checkout, wholesale checkout, or both.
+
+- Allowed values are `both`, `retail`, and `wholesale`.
+- Existing and newly created coupons default to `both`.
+- Coupon validation and checkout order creation must reject active coupons when the coupon scope does not include the order `price_mode`.
 
 ---
 
@@ -467,6 +483,11 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 - Guest checkout stores `customer_id = null`, persists `customer_data`, creates the order, and triggers the same admin notification flow as authenticated checkout.
 - Stock is reduced only when the order is completed, inside the checkout transaction. Adding products to cart must not reduce stock for guest or authenticated carts.
 - Checkout must fail with a clear message if stock is no longer available at completion time.
+- Delivery methods and payment methods must include `price_mode_scope` with allowed values `both`, `retail`, and `wholesale`.
+- Admin staff can choose the scope when creating or editing delivery methods, payment methods, and coupons.
+- Payment method `fee` is a percentage commission, not a fixed amount. Checkout totals must calculate the payment surcharge from the current order subtotal after coupon discount.
+- The checkout UI must only present delivery and payment methods whose scope is `both` or matches the active storefront price mode.
+- Public and admin checkout creation must reject delivery methods, payment methods, and coupons whose scope does not match the order `price_mode`.
 
 ---
 
@@ -639,10 +660,16 @@ The first implementation covers admin order exports.
 | GET    | `/api/admin/orders/{order}/export?format=xls`  | Export one order as XLS        |
 | GET    | `/api/admin/orders/{order}/export?format=xlsx` | Export one order as XLSX       |
 | GET    | `/api/admin/orders/{order}/export?format=pdf`  | Export one order as PDF        |
+| GET    | `/api/admin/customers/export?format=xlsx`      | Export registered customers as XLSX |
+| GET    | `/api/admin/customers/export?format=pdf`       | Export registered customers as PDF  |
+| GET    | `/api/admin/guest-customers/export?format=xlsx` | Export guest customers as XLSX |
+| GET    | `/api/admin/guest-customers/export?format=pdf` | Export guest customers as PDF  |
 
 Supported filters must match the admin orders list where applicable:
 
 - `search`: order ID, customer name, or customer email.
+- Customer exports support the active customer search filter.
+- Guest customer exports support the active guest customer search and price-mode filters.
 
 ### 13.5 Backend Rules
 
@@ -658,6 +685,7 @@ Supported filters must match the admin orders list where applicable:
 - Single-order PDF item rows must show `Color` and `Talle` columns instead of generic variant and SKU columns.
 - Export documents must display all user-facing labels in Spanish while keeping code identifiers in English.
 - Shared backend translations and formatting helpers live under `App\Support\Localization`.
+- Customer exports must include identity, contact, location, status or purchase summary fields, and generation metadata in PDF files.
 - Large exports should later move to queued jobs and stored files.
 
 ### 13.6 Frontend Rules
@@ -665,7 +693,8 @@ Supported filters must match the admin orders list where applicable:
 - The orders list displays export actions for XLSX, CSV, and PDF.
 - Each order row in the orders list must provide a direct PDF export action for that order.
 - The order detail page displays a PDF export action and must not expose the single-order XLS export action in the UI.
-- Export requests include the current search filter.
+- Customer tabs display export actions for XLSX and PDF.
+- Export requests include the current search and tab-specific filters.
 - Downloads use authenticated Axios requests with `blob` response type.
 
 ---

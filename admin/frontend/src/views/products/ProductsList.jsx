@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  Fragment,
-} from "react";
+import React, { useEffect, useState, useCallback, Fragment } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axiosClient from "@/lib/axios";
@@ -36,7 +31,6 @@ import {
   X,
   ChevronDown,
   Image as ImageIcon,
-  Star,
   Eye,
   ArrowUpDown,
   ArrowUp,
@@ -55,13 +49,21 @@ import { CrudPagination } from "@/components/crud-pagination";
 import { BulkActionsBar } from "@/components/bulk-actions-bar";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { PageHeader } from "@/components/page-header";
-import { CrudInlineOrderEditor } from "@/components/crud-inline-order-editor";
 import { AdminTableShell } from "@/components/admin-table-shell";
+
+const PRODUCT_FILTERS_OPEN_STORAGE_KEY = "admin.products.filtersOpen";
+const PRODUCT_LIST_FILTERS_STORAGE_KEY = "admin.products.filters";
 
 export default function ProductsList() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    return (
+      window.localStorage.getItem(PRODUCT_FILTERS_OPEN_STORAGE_KEY) === "true"
+    );
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [variantChanges, setVariantChanges] = useState({});
@@ -91,8 +93,18 @@ export default function ProductsList() {
   } = useCrudList({
     endpoint: "products",
     filterKeys: ["search", "category_id", "status", "mode"],
-    defaultSort: { column: "id", direction: "desc" },
+    defaultSort: { column: "created_at", direction: "desc" },
+    storageKey: PRODUCT_LIST_FILTERS_STORAGE_KEY,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(
+      PRODUCT_FILTERS_OPEN_STORAGE_KEY,
+      isFiltersOpen ? "true" : "false",
+    );
+  }, [isFiltersOpen]);
 
   // Fetch categories for filter dropdown
   useEffect(() => {
@@ -103,8 +115,6 @@ export default function ProductsList() {
 
   const quickUpdate = useCallback(
     (id, field, value) => {
-      const previousProducts = [...products];
-
       axiosClient
         .patch(`/products/${id}/quick-update`, { [field]: value })
         .then(() => {
@@ -116,12 +126,8 @@ export default function ProductsList() {
           console.error(error);
         });
     },
-    [products, fetchItems],
+    [fetchItems],
   );
-
-  const handleToggleFeatured = (product) => {
-    quickUpdate(product.id, "featured", !product.featured);
-  };
 
   const handleStatusChange = (product, newStatus) => {
     quickUpdate(product.id, "status", newStatus);
@@ -221,7 +227,8 @@ export default function ProductsList() {
   };
 
   const getRetailDiscount = (product) => Number(product.discount ?? 0);
-  const getWholesaleDiscount = (product) => Number(product.wholesale_discount ?? 0);
+  const getWholesaleDiscount = (product) =>
+    Number(product.wholesale_discount ?? 0);
 
   const getRetailFinalPrice = (product) => {
     const salePrice = Number(product.sale_price ?? 0);
@@ -263,11 +270,6 @@ export default function ProductsList() {
     });
 
     if (success) clearSelection();
-  };
-
-  const saveProductOrder = async (productId, order) => {
-    await axiosClient.patch(`/products/${productId}/quick-update`, { order });
-    fetchItems();
   };
 
   return (
@@ -389,14 +391,6 @@ export default function ProductsList() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none w-[60px]"
-                    onClick={() => handleSort("id")}
-                  >
-                    <div className="flex items-center">
-                      {"ID"} {renderSortIcon("id")}
-                    </div>
-                  </TableHead>
                   <TableHead>{"Portada"}</TableHead>
                   <TableHead
                     className="cursor-pointer select-none"
@@ -417,14 +411,9 @@ export default function ProductsList() {
                   <TableHead>{"Precio Final"}</TableHead>
                   <TableHead>{"Estado"}</TableHead>
                   <TableHead
-                    className="cursor-pointer select-none w-[120px]"
-                    onClick={() => handleSort("featured")}
+                    data-sticky="right"
+                    className="text-right w-[150px]"
                   >
-                    <div className="flex items-center">
-                      {"Destacado"} {renderSortIcon("featured")}
-                    </div>
-                  </TableHead>
-                  <TableHead data-sticky="right" className="text-right w-[150px]">
                     {"Acciones"}
                   </TableHead>
                 </TableRow>
@@ -434,7 +423,7 @@ export default function ProductsList() {
               >
                 {loading && products.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={14} className="text-center">
+                    <TableCell colSpan={12} className="text-center">
                       {"Cargando..."}
                     </TableCell>
                   </TableRow>
@@ -442,7 +431,7 @@ export default function ProductsList() {
                 {!loading && products.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={14}
+                      colSpan={12}
                       className="text-center py-8 text-muted-foreground"
                     >
                       {"No se encontraron datos."}
@@ -458,7 +447,6 @@ export default function ProductsList() {
                           onCheckedChange={() => toggleSelect(product.id)}
                         />
                       </TableCell>
-                      <TableCell className="w-[60px]">{product.id}</TableCell>
                       <TableCell>
                         {product.cover_url ? (
                           <img
@@ -536,8 +524,9 @@ export default function ProductsList() {
                                 );
                               })}
                             </div>
-                            {Object.keys(getVariantChangesForProduct(product.id))
-                              .length > 0 && (
+                            {Object.keys(
+                              getVariantChangesForProduct(product.id),
+                            ).length > 0 && (
                               <div className="flex justify-start pt-1">
                                 <Button
                                   size="sm"
@@ -619,47 +608,45 @@ export default function ProductsList() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      <TableCell className="w-[120px]">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleToggleFeatured(product)}
-                            className="focus:outline-none"
-                          >
-                            {product.featured ? (
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0 cursor-pointer hover:scale-110 transition-transform" />
-                            ) : (
-                              <Star className="h-4 w-4 text-muted-foreground/30 shrink-0 cursor-pointer hover:scale-110 transition-transform" />
-                            )}
-                          </button>
-                          <CrudInlineOrderEditor
-                            value={product.order}
-                            onSave={(order) =>
-                              saveProductOrder(product.id, order)
-                            }
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell data-sticky="right" className="text-right w-[150px]">
+                      <TableCell
+                        data-sticky="right"
+                        className="text-right w-[150px]"
+                      >
                         <div className="flex items-center justify-end gap-1">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 lg:hidden"
+                              >
                                 <ChevronDown className="h-5 w-5" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <Can permission="view products">
-                                <DropdownMenuItem onClick={() => navigate(`/productos/${product.id}`)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/productos/${product.id}`)
+                                  }
+                                >
                                   <Eye className="mr-2 h-4 w-4" /> Ver
                                 </DropdownMenuItem>
                               </Can>
                               <Can permission="edit products">
-                                <DropdownMenuItem onClick={() => navigate(`/productos/editar/${product.id}`)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    navigate(`/productos/editar/${product.id}`)
+                                  }
+                                >
                                   <Edit className="mr-2 h-4 w-4" /> Editar
                                 </DropdownMenuItem>
                               </Can>
                               <Can permission="delete products">
-                                <DropdownMenuItem onClick={() => onDeleteClick(product)} className="text-red-500">
+                                <DropdownMenuItem
+                                  onClick={() => onDeleteClick(product)}
+                                  className="text-red-500"
+                                >
                                   <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                                 </DropdownMenuItem>
                               </Can>

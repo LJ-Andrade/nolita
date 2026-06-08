@@ -29,6 +29,12 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { PageHeader } from '@/components/page-header';
 import { RichTextPreview } from '@/components/rich-text-preview';
 
+const priceModeScopeLabels = {
+	both: 'Ambos',
+	retail: 'Minorista',
+	wholesale: 'Mayorista',
+};
+
 export default function PaymentMethodsList() {
 	const navigate = useNavigate();
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -81,10 +87,20 @@ export default function PaymentMethodsList() {
 			),
 		},
 		{
+			key: 'price_mode_scope',
+			label: 'Canal',
+			sortable: false,
+			render: (value) => (
+				<span className="rounded-full bg-muted px-2 py-1 text-xs">
+					{priceModeScopeLabels[value || 'both'] || 'Ambos'}
+				</span>
+			),
+		},
+		{
 			key: 'fee',
 			label: 'Comisión',
 			sortable: true,
-			render: (value) => `$${parseFloat(value || 0).toFixed(2)}`,
+			render: (value) => `${parseFloat(value || 0).toFixed(2)}%`,
 		},
 		{ key: 'created_at', label: 'Creado', sortable: true, align: 'right', width: 'w-[130px]', format: 'date' },
 	];

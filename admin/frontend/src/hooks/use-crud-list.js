@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import axiosClient from '@/lib/axios';
-import { toast } from 'sonner';
-import { useBulkSelect } from './use-bulk-select';
+import { useState, useEffect, useCallback } from "react";
+import axiosClient from "@/lib/axios";
+import { toast } from "sonner";
+import { useBulkSelect } from "./use-bulk-select";
 
 /**
  * Hook for CRUD list operations
  * Handles fetching, pagination, sorting, filtering, and bulk operations
- * 
+ *
  * @param {Object} config - Configuration object
  * @param {string} config.endpoint - API endpoint (e.g., 'product-categories')
  * @param {Object} config.defaultSort - Default sort configuration { column: 'id', direction: 'desc' }
@@ -16,30 +16,47 @@ import { useBulkSelect } from './use-bulk-select';
  */
 export function useCrudList({
   endpoint,
-  defaultSort = { column: 'id', direction: 'desc' },
-  filterKeys = ['search'],
-  debounceMs = 500
+  defaultSort = { column: "id", direction: "desc" },
+  filterKeys = ["search"],
+  debounceMs = 500,
+  storageKey = null,
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [meta, setMeta] = useState({});
   const [page, setPage] = useState(1);
-  
+
   // Sort state
   const [sortBy, setSortBy] = useState(defaultSort.column);
   const [sortDir, setSortDir] = useState(defaultSort.direction);
-  
+
   // Filter states - dynamically created based on filterKeys
   const [filters, setFilters] = useState(() => {
     const initial = {};
-    filterKeys.forEach(key => {
-      initial[key] = '';
+    filterKeys.forEach((key) => {
+      initial[key] = "";
     });
+
+    if (storageKey && typeof window !== "undefined") {
+      try {
+        const storedFilters = JSON.parse(
+          window.localStorage.getItem(storageKey) || "{}",
+        );
+        filterKeys.forEach((key) => {
+          if (storedFilters[key] !== undefined) {
+            initial[key] = storedFilters[key];
+          }
+        });
+      } catch (error) {
+        console.warn(`Unable to restore filters for ${endpoint}:`, error);
+      }
+    }
+
     return initial;
   });
-  
+
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
-  
+
   // Bulk selection
   const {
     selectedIds,
@@ -48,7 +65,7 @@ export function useCrudList({
     toggleSelect,
     toggleSelectAll,
     clearSelection,
-    isSelected
+    isSelected,
   } = useBulkSelect(items);
 
   // Debounce filters
@@ -59,6 +76,16 @@ export function useCrudList({
 
     return () => clearTimeout(handler);
   }, [filters, debounceMs]);
+
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") return;
+
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(filters));
+    } catch (error) {
+      console.warn(`Unable to persist filters for ${endpoint}:`, error);
+    }
+  }, [endpoint, filters, storageKey]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -71,120 +98,132 @@ export function useCrudList({
   }, [page, debouncedFilters, sortBy, sortDir, clearSelection]);
 
   // Fetch items
-  const fetchItems = useCallback(({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
-    
-    const params = {
-      page,
-      sort_by: sortBy,
-      sort_dir: sortDir,
-      ...Object.entries(debouncedFilters).reduce((acc, [key, value]) => {
-        if (value) acc[key] = value;
-        return acc;
-      }, {})
-    };
+  const fetchItems = useCallback(
+    ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
 
-    axiosClient
-      .get(endpoint, { params })
-      .then(({ data }) => {
-        setItems(Array.isArray(data) ? data : data.data || []);
-        setMeta(data.meta || {});
-        if (!silent) setLoading(false);
-      })
-      .catch((error) => {
-        console.error(`Error fetching ${endpoint}:`, error);
-        if (!silent) setLoading(false);
-      });
-  }, [endpoint, page, sortBy, sortDir, debouncedFilters]);
+      const params = {
+        page,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+        ...Object.entries(debouncedFilters).reduce((acc, [key, value]) => {
+          if (value) acc[key] = value;
+          return acc;
+        }, {}),
+      };
+
+      axiosClient
+        .get(endpoint, { params })
+        .then(({ data }) => {
+          setItems(Array.isArray(data) ? data : data.data || []);
+          setMeta(data.meta || {});
+          if (!silent) setLoading(false);
+        })
+        .catch((error) => {
+          console.error(`Error fetching ${endpoint}:`, error);
+          if (!silent) setLoading(false);
+        });
+    },
+    [endpoint, page, sortBy, sortDir, debouncedFilters],
+  );
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
   // Sort handler
-  const handleSort = useCallback((column) => {
-    if (sortBy === column) {
-      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortDir('asc');
-    }
-  }, [sortBy]);
+  const handleSort = useCallback(
+    (column) => {
+      if (sortBy === column) {
+        setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+      } else {
+        setSortBy(column);
+        setSortDir("asc");
+      }
+    },
+    [sortBy],
+  );
 
   // Filter handlers
   const setFilter = useCallback((key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const clearFilters = useCallback(() => {
     const cleared = {};
-    filterKeys.forEach(key => {
-      cleared[key] = '';
+    filterKeys.forEach((key) => {
+      cleared[key] = "";
     });
     setFilters(cleared);
     setPage(1);
   }, [filterKeys]);
 
   // Delete single item
-  const deleteItem = useCallback(async (id, options = {}) => {
-    const { 
-      successMessage = 'Item deleted successfully',
-      errorMessage = 'Error deleteting item'
-    } = options;
-    
-    try {
-      await axiosClient.delete(`${endpoint}/${id}`);
-      toast.success(successMessage);
-      fetchItems();
-      return true;
-    } catch (error) {
-      toast.error(errorMessage);
-      console.error('Delete error:', error);
-      return false;
-    }
-  }, [endpoint, fetchItems]);
+  const deleteItem = useCallback(
+    async (id, options = {}) => {
+      const {
+        successMessage = "Item deleted successfully",
+        errorMessage = "Error deleteting item",
+      } = options;
+
+      try {
+        await axiosClient.delete(`${endpoint}/${id}`);
+        toast.success(successMessage);
+        fetchItems();
+        return true;
+      } catch (error) {
+        toast.error(errorMessage);
+        console.error("Delete error:", error);
+        return false;
+      }
+    },
+    [endpoint, fetchItems],
+  );
 
   // Bulk delete
-  const bulkDelete = useCallback(async (ids, options = {}) => {
-    const {
-      successMessage = `${ids.length} items deleted successfully`,
-      errorMessage = 'Error deleteting items'
-    } = options;
+  const bulkDelete = useCallback(
+    async (ids, options = {}) => {
+      const {
+        successMessage = `${ids.length} items deleted successfully`,
+        errorMessage = "Error deleteting items",
+      } = options;
 
-    try {
-      await axiosClient.post(`${endpoint}/bulk-delete`, { ids });
-      toast.success(successMessage);
-      clearSelection();
-      fetchItems();
-      return true;
-    } catch (error) {
-      toast.error(errorMessage);
-      console.error('Bulk delete error:', error);
-      return false;
-    }
-  }, [endpoint, fetchItems, clearSelection]);
+      try {
+        await axiosClient.post(`${endpoint}/bulk-delete`, { ids });
+        toast.success(successMessage);
+        clearSelection();
+        fetchItems();
+        return true;
+      } catch (error) {
+        toast.error(errorMessage);
+        console.error("Bulk delete error:", error);
+        return false;
+      }
+    },
+    [endpoint, fetchItems, clearSelection],
+  );
 
   return {
     // Data
     items,
     loading,
     meta,
-    
+
     // Pagination
     page,
     setPage,
-    
+
     // Sorting
     sortBy,
     sortDir,
     handleSort,
-    
+
     // Filtering
     filters,
     debouncedFilters,
     setFilter,
     clearFilters,
-    
+
     // Selection
     selectedIds,
     selectedCount,
@@ -193,11 +232,11 @@ export function useCrudList({
     toggleSelectAll,
     clearSelection,
     isSelected,
-    
+
     // Actions
     fetchItems,
     refresh: () => fetchItems({ silent: true }),
     deleteItem,
-    bulkDelete
+    bulkDelete,
   };
 }

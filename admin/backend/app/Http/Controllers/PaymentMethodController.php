@@ -29,6 +29,14 @@ class PaymentMethodController extends Controller
             $query->where('status', 'active');
         }
 
+        if ($request->filled('price_mode')) {
+            $query->forPriceMode($request->input('price_mode'));
+        }
+
+        if ($request->filled('filter_price_mode_scope')) {
+            $query->where('price_mode_scope', $request->input('filter_price_mode_scope'));
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
 
@@ -47,6 +55,7 @@ class PaymentMethodController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'fee' => 'nullable|numeric|min:0',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -55,6 +64,9 @@ class PaymentMethodController extends Controller
 
         $data = $validator->validated();
         $data['fee'] = $request->input('fee', 0);
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
 
         $paymentMethod = PaymentMethod::create($data);
 
@@ -75,6 +87,7 @@ class PaymentMethodController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'fee' => 'nullable|numeric|min:0',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +96,9 @@ class PaymentMethodController extends Controller
 
         $data = $validator->validated();
         $data['fee'] = $request->input('fee', 0);
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
 
         $paymentMethod->update($data);
 

@@ -12,6 +12,7 @@ class CouponResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
+            'price_mode_scope' => $this->price_mode_scope ?: 'both',
             'discount_type' => $this->discount_type,
             'amount' => $this->amount,
             'expires_at' => $this->expires_at?->toIso8601String(),

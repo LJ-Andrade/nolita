@@ -32,6 +32,12 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { PageHeader } from '@/components/page-header';
 import axiosClient from '@/lib/axios';
 
+const priceModeScopeLabels = {
+	both: 'Ambos',
+	retail: 'Minorista',
+	wholesale: 'Mayorista',
+};
+
 export default function CouponList() {
 	const navigate = useNavigate();
 	const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -96,6 +102,16 @@ export default function CouponList() {
 	const columns = [
 		{ key: 'id', label: "ID" || 'ID', sortable: true, width: 'w-[60px]' },
 		{ key: 'code', label: "Código" || 'Código', sortable: true },
+		{
+			key: 'price_mode_scope',
+			label: 'Canal',
+			sortable: false,
+			render: (value) => (
+				<Badge variant="secondary">
+					{priceModeScopeLabels[value || 'both'] || 'Ambos'}
+				</Badge>
+			),
+		},
 		{
 			key: 'discount_type',
 			label: "Tipo de descuento" || 'Tipo de descuento',

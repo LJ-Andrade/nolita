@@ -36,6 +36,10 @@ class CouponController extends Controller
             $query->where('active', $request->boolean('filter_active'));
         }
 
+        if ($request->filled('filter_price_mode_scope')) {
+            $query->where('price_mode_scope', $request->filter_price_mode_scope);
+        }
+
         $sortBy = $request->input('sort_by', 'id');
         $sortDir = $request->input('sort_dir', 'desc');
 
@@ -58,6 +62,7 @@ class CouponController extends Controller
             'amount' => 'required|numeric|min:0',
             'expires_at' => 'nullable|date',
             'active' => 'boolean',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -65,6 +70,9 @@ class CouponController extends Controller
         }
 
         $data = $validator->validated();
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
         
         // Debug: log all input
         \Log::info('=== BACKEND STORE: Request all ===', $request->all());
@@ -97,6 +105,7 @@ class CouponController extends Controller
             'amount' => 'sometimes|numeric|min:0',
             'expires_at' => 'nullable|date',
             'active' => 'sometimes|boolean',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -104,6 +113,9 @@ class CouponController extends Controller
         }
 
         $data = $validator->validated();
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
         
         \Log::info('=== BACKEND UPDATE: Request all ===', $request->all());
         \Log::info('=== BACKEND UPDATE: Validated data ===', $data);
@@ -156,11 +168,13 @@ class CouponController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:255'],
             'subtotal' => ['required', 'numeric', 'min:0'],
+            'price_mode' => ['nullable', 'in:retail,wholesale'],
         ]);
 
         $coupon = Coupon::whereRaw('LOWER(code) = ?', [strtolower(trim($validated['code']))])->first();
+        $priceMode = $validated['price_mode'] ?? 'retail';
 
-        if (!$coupon || !$coupon->isValidForCheckout()) {
+        if (!$coupon || !$coupon->isValidForCheckout($priceMode)) {
             return response()->json([
                 'message' => 'Cupón inválido o vencido',
             ], 404);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CustomerSession } from "lib/vadmin/auth";
 import type { DeliveryMethod, PaymentMethod } from "lib/vadmin/types";
 
@@ -109,6 +109,26 @@ export default function CheckoutForm({
     onPaymentChange?.(methodId);
   };
 
+  useEffect(() => {
+    if (deliveryMethods.some((method) => method.id === selectedDelivery)) {
+      return;
+    }
+
+    const nextDelivery = deliveryMethods[0]?.id ?? "";
+    setSelectedDelivery(nextDelivery);
+    if (nextDelivery) onDeliveryChange?.(nextDelivery);
+  }, [deliveryMethods, onDeliveryChange, selectedDelivery]);
+
+  useEffect(() => {
+    if (paymentMethods.some((method) => method.id === selectedPayment)) {
+      return;
+    }
+
+    const nextPayment = paymentMethods[0]?.id ?? "";
+    setSelectedPayment(nextPayment);
+    if (nextPayment) onPaymentChange?.(nextPayment);
+  }, [onPaymentChange, paymentMethods, selectedPayment]);
+
   return (
     <div className="space-y-6">
       <CheckoutCard title="Método de pago">
@@ -140,7 +160,7 @@ export default function CheckoutForm({
                 )}
                 {parseFloat(method.fee || "0") > 0 && (
                   <span className="block text-xs font-semibold text-stone-brown">
-                    Recargo: $ {method.fee}
+                    Recargo: {method.fee}%
                   </span>
                 )}
               </span>
@@ -295,7 +315,7 @@ export default function CheckoutForm({
             />
           </Field>
 
-          <Field id="cuit" label="CUIT">
+          <Field id="cuit" label="Cuit o DNI">
             <input
               id="cuit"
               name="cuit"

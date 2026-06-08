@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Http\Requests\Admin\CustomerRequest;
 use App\Http\Resources\Admin\CustomerResource;
+use App\Support\Exports\CustomerExportQuery;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -13,23 +14,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Customer::query()->with(['province', 'locality']);
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('dni', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('postal_code', 'like', "%{$search}%");
-            });
-        }
-
-        $sortField = $request->input('sortField', 'created_at');
-        $sortOrder = $request->input('sortOrder', 'desc');
-        $query->orderBy($sortField, $sortOrder);
+        $query = CustomerExportQuery::registeredFromRequest($request);
 
         $perPage = $request->input('perPage', 10);
         

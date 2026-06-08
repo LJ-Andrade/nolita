@@ -38,6 +38,7 @@ export default function PaymentMethodForm() {
     description: z.string().optional(),
     status: z.string().min(1, 'El estado es requerido'),
     fee: z.number().min(0, 'La comisión debe ser mayor o igual a 0').default(0),
+    price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   });
 
   const { form, loading, fetching, entityName, setEntityName } = useCrudForm({
@@ -49,6 +50,7 @@ export default function PaymentMethodForm() {
       description: '',
       status: 'active',
       fee: 0,
+      price_mode_scope: 'both',
     },
     onSuccess: () => {},
     messages: {
@@ -181,16 +183,39 @@ export default function PaymentMethodForm() {
 
                 <FormField
                   control={form.control}
+                  name="price_mode_scope"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Canal *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar canal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="both">Mayorista y minorista</SelectItem>
+                          <SelectItem value="retail">Minorista</SelectItem>
+                          <SelectItem value="wholesale">Mayorista</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="fee"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Comisión ($)</FormLabel>
+                      <FormLabel>Comisión (%)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
-                          placeholder="0.00"
+                          placeholder="Ej: 10"
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />

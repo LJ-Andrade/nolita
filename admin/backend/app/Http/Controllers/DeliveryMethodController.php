@@ -23,6 +23,14 @@ class DeliveryMethodController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
+        if ($request->filled('price_mode')) {
+            $query->forPriceMode($request->input('price_mode'));
+        }
+
+        if ($request->filled('filter_price_mode_scope')) {
+            $query->where('price_mode_scope', $request->input('filter_price_mode_scope'));
+        }
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
 
@@ -40,6 +48,7 @@ class DeliveryMethodController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fee' => 'nullable|numeric|min:0',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +56,9 @@ class DeliveryMethodController extends Controller
         }
 
         $data = $validator->validated();
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
 
         $deliveryMethod = DeliveryMethod::create($data);
 
@@ -66,6 +78,7 @@ class DeliveryMethodController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fee' => 'nullable|numeric|min:0',
+            'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
         if ($validator->fails()) {
@@ -73,6 +86,9 @@ class DeliveryMethodController extends Controller
         }
 
         $data = $validator->validated();
+        if ($request->has('price_mode_scope')) {
+            $data['price_mode_scope'] = $data['price_mode_scope'] ?? 'both';
+        }
 
         $deliveryMethod->update($data);
 

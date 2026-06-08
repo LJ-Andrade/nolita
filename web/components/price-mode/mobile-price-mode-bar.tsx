@@ -8,7 +8,7 @@ export default function MobilePriceModeBar() {
   const isWholesale = priceMode === "wholesale";
 
   return (
-    <div className="grid h-10 grid-cols-2 border-b border-black/10 bg-white md:hidden">
+    <div className="grid h-12 grid-cols-2 border-b border-black/10 bg-white md:hidden">
       <button
         type="button"
         onClick={() => setPriceMode("retail")}

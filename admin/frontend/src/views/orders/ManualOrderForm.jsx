@@ -41,6 +41,11 @@ const formatMoney = (value) => {
 	return `$${amount.toFixed(2)}`;
 };
 
+const formatPercent = (value) => {
+	const amount = Number(value || 0);
+	return `${amount.toFixed(2)}%`;
+};
+
 const FieldLabel = ({ children }) => (
 	<label className="text-sm font-medium leading-none">{children}</label>
 );
@@ -49,6 +54,16 @@ const pricedAmount = (price, discount) => {
 	const originalPrice = Number(price || 0);
 	const safeDiscount = Math.min(Math.max(Number(discount || 0), 0), 100);
 	return Number((originalPrice * (1 - safeDiscount / 100)).toFixed(2));
+};
+
+const calculatePaymentFee = (subtotal, method) => {
+	const commissionPercent = Number(method?.fee || 0);
+	return Number((Math.max(Number(subtotal || 0), 0) * commissionPercent / 100).toFixed(2));
+};
+
+const methodAppliesToPriceMode = (method, priceMode) => {
+	const scope = method?.price_mode_scope || 'both';
+	return scope === 'both' || scope === priceMode;
 };
 
 export default function ManualOrderForm({ onCreated }) {
@@ -110,15 +125,27 @@ export default function ManualOrderForm({ onCreated }) {
 		)).filter((variant) => variant.unitPrice > 0);
 	}, [options.products, form.price_mode]);
 
+	const deliveryMethods = useMemo(
+		() => options.delivery_methods.filter((method) => methodAppliesToPriceMode(method, form.price_mode)),
+		[options.delivery_methods, form.price_mode],
+	);
+	const paymentMethods = useMemo(
+		() => options.payment_methods.filter((method) => methodAppliesToPriceMode(method, form.price_mode)),
+		[options.payment_methods, form.price_mode],
+	);
+
 	const subtotal = lines.reduce((total, line) => {
 		const variant = variantOptions.find((item) => String(item.id) === String(line.product_variant_id));
 		return total + (variant ? variant.unitPrice * Number(line.quantity || 0) : 0);
 	}, 0);
 	const deliveryFee = Number(
-		options.delivery_methods.find((method) => String(method.id) === String(form.delivery_method_id))?.fee || 0,
+		deliveryMethods.find((method) => String(method.id) === String(form.delivery_method_id))?.fee || 0,
 	);
 	const paymentFee = Number(
-		options.payment_methods.find((method) => String(method.id) === String(form.payment_method_id))?.fee || 0,
+		calculatePaymentFee(
+			subtotal,
+			paymentMethods.find((method) => String(method.id) === String(form.payment_method_id)),
+		),
 	);
 	const estimatedTotal = subtotal + deliveryFee + paymentFee;
 	const fieldsDisabled = !form.customer_id;
@@ -126,6 +153,23 @@ export default function ManualOrderForm({ onCreated }) {
 	const updateField = (field, value) => {
 		setForm((current) => ({ ...current, [field]: value }));
 	};
+
+	useEffect(() => {
+		setForm((current) => {
+			const deliveryStillValid = deliveryMethods.some((method) => String(method.id) === String(current.delivery_method_id));
+			const paymentStillValid = paymentMethods.some((method) => String(method.id) === String(current.payment_method_id));
+
+			if (deliveryStillValid && paymentStillValid) {
+				return current;
+			}
+
+			return {
+				...current,
+				delivery_method_id: deliveryStillValid ? current.delivery_method_id : '',
+				payment_method_id: paymentStillValid ? current.payment_method_id : '',
+			};
+		});
+	}, [deliveryMethods, paymentMethods]);
 
 	const handleCustomerChange = (customerId) => {
 		const customer = options.customers.find((item) => String(item.id) === String(customerId));
@@ -312,7 +356,7 @@ export default function ManualOrderForm({ onCreated }) {
 							<SelectValue placeholder="Seleccionar" />
 						</SelectTrigger>
 						<SelectContent>
-							{options.delivery_methods.map((method) => (
+							{deliveryMethods.map((method) => (
 								<SelectItem key={method.id} value={String(method.id)}>
 									{method.name} · {formatMoney(method.fee)}
 								</SelectItem>
@@ -327,9 +371,9 @@ export default function ManualOrderForm({ onCreated }) {
 							<SelectValue placeholder="Seleccionar" />
 						</SelectTrigger>
 						<SelectContent>
-							{options.payment_methods.map((method) => (
+							{paymentMethods.map((method) => (
 								<SelectItem key={method.id} value={String(method.id)}>
-									{method.name} · {formatMoney(method.fee)}
+									{method.name} · {formatPercent(method.fee)}
 								</SelectItem>
 							))}
 						</SelectContent>

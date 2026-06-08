@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   code: z.string().min(1, 'Este campo es requerido').toUpperCase(),
   discount_type: z.enum(['percentage', 'fixed']),
+  price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   amount: z.number({ invalid_type_error: 'Este campo es requerido' }).min(0, 'El monto debe ser mayor o igual a 0'),
   expires_at: z.date().optional().nullable(),
   active: z.boolean().default(true),
@@ -65,6 +66,7 @@ export default function CouponForm() {
     defaultValues: {
       code: '',
       discount_type: 'percentage',
+      price_mode_scope: 'both',
       amount: 0,
       expires_at: null,
       active: true,
@@ -213,6 +215,31 @@ export default function CouponForm() {
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="price_mode_scope"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Canal</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar canal" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="both">Mayorista y minorista</SelectItem>
+                            <SelectItem value="retail">Minorista</SelectItem>
+                            <SelectItem value="wholesale">Mayorista</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="amount"

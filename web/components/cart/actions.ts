@@ -30,7 +30,7 @@ export async function addItem(
   }
 
   const token = (await cookies()).get("auth_token")?.value;
-  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
+  const priceMode = (await cookies()).get("nolita_price_mode_v2")?.value === "retail" ? "retail" : "wholesale";
   if (!token) {
     return;
   }
@@ -55,7 +55,7 @@ export async function addMultipleItems(
   }
 
   const token = (await cookies()).get("auth_token")?.value;
-  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
+  const priceMode = (await cookies()).get("nolita_price_mode_v2")?.value === "retail" ? "retail" : "wholesale";
   if (!token) {
     return;
   }
@@ -73,7 +73,7 @@ export async function addMultipleItems(
 
 export async function removeItem(prevState: any, merchandiseId: string) {
   try {
-    const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
+    const priceMode = (await cookies()).get("nolita_price_mode_v2")?.value === "retail" ? "retail" : "wholesale";
     const cart = await getCart();
 
     if (!cart) {
@@ -105,7 +105,7 @@ export async function updateItemQuantity(
   }
 ) {
   const { merchandiseId, quantity } = payload;
-  const priceMode = (await cookies()).get("nolita_price_mode")?.value === "wholesale" ? "wholesale" : "retail";
+  const priceMode = (await cookies()).get("nolita_price_mode_v2")?.value === "retail" ? "retail" : "wholesale";
 
   try {
     const cart = await getCart();

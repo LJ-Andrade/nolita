@@ -406,9 +406,9 @@ function CategoryPill({
       onClick={onClick}
       className={clsx(
         "border px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] outline-none transition-colors",
-        active
-          ? "border-[var(--pb-filter-accent)] bg-[var(--pb-filter-accent)] text-white"
-          : "border-black/15 bg-white text-black/60 hover:border-black hover:text-black",
+          active
+            ? "border-[var(--pb-filter-accent)] bg-[var(--pb-filter-accent)] text-white"
+            : "border-black/15 bg-white text-black hover:border-black hover:text-black",
       )}
       style={{ borderRadius: 2 }}
     >

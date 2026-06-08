@@ -78,11 +78,11 @@ class OrderController extends Controller
         return response()->json([
             'customers' => $customers,
             'products' => $products,
-            'delivery_methods' => DeliveryMethod::query()->orderBy('name')->get(['id', 'name', 'fee']),
+            'delivery_methods' => DeliveryMethod::query()->orderBy('name')->get(['id', 'name', 'fee', 'price_mode_scope']),
             'payment_methods' => PaymentMethod::query()
                 ->where('status', 'active')
                 ->orderBy('name')
-                ->get(['id', 'name', 'fee']),
+                ->get(['id', 'name', 'fee', 'price_mode_scope']),
         ]);
     }
 
@@ -126,8 +126,13 @@ class OrderController extends Controller
         ]);
 
         $customer = Customer::with(['province', 'locality'])->findOrFail($validated['customer_id']);
-        $deliveryMethod = DeliveryMethod::findOrFail($validated['delivery_method_id']);
-        $paymentMethod = PaymentMethod::where('status', 'active')->findOrFail($validated['payment_method_id']);
+        $deliveryMethod = DeliveryMethod::query()
+            ->forPriceMode($validated['price_mode'])
+            ->findOrFail($validated['delivery_method_id']);
+        $paymentMethod = PaymentMethod::query()
+            ->where('status', 'active')
+            ->forPriceMode($validated['price_mode'])
+            ->findOrFail($validated['payment_method_id']);
         $pricedLines = $this->buildPricedLines($validated['lines'], $validated['price_mode']);
 
         if (empty($pricedLines)) {
@@ -142,7 +147,7 @@ class OrderController extends Controller
         if ($couponCode !== '') {
             $coupon = Coupon::whereRaw('LOWER(code) = ?', [strtolower($couponCode)])->first();
 
-            if (!$coupon || !$coupon->isValidForCheckout()) {
+            if (!$coupon || !$coupon->isValidForCheckout($validated['price_mode'])) {
                 return response()->json(['message' => 'Cupón inválido o vencido.'], 422);
             }
 
@@ -186,7 +191,7 @@ class OrderController extends Controller
                 ];
 
                 $deliveryFee = (float) $deliveryMethod->fee;
-                $paymentFee = (float) $paymentMethod->fee;
+                $paymentFee = $this->calculatePaymentFee($subtotal, $couponDiscountAmount, $paymentMethod);
                 $total = max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee;
 
                 $order = Order::create([
@@ -324,5 +329,13 @@ class OrderController extends Controller
         }
 
         return round($originalPrice * (1 - (min($discount, 100) / 100)), 2);
+    }
+
+    private function calculatePaymentFee(float $subtotal, float $couponDiscountAmount, PaymentMethod $paymentMethod): float
+    {
+        $commissionPercent = max((float) $paymentMethod->fee, 0);
+        $base = max($subtotal - $couponDiscountAmount, 0);
+
+        return round($base * $commissionPercent / 100, 2);
     }
 }
