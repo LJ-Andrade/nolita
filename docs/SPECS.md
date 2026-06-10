@@ -51,7 +51,26 @@ If a buyer registers later using the same email, a registered `customers` row is
 
 For new or complex behavior, update this specification first, then track execution in `docs/DEVLOG.md`. For small fixes, update documentation only when the fix changes behavior, workflow, or project knowledge.
 
-## 1. E-commerce Web Integration
+## 1. Admin List State Persistence
+
+### 1.1 URL Synchronization
+
+All admin CRUD list views (products, categories, users, orders, etc.) must persist their list state in the URL via query parameters so that browser back/forward navigation restores the exact page, filters, and sort order.
+
+- `page` (integer): current pagination page.
+- `sort_by` (string): active sort column.
+- `sort_dir` (string): `asc` or `desc`.
+- One query param per active filter key (e.g., `search`, `status`, `category_id`).
+
+### 1.2 Implementation Contract
+
+- `useCrudList` synchronizes `page`, `sort_by`, `sort_dir`, and `filterKeys` with `URLSearchParams` by default (`syncUrl = true`).
+- State is initialized from the URL on mount. When the user changes page, sort, or filters, the URL is updated with `replace: true` to avoid polluting the history with intermediate filter states.
+- Filter changes reset the page to 1, except when the filter change originates from the URL itself (e.g., browser back/forward).
+- `localStorage` filter persistence is disabled when `syncUrl` is active; it remains available only when `syncUrl = false`.
+- `CrudPagination` and `CrudTable` do not need changes; they consume the existing `page` / `setPage` and `handleSort` APIs.
+
+## 2. E-commerce Web Integration
 
 ### Overview
 

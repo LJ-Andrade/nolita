@@ -492,7 +492,7 @@ export default function ProductForm() {
             ? "Producto actualizado correctamente"
             : "Producto creado correctamente",
         );
-        navigate("/productos");
+        navigate(-1);
       })
       .catch((error) => {
         if (error.response?.data?.errors) {
@@ -1207,7 +1207,7 @@ export default function ProductForm() {
             )}
             <Button
               variant="outline"
-              onClick={() => navigate("/productos")}
+              onClick={() => navigate(-1)}
               type="button"
             >
               <X className="mr-2 h-4 w-4" />
