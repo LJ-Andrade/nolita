@@ -393,7 +393,7 @@ export default function ProductsList() {
           </Collapsible>
 
           {/* Custom table for products with special features */}
-          <AdminTableShell>
+          <AdminTableShell topScrollbar>
             <Table>
               <TableHeader>
                 <TableRow>

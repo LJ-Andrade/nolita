@@ -2,6 +2,14 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 93: Admin List State URL Persistence
+
+1. [x] `docs/SPECS.md`: Document URL sync contract for admin CRUD list state.
+2. [x] `admin/frontend/src/hooks/use-crud-list.js`: Add `syncUrl` option (default `true`) using `useSearchParams` to read/write `page`, `sort_by`, `sort_dir`, and filter keys.
+3. [x] `admin/frontend/src/hooks/use-crud-list.js`: Disable `localStorage` filter persistence when `syncUrl` is active.
+4. [x] `admin/frontend/src/hooks/use-crud-list.js`: Prevent page reset when filter changes come from the URL (back/forward navigation).
+5. [x] Validation: Run admin frontend lint/build checks.
+
 ## Phase 92: Payment Percentage Fee and Product List Order Cleanup
 
 1. [x] `docs/SPECS.md`: Document payment method percentage commissions and hidden product order column.
