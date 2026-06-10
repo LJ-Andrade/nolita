@@ -847,6 +847,15 @@ Once SPECS are approved, the actionable checklist will be expanded.
 5. [x] `web/components/product/variant-selector.tsx` and `web/components/cart/add-to-cart.tsx`: Align variant controls and add-to-cart row with the reference UI.
 6. [x] Validate web build; browser rendering was attempted, but the in-app browser reported the Next.js body at height `0` despite successful route content and no console errors.
 
+## Phase 93: Terms and Conditions Page
+
+1. [x] `docs/SPECS.md`: Document terms and conditions site content contract and storefront rendering rules.
+2. [x] `admin/backend/database/migrations`: Add migration to insert `home_terms_and_conditions` into `site_contents`.
+3. [x] `admin/backend/database/seeders/SiteContentSeeder.php`: Seed the terms key for fresh installs.
+4. [x] `admin/frontend/src/views/site/ContentSettings.jsx`: Add `<RichTextEditor>` for `home_terms_and_conditions` below existing fields.
+5. [x] `web/app/terminos-y-condiciones/page.tsx`: Create static page that reads `home_terms_and_conditions` and renders it with `<Prose>`.
+6. [x] Validation: Run PHP syntax checks, admin frontend lint/build, and storefront build.
+
 ## Phase 38: Storefront Compact Footer
 
 1. [x] `docs/SPECS.md`: Document compact reference footer behavior.

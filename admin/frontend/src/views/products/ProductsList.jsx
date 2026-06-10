@@ -226,6 +226,18 @@ export default function ProductsList() {
     }).format(numericValue);
   };
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    return new Intl.DateTimeFormat("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
   const getRetailDiscount = (product) => Number(product.discount ?? 0);
   const getWholesaleDiscount = (product) =>
     Number(product.wholesale_discount ?? 0);
@@ -403,13 +415,49 @@ export default function ProductsList() {
                   <TableHead className="min-w-[320px]">
                     {"Variantes / Stock"}
                   </TableHead>
-                  <TableHead>{"Precio Minorista"}</TableHead>
-                  <TableHead>{"% Desc."}</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("sale_price")}
+                  >
+                    <div className="flex items-center">
+                      {"Precio Minorista"} {renderSortIcon("sale_price")}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("discount")}
+                  >
+                    <div className="flex items-center">
+                      {"% Desc."} {renderSortIcon("discount")}
+                    </div>
+                  </TableHead>
                   <TableHead>{"Precio Final"}</TableHead>
-                  <TableHead>{"Precio Mayorista"}</TableHead>
-                  <TableHead>{"% Desc."}</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("wholesale_price")}
+                  >
+                    <div className="flex items-center">
+                      {"Precio Mayorista"} {renderSortIcon("wholesale_price")}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("wholesale_discount")}
+                  >
+                    <div className="flex items-center">
+                      {"% Desc."} {renderSortIcon("wholesale_discount")}
+                    </div>
+                  </TableHead>
                   <TableHead>{"Precio Final"}</TableHead>
                   <TableHead>{"Estado"}</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    <div className="flex items-center">
+                      {"Creado"} {renderSortIcon("created_at")}
+                    </div>
+                  </TableHead>
                   <TableHead
                     data-sticky="right"
                     className="text-right w-[150px]"
@@ -423,7 +471,7 @@ export default function ProductsList() {
               >
                 {loading && products.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center">
+                    <TableCell colSpan={13} className="text-center">
                       {"Cargando..."}
                     </TableCell>
                   </TableRow>
@@ -431,7 +479,7 @@ export default function ProductsList() {
                 {!loading && products.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={12}
+                      colSpan={13}
                       className="text-center py-8 text-muted-foreground"
                     >
                       {"No se encontraron datos."}
@@ -607,6 +655,11 @@ export default function ProductsList() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDate(product.created_at)}
+                        </div>
                       </TableCell>
                       <TableCell
                         data-sticky="right"

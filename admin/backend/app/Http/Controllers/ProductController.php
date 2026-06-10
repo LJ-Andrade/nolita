@@ -93,7 +93,7 @@ class ProductController extends Controller
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
 
-        $allowedSortBy = ['id', 'name', 'created_at', 'order', 'featured'];
+        $allowedSortBy = ['id', 'name', 'created_at', 'sale_price', 'discount', 'wholesale_price', 'wholesale_discount'];
         if (in_array($sortBy, $allowedSortBy)) {
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
@@ -120,9 +120,6 @@ class ProductController extends Controller
             'tag_ids.*' => 'exists:product_tags,id',
             'size_ids' => 'nullable|array',
             'size_ids.*' => 'exists:product_sizes,id',
-            'featured' => 'nullable|boolean',
-            'hide_on_wholesale' => 'nullable|boolean',
-            'order' => 'nullable|integer',
             'cover' => 'nullable|image|max:5120',
             'gallery' => 'nullable|array',
             'gallery.*' => 'nullable|image|max:5120',
@@ -300,9 +297,7 @@ class ProductController extends Controller
             'tag_ids.*' => 'exists:product_tags,id',
             'size_ids' => 'nullable|array',
             'size_ids.*' => 'exists:product_sizes,id',
-            'featured' => 'nullable|boolean',
             'hide_on_wholesale' => 'nullable|boolean',
-            'order' => 'nullable|integer',
             'cover' => 'nullable|image|max:5120',
             'gallery' => 'nullable|array',
             'gallery.*' => 'nullable|image|max:5120',
@@ -478,9 +473,7 @@ class ProductController extends Controller
     public function quickUpdate(Request $request, Product $product)
     {
         $validator = Validator::make($request->all(), [
-            'featured' => 'nullable|boolean',
             'status' => 'nullable|in:draft,published,archived',
-            'order' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
@@ -489,16 +482,8 @@ class ProductController extends Controller
 
         $data = $validator->validated();
 
-        if (isset($data['featured'])) {
-            $product->featured = $data['featured'];
-        }
-
         if (isset($data['status'])) {
             $product->status = $data['status'];
-        }
-
-        if (isset($data['order'])) {
-            $product->order = $data['order'];
         }
 
         $product->save();

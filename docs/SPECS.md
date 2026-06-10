@@ -766,6 +766,38 @@ VADMIN must include an administrative statistics section for future business met
 
 ---
 
+## 16. Terms and Conditions Site Content
+
+### 16.1 Overview
+
+The storefront must expose a `/terminos-y-condiciones` page whose content is editable from the admin panel under **Sitio > Contenido**.
+
+### 16.2 Storage Contract
+
+- The terms content is stored in `site_contents` with:
+  - `key`: `home_terms_and_conditions`
+  - `section`: `home`
+  - `type`: `rich-text`
+  - `description`: `Terms and conditions page content`
+- The existing `site_contents` schema and API endpoints already support this record without structural changes.
+
+### 16.3 Admin Editing Contract
+
+- The admin **Contenido** view (`/contenido-configuracion`) must expose the terms editor below the existing home content fields (announcement bar and hero banner).
+- The editor must use the existing `<RichTextEditor>` component (TipTap) so staff can edit rich text, lists, and links.
+- Saving must include the terms key in the same `PUT /api/site-content/bulk` payload used for the other home keys.
+- The terms card must be part of the existing `hasChanges` and `handleSave` flow.
+
+### 16.4 Storefront Rendering Contract
+
+- The storefront route `/terminos-y-condiciones` must be a static App Router page, not the dynamic `[page]` route, because `getPage` is not yet implemented.
+- The page must fetch `home` site content via `getSiteContent("home")`, read `home_terms_and_conditions`, and render it through the existing `<Prose>` component.
+- The page must return SEO metadata with title `Términos y Condiciones`.
+- If the terms content is empty, the page must still render the title and an empty prose block.
+- The existing footer link to `/terminos-y-condiciones` is already hardcoded and must remain unchanged.
+
+---
+
 ## 15. Admin Dashboard
 
 ### 15.1 Overview

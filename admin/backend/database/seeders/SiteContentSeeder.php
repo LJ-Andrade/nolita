@@ -12,6 +12,7 @@ class SiteContentSeeder extends Seeder
 		$contents = [
 			['key' => 'home_top_text_retail', 'value' => 'Envios bonificados en compras minoristas seleccionadas', 'section' => 'home', 'type' => 'text', 'description' => 'Retail announcement bar text'],
 			['key' => 'home_top_text_wholesale', 'value' => 'Envios bonificados en pedidos mayoristas · Nueva coleccion disponible', 'section' => 'home', 'type' => 'text', 'description' => 'Wholesale announcement bar text'],
+			['key' => 'home_terms_and_conditions', 'value' => '', 'section' => 'home', 'type' => 'rich-text', 'description' => 'Terms and conditions page content'],
 			['key' => 'business_phone', 'value' => '11 4343-4343', 'type' => 'text', 'description' => 'Public contact phone'],
 			['key' => 'business_email', 'value' => 'info@nolita.com.ar', 'type' => 'text', 'description' => 'Public contact email'],
 			['key' => 'business_address', 'value' => 'Riobamba 1080 - CABA', 'type' => 'text', 'description' => 'Public business address'],

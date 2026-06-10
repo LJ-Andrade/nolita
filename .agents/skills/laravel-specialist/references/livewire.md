@@ -159,10 +159,10 @@ class PostForm extends Component
 
         if ($this->post) {
             $this->post->update($validated);
-            $message = 'Post updated successfully!';
+            $message = 'Post actualizado correctamente!';
         } else {
             $this->post = Post::create($validated);
-            $message = 'Post created successfully!';
+            $message = 'Post creado correctamente!';
         }
 
         if ($this->image) {

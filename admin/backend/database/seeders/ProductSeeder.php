@@ -27,7 +27,7 @@ class ProductSeeder extends Seeder
 			$this->command->warn('Product attributes missing. Run ProductAttributeSeeder first.');
 			return;
 		}
-		$products_amount = 4;
+		$products_amount = 30;
 		$this->command->info('Creating ' . $products_amount . ' products...');
 
 		Product::factory()

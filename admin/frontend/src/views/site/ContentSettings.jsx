@@ -12,13 +12,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
-import { Save, Loader2, Type, Image as ImageIcon } from "lucide-react";
+import { Save, Loader2, Type, Image as ImageIcon, FileText } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const HERO_DESKTOP_KEY = "home_hero_banner";
 const HERO_MOBILE_KEY = "home_hero_banner_mobile";
 const ANNOUNCEMENT_RETAIL_KEY = "home_top_text_retail";
 const ANNOUNCEMENT_WHOLESALE_KEY = "home_top_text_wholesale";
+const TERMS_KEY = "home_terms_and_conditions";
 
 const getFullUrl = (path, version) => {
   if (!path) return "";
@@ -110,6 +112,11 @@ export default function ContentSettings() {
       originalSettings[ANNOUNCEMENT_WHOLESALE_KEY]?.value
     )
       return true;
+    if (
+      settings[TERMS_KEY]?.value !==
+      originalSettings[TERMS_KEY]?.value
+    )
+      return true;
     if (hasImageChanged(heroImage, HERO_DESKTOP_KEY)) return true;
     if (hasImageChanged(heroMobileImage, HERO_MOBILE_KEY)) return true;
     return false;
@@ -166,6 +173,12 @@ export default function ContentSettings() {
           value: settings[ANNOUNCEMENT_WHOLESALE_KEY]?.value || "",
           section: "home",
           type: "text",
+        },
+        {
+          key: TERMS_KEY,
+          value: settings[TERMS_KEY]?.value || "",
+          section: "home",
+          type: "rich-text",
         },
         {
           key: HERO_DESKTOP_KEY,
@@ -372,6 +385,25 @@ export default function ContentSettings() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Terms and Conditions Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              {"Términos y Condiciones"}
+            </CardTitle>
+            <CardDescription>
+              {"Texto que se muestra en la página de términos y condiciones de la web."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RichTextEditor
+              value={settings[TERMS_KEY]?.value || ""}
+              onChange={(html) => updateSetting(TERMS_KEY, html)}
+            />
           </CardContent>
         </Card>
 

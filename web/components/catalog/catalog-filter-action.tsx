@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const SORT_OPTIONS = [
-  { label: "Destacados", value: "featured" },
   { label: "Últimos Ingresos", value: "newest" },
   { label: "Con descuento", value: "discount_desc" },
   { label: "Precio: Menor a Mayor", value: "price_asc" },
@@ -19,7 +18,7 @@ export function CatalogFilterAction() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const currentSort = (searchParams.get("sort") ?? "featured") as SortValue;
+  const currentSort = (searchParams.get("sort") ?? "newest") as SortValue;
   const [isOpen, setIsOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDetailsElement | null>(null);
 
@@ -27,7 +26,7 @@ export function CatalogFilterAction() {
     (value: SortValue) => {
       const params = new URLSearchParams(searchParams.toString());
 
-      if (value === "featured") {
+      if (value === "newest") {
         params.delete("sort");
       } else {
         params.set("sort", value);

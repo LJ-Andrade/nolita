@@ -34,21 +34,6 @@ function sortProducts(products: Product[], sort: string): Product[] {
   const copy = [...products];
 
   switch (sort) {
-    case "featured": {
-      const withDiscount = copy.filter(
-        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
-      );
-      const withoutDiscount = copy.filter(
-        (p) => (p.discount ?? 0) === 0 && !p.hasDiscount,
-      );
-      const sortByDate = (a: Product, b: Product) =>
-        new Date(b.createdAt || b.updatedAt).getTime() -
-        new Date(a.createdAt || a.updatedAt).getTime();
-      return [
-        ...withDiscount.sort(sortByDate),
-        ...withoutDiscount.sort(sortByDate),
-      ];
-    }
     case "price_asc":
       return copy.sort(
         (a, b) =>
@@ -67,16 +52,31 @@ function sortProducts(products: Product[], sort: string): Product[] {
       );
       return withDiscount.sort(
         (a, b) =>
-          new Date(b.createdAt || b.updatedAt).getTime() -
-          new Date(a.createdAt || a.updatedAt).getTime(),
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
       );
     }
     case "newest":
-    default:
-      return copy.sort(
-        (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    default: {
+      const withDiscount = copy.filter(
+        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
       );
+      const withoutDiscount = copy.filter(
+        (p) => (p.discount ?? 0) === 0 && !p.hasDiscount,
+      );
+      return [
+        ...withDiscount.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime(),
+        ),
+        ...withoutDiscount.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime(),
+        ),
+      ];
+    }
   }
 }
 
@@ -198,7 +198,7 @@ export default async function HomePage(props: {
       ? searchParams.color
       : [searchParams.color]
     : [];
-  const sort = searchParams.sort ?? "featured";
+  const sort = searchParams.sort ?? "newest";
   const [products, collections, content, session, categoryFilterProducts] =
     await Promise.all([
       getProducts({ category }),

@@ -74,7 +74,7 @@ export type Product = {
   } | null;
   tags: string[];
   updatedAt: string;
-  createdAt?: string;
+  createdAt: string;
   colorImages?: { color: string; hex?: string; url: string }[];
 };
 

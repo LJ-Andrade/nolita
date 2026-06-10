@@ -124,9 +124,6 @@ export default function ProductsShow() {
         ]}
         actions={
           <>
-            {product.featured && (
-              <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-            )}
             <Button asChild>
               <Link to={`/productos/editar/${product.id}`}>
                 <Edit className="h-4 w-4 mr-2" />
@@ -163,10 +160,6 @@ export default function ProductsShow() {
                   <p className="font-mono text-sm break-all">
                     {product.slug || "-"}
                   </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Orden</p>
-                  <p className="font-semibold">{product.order ?? 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Estado</p>

@@ -33,4 +33,16 @@ describe('CrudPagination', () => {
     expect(onPageChange).toHaveBeenNthCalledWith(1, 1);
     expect(onPageChange).toHaveBeenNthCalledWith(2, 3);
   });
+
+  it('changes to first and last pages', async () => {
+    const user = userEvent.setup();
+    const onPageChange = vi.fn();
+
+    render(<CrudPagination meta={{ last_page: 5 }} page={3} onPageChange={onPageChange} />);
+    await user.click(screen.getByRole('button', { name: /first page/i }));
+    await user.click(screen.getByRole('button', { name: /last page/i }));
+
+    expect(onPageChange).toHaveBeenNthCalledWith(1, 1);
+    expect(onPageChange).toHaveBeenNthCalledWith(2, 5);
+  });
 });

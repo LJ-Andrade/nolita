@@ -192,14 +192,12 @@ function normalizeProductImageUrls(product: Product): Product {
 // CATALOG
 export async function getProducts({
   category,
-  featured,
   mode,
   query,
   reverse,
   sortKey,
 }: {
   category?: string;
-  featured?: boolean;
   mode?: "retail" | "wholesale";
   query?: string;
   reverse?: boolean;
@@ -211,7 +209,7 @@ export async function getProducts({
 
   const res = await vadminFetch<Product[]>({
     path: "catalog/products",
-    params: { category, featured, mode, search: query, reverse, sortKey },
+    params: { category, mode, search: query, reverse, sortKey },
     tags: [TAGS.products],
   });
 

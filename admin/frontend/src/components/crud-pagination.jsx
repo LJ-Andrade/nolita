@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 /**
  * Reusable CRUD Pagination component
@@ -49,11 +49,20 @@ export function CrudPagination({
       <Button
         variant="outline"
         size="sm"
+        onClick={() => onPageChange(1)}
+        disabled={page === 1}
+        aria-label="First page"
+      >
+        <ChevronsLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
+        aria-label={prevLabel}
       >
-        <ChevronLeft className="h-4 w-4 mr-2" />
-        {prevLabel}
+        <ChevronLeft className="h-4 w-4" />
       </Button>
       <div className="flex items-center space-x-1">
         {renderPages()}
@@ -63,9 +72,18 @@ export function CrudPagination({
         size="sm"
         onClick={() => onPageChange(page + 1)}
         disabled={page === meta.last_page}
+        aria-label={nextLabel}
       >
-        {nextLabel}
-        <ChevronRight className="h-4 w-4 ml-2" />
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(meta.last_page)}
+        disabled={page === meta.last_page}
+        aria-label="Last page"
+      >
+        <ChevronsRight className="h-4 w-4" />
       </Button>
     </div>
   );

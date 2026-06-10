@@ -123,8 +123,6 @@ export default function ProductForm() {
       )
       .default([]),
     status: z.enum(["draft", "published", "archived"]),
-    order: z.coerce.number().optional().default(0),
-    featured: z.boolean().default(false),
     hide_on_wholesale: z.boolean().default(false),
   });
 
@@ -149,8 +147,6 @@ export default function ProductForm() {
       min_stock: 0,
       variants: [],
       status: "draft",
-      order: 0,
-      featured: false,
       hide_on_wholesale: false,
     },
   });
@@ -229,8 +225,6 @@ export default function ProductForm() {
                 active: v.active,
               })) || [],
             status: data.data.status,
-            order: data.data.order || 0,
-            featured: data.data.featured || false,
             hide_on_wholesale: data.data.hide_on_wholesale || false,
           });
           setGallery(data.data.gallery || []);
@@ -299,7 +293,6 @@ export default function ProductForm() {
         size_ids: randomSizes,
         color_ids: randomColors,
         status: "published",
-        featured: true,
         hide_on_wholesale: false,
       });
       setProductName(fakeName);
@@ -442,7 +435,7 @@ export default function ProductForm() {
             }
           });
         });
-      } else if (key === "featured" || key === "hide_on_wholesale") {
+      } else if (key === "hide_on_wholesale") {
         formData.append(key, values[key] ? "1" : "0");
       } else if (typeof values[key] === "boolean") {
         formData.append(key, values[key] ? "1" : "0");
@@ -451,9 +444,6 @@ export default function ProductForm() {
       }
     });
 
-    if (!formData.has("featured")) {
-      formData.append("featured", "0");
-    }
     if (!formData.has("hide_on_wholesale")) {
       formData.append("hide_on_wholesale", "0");
     }
@@ -1123,7 +1113,7 @@ export default function ProductForm() {
             )}
           />
 
-          {/* Row 3: Status, Order, Featured */}
+          {/* Row 3: Status */}
           <Card>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1143,44 +1133,6 @@ export default function ProductForm() {
                         </select>
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="order"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{"Orden"}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="featured"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-6">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        {"Destacado"}
-                      </FormLabel>
                     </FormItem>
                   )}
                 />

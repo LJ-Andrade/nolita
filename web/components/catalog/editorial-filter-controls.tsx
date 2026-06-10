@@ -322,7 +322,7 @@ export function EditorialFilterControls({
                     aria-pressed={active}
                   >
                     <span
-                      className="h-4 w-4 shrink-0 rounded-full ring-1 ring-black/10"
+                      className="h-4 w-4 shrink-0 rounded-full border border-black"
                       style={{ backgroundColor: color.hex ?? "#CCCCCC" }}
                     />
                     <span className="truncate">{color.name}</span>

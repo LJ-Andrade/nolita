@@ -139,7 +139,7 @@ export function ProductCard({
           </Link>
 
           {showColors && colors.length > 0 && (
-            <div className="flex shrink-0 items-center gap-1 mt-0.5">
+            <div className="flex shrink-0 items-center gap-1.5 mt-0.5">
               {colors.map((color, i) => {
                 const colorImage = product.colorImages?.find(
                   (ci) => ci.color.toLowerCase() === color.toLowerCase(),
@@ -161,8 +161,8 @@ export function ProductCard({
                     }}
                     className={`h-4 w-4 cursor-pointer shrink-0 rounded-full transition-transform hover:scale-125 ${
                       currentImage === colorImage?.url && colorImage?.url
-                        ? "ring-2 ring-offset-1 ring-black scale-125"
-                        : "ring-1 ring-offset-1 ring-gray-200"
+                        ? "outline-2 outline-offset-1 outline-black scale-125"
+                        : "border border-black"
                     }`}
                     style={{ backgroundColor: hex }}
                   />

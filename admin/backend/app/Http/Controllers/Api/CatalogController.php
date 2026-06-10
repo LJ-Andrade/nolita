@@ -26,10 +26,6 @@ class CatalogController extends Controller
 			});
 		}
 
-		if ($request->has('featured')) {
-			$query->where('featured', true);
-		}
-
 		if ($request->has('search')) {
 			$search = $request->search;
 			$query->where(function ($q) use ($search) {
@@ -45,7 +41,7 @@ class CatalogController extends Controller
 			$query->where('sale_price', '>', 0);
 		}
 
-		$products = $query->orderBy('order')->get();
+		$products = $query->orderBy('created_at', 'desc')->get();
 
 		// Transform for Next.js Commerce expectation
 		$transformed = $products->map(function (Product $product) use ($mode) {
@@ -156,6 +152,7 @@ class CatalogController extends Controller
 				'title' => $product->category->name,
 			] : null,
 			'tags' => $product->tags->pluck('name')->toArray(),
+			'createdAt' => $product->created_at->toISOString(),
 			'updatedAt' => $product->updated_at->toISOString(),
 			'colorImages' => $product->getMedia('color_images')->map(function ($media) use ($product) {
 				$color = $product->colors->firstWhere('id', $media->getCustomProperty('color_id'));

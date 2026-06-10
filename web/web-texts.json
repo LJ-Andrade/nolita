@@ -1,8 +1,8 @@
 {
 	"checkoutProcessingNotice": {
 		"processingTitle": "Procesando tu pedido...",
-		"completeTitle": "¡Pedido recibido!",
-		"completeMessage": "Muchas gracias!. <br>Pronto nos vamos a comunicar con vos.",
+		"completeTitle": "¡Gracias por tu compra!",
+		"completeMessage": "Nuestro equipo se contactará con vos por WhatsApp para confirmar el método de pago y agendar el envío.",
 		"testButtonLabel": "Ejecutar animacion de compra finalizada"
 	}
 }
