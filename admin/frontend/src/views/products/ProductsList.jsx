@@ -112,7 +112,7 @@ export default function ProductsList() {
     try {
       window.sessionStorage.setItem(
         PRODUCT_LIST_RETURN_URL_KEY,
-        window.location.pathname + window.location.search,
+        window.location.search,
       );
     } catch {
       /* ignore */
