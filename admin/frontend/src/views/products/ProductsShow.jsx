@@ -29,6 +29,19 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { getMediaUrl } from "@/lib/media-url";
 
+const PRODUCT_LIST_RETURN_URL_KEY = "admin.products.lastListUrl";
+
+function getProductsListReturnUrl() {
+  if (typeof window === "undefined") return "/productos";
+  try {
+    return (
+      window.sessionStorage.getItem(PRODUCT_LIST_RETURN_URL_KEY) || "/productos"
+    );
+  } catch {
+    return "/productos";
+  }
+}
+
 export default function ProductsShow() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -119,7 +132,7 @@ export default function ProductsShow() {
 
       <PageHeader
         breadcrumbs={[
-          { label: "Productos", href: "/productos" },
+          { label: "Productos", href: getProductsListReturnUrl() },
           { label: product.name },
         ]}
         actions={

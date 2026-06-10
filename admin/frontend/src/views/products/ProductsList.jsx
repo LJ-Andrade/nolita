@@ -53,6 +53,7 @@ import { AdminTableShell } from "@/components/admin-table-shell";
 
 const PRODUCT_FILTERS_OPEN_STORAGE_KEY = "admin.products.filtersOpen";
 const PRODUCT_LIST_FILTERS_STORAGE_KEY = "admin.products.filters";
+const PRODUCT_LIST_RETURN_URL_KEY = "admin.products.lastListUrl";
 
 export default function ProductsList() {
   const navigate = useNavigate();
@@ -105,6 +106,18 @@ export default function ProductsList() {
       isFiltersOpen ? "true" : "false",
     );
   }, [isFiltersOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.sessionStorage.setItem(
+        PRODUCT_LIST_RETURN_URL_KEY,
+        window.location.pathname + window.location.search,
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [page, sortBy, sortDir, filters]);
 
   // Fetch categories for filter dropdown
   useEffect(() => {

@@ -537,7 +537,7 @@ html.light {
   }
 
   .ProseMirror strong {
-    @apply font-bold text-black;
+    @apply font-bold;
   }
 
   .ProseMirror blockquote {

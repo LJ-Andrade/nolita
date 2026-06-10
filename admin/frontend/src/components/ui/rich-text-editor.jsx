@@ -11,6 +11,7 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
+import { FontSize } from './font-size'
 import { 
   Bold, 
   Italic, 
@@ -32,7 +33,8 @@ import {
   Redo,
   Palette,
   Table as TableIcon,
-  Trash2
+  Trash2,
+  TypeOutline
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -111,6 +113,80 @@ const ColorPicker = ({ onColorSelect, currentColor }) => {
   )
 }
 
+const FONT_SIZES = [
+  { label: '12px', value: '12px' },
+  { label: '14px', value: '14px' },
+  { label: '16px', value: '16px' },
+  { label: '18px', value: '18px' },
+  { label: '20px', value: '20px' },
+  { label: '24px', value: '24px' },
+  { label: '30px', value: '30px' },
+  { label: '36px', value: '36px' },
+]
+
+const FontSizePicker = ({ onSizeSelect, currentSize }) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="relative">
+      <ToolbarButton
+        onClick={() => setIsOpen(!isOpen)}
+        isActive={!!currentSize}
+        title="Tamaño de texto"
+      >
+        <div className="flex items-center gap-1">
+          <TypeOutline className="h-4 w-4" />
+          <span className="text-[10px] font-semibold leading-none">
+            {currentSize || '16'}
+          </span>
+        </div>
+      </ToolbarButton>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute top-full left-0 mt-1 p-1 bg-white rounded-lg shadow-lg border z-50 w-32">
+            <div className="flex flex-col gap-0.5">
+              {FONT_SIZES.map((size) => (
+                <button
+                  key={size.value}
+                  type="button"
+                  onClick={() => {
+                    onSizeSelect(size.value)
+                    setIsOpen(false)
+                  }}
+                  className={`px-3 py-1.5 text-sm rounded-md text-left transition-colors ${
+                    currentSize === size.value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted text-muted-foreground'
+                  }`}
+                  style={{ fontSize: size.value }}
+                >
+                  {size.label}
+                </button>
+              ))}
+              <div className="border-t my-1" />
+              <button
+                type="button"
+                onClick={() => {
+                  onSizeSelect(null)
+                  setIsOpen(false)
+                }}
+                className="px-3 py-1.5 text-sm rounded-md text-left hover:bg-muted text-muted-foreground transition-colors"
+              >
+                Predeterminado
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 const LinkDialog = ({ editor, onClose }) => {
   const [url, setUrl] = useState('')
 
@@ -168,6 +244,7 @@ export function RichTextEditor({ value, onChange, placeholder }) {
       }),
       Color,
       TextStyle,
+      FontSize,
       Link.configure({
         openOnClick: false,
       }),
@@ -251,6 +328,16 @@ export function RichTextEditor({ value, onChange, placeholder }) {
         <ColorPicker 
           onColorSelect={(color) => editor.chain().focus().setColor(color).run()}
           currentColor={currentColor}
+        />
+        <FontSizePicker
+          onSizeSelect={(size) => {
+            if (size) {
+              editor.chain().focus().setFontSize(size).run()
+            } else {
+              editor.chain().focus().unsetFontSize().run()
+            }
+          }}
+          currentSize={editor.getAttributes('textStyle').fontSize}
         />
 
         <div className="w-px h-6 bg-border mx-1" />

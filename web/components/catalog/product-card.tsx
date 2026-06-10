@@ -153,35 +153,24 @@ export function ProductCard({
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      if (colorImage?.url) {
+                      if (currentImage === colorImage?.url && colorImage?.url) {
+                        setCurrentImage(defaultImageUrl);
+                      } else if (colorImage?.url) {
                         setCurrentImage(colorImage.url);
                       } else {
                         setCurrentImage(defaultImageUrl);
                       }
                     }}
-                    className={`h-4 w-4 cursor-pointer shrink-0 rounded-full transition-transform hover:scale-125 ${
+                    className={`h-4 w-4 cursor-pointer shrink-0 rounded-full transition-transform hover:scale-110 ${
                       currentImage === colorImage?.url && colorImage?.url
-                        ? "outline-2 outline-offset-1 outline-black scale-125"
-                        : "border border-black"
+                        ? "outline-2 outline-offset-2 outline-[#6f6f6f] scale-110"
+                        : "border border-[#6f6f6f]"
                     }`}
                     style={{ backgroundColor: hex }}
                   />
                 );
               })}
 
-              {currentImage !== defaultImageUrl && (
-                <button
-                  type="button"
-                  title="Restablecer vista"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentImage(defaultImageUrl);
-                  }}
-                  className="flex h-3.5 w-3.5 cursor-pointer items-center justify-center rounded-full bg-black/5 text-[7px] text-black/40 transition-colors hover:bg-black/10 hover:text-black/60"
-                >
-                  ✕
-                </button>
-              )}
             </div>
           )}
         </div>

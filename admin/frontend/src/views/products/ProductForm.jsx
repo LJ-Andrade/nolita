@@ -32,6 +32,19 @@ import { ImageGallery } from "@/components/ui/image-gallery";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { PageHeader } from "@/components/page-header";
 import { isSuperAdmin } from "@/components/can";
+
+const PRODUCT_LIST_RETURN_URL_KEY = "admin.products.lastListUrl";
+
+function getProductsListReturnUrl() {
+  if (typeof window === "undefined") return "/productos";
+  try {
+    return (
+      window.sessionStorage.getItem(PRODUCT_LIST_RETURN_URL_KEY) || "/productos"
+    );
+  } catch {
+    return "/productos";
+  }
+}
 import {
   Table,
   TableBody,
@@ -482,7 +495,7 @@ export default function ProductForm() {
             ? "Producto actualizado correctamente"
             : "Producto creado correctamente",
         );
-        navigate(-1);
+        navigate(getProductsListReturnUrl());
       })
       .catch((error) => {
         if (error.response?.data?.errors) {
@@ -1159,7 +1172,7 @@ export default function ProductForm() {
             )}
             <Button
               variant="outline"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(getProductsListReturnUrl())}
               type="button"
             >
               <X className="mr-2 h-4 w-4" />

@@ -14,8 +14,7 @@ export default async function TermsAndConditionsPage() {
 
   return (
     <div className="mx-auto max-w-screen-2xl px-6 py-12 md:px-10 lg:px-16">
-      <h1 className="mb-8 text-5xl font-bold">Términos y Condiciones</h1>
-      <Prose className="mb-8" html={html} />
+      <Prose className="mb-8" html={html} variant="editor" />
     </div>
   );
 }
