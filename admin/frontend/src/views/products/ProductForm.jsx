@@ -38,9 +38,13 @@ const PRODUCT_LIST_RETURN_URL_KEY = "admin.products.lastListUrl";
 function getProductsListReturnUrl() {
   if (typeof window === "undefined") return "/productos";
   try {
-    const search =
-      window.sessionStorage.getItem(PRODUCT_LIST_RETURN_URL_KEY) || "";
-    return "/productos" + search;
+    const stored =
+      window.sessionStorage.getItem(PRODUCT_LIST_RETURN_URL_KEY) || "/productos";
+    const basename = "/vadmin";
+    if (stored.startsWith(basename)) {
+      return stored.slice(basename.length) || "/";
+    }
+    return stored;
   } catch {
     return "/productos";
   }
