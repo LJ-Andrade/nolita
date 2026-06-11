@@ -4,7 +4,6 @@ import { ProductMedia } from "components/product/product-media";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
 import { getProduct, getProducts } from "lib/vadmin";
 import { getSession } from "lib/vadmin/auth";
-import { getFavorites } from "lib/vadmin/favorites";
 import type { Image } from "lib/vadmin/types";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -57,11 +56,7 @@ export default async function ProductPage(props: {
 
   if (!product) return notFound();
   const isAuthenticated = Boolean(session);
-  const [favorites, relatedProducts] = await Promise.all([
-    session ? getFavorites() : Promise.resolve([]),
-    getRelatedProducts(product.id, product.category?.handle),
-  ]);
-  const favoriteIds = new Set(favorites.map((favorite) => favorite.id));
+  const relatedProducts = await getRelatedProducts(product.id, product.category?.handle);
 
   const productJsonLd: Record<string, any> = {
     "@context": "https://schema.org",
@@ -129,8 +124,6 @@ export default async function ProductPage(props: {
         </div>
         <HomeProductSection
           products={relatedProducts}
-          favoriteIds={favoriteIds}
-          isAuthenticated={isAuthenticated}
           title="Productos relacionados"
         />
       </div>

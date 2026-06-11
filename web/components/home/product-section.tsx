@@ -4,8 +4,6 @@ import Link from "next/link";
 
 type HomeProductSectionProps = {
 	products: Product[];
-	favoriteIds: Set<string>;
-	isAuthenticated: boolean;
 	title?: string;
 	viewAllHref?: string;
 	priorityCount?: number;
@@ -13,8 +11,6 @@ type HomeProductSectionProps = {
 
 export function HomeProductSection({
 	products,
-	favoriteIds,
-	isAuthenticated,
 	title,
 	viewAllHref,
 	priorityCount = 2,
@@ -54,8 +50,6 @@ export function HomeProductSection({
 							key={product.id}
 							product={product}
 							priority={index < priorityCount}
-							isFavorited={favoriteIds.has(product.id)}
-							isAuthenticated={isAuthenticated}
 						/>
 					))}
 				</div>

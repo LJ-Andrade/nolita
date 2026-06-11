@@ -17,7 +17,6 @@ export default async function FavoritesPage() {
   }
 
   const favorites = await getFavorites();
-  const favoriteIds = new Set(favorites.map((p) => p.id));
 
   return (
     <div className="mx-auto max-w-screen-2xl px-4 py-12 lg:px-8">
@@ -31,7 +30,7 @@ export default async function FavoritesPage() {
         </p>
       </div>
 
-      <ProductGrid products={favorites} favoriteIds={favoriteIds} isAuthenticated={true} />
+      <ProductGrid products={favorites} />
     </div>
   );
 }

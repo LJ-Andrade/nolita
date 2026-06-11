@@ -10,8 +10,6 @@ import {
   getSiteContent,
   getVadminImageUrl,
 } from "lib/vadmin";
-import { getSession } from "lib/vadmin/auth";
-import { getFavorites } from "lib/vadmin/favorites";
 import type { Product } from "lib/vadmin/types";
 import { COLOR_MAP } from "lib/constants";
 import { Suspense } from "react";
@@ -199,17 +197,14 @@ export default async function HomePage(props: {
       : [searchParams.color]
     : [];
   const sort = searchParams.sort ?? "newest";
-  const [products, collections, content, session, categoryFilterProducts] =
+  const [products, collections, content, categoryFilterProducts] =
     await Promise.all([
       getProducts({ category }),
       getCollections(),
       getSiteContent("home"),
-      getSession(),
       category ? getProducts() : Promise.resolve(null),
     ]);
 
-  const favorites = session ? await getFavorites() : [];
-  const favoriteIds = new Set(favorites.map((product) => product.id));
   const allSizes = getAvailableProductSizes(products);
   const allColors = getAvailableProductColors(products);
   const filteredProducts = filterProducts(products, sizes, colors);
@@ -297,8 +292,6 @@ export default async function HomePage(props: {
           </div>
           <ProductGrid
             products={sortedProducts}
-            favoriteIds={favoriteIds}
-            isAuthenticated={Boolean(session)}
             showColors={true}
           />
         </div>
