@@ -4,11 +4,7 @@ import { Product } from "lib/vadmin/types";
 import { COLOR_MAP } from "lib/constants";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { HeartIcon } from "@heroicons/react/24/outline";
-import { toggleFavoriteAction } from "lib/vadmin/favorites-actions";
+import { useState } from "react";
 import { ProductPrice } from "components/product/product-price";
 import { usePriceMode } from "components/price-mode/price-mode-context";
 import { isProductPurchasableInMode } from "lib/pricing";
@@ -16,25 +12,18 @@ import { isProductPurchasableInMode } from "lib/pricing";
 type ProductCardProps = {
   product: Product;
   priority?: boolean;
-  isFavorited?: boolean;
-  isAuthenticated?: boolean;
   showColors?: boolean;
 };
 
 export function ProductCard({
   product,
   priority = false,
-  isFavorited = false,
-  isAuthenticated = false,
   showColors = true,
 }: ProductCardProps) {
-  const router = useRouter();
   const { priceMode } = usePriceMode();
   const defaultImageUrl =
     product.featuredImage?.url ?? product.images?.[0]?.url ?? "";
   const [currentImage, setCurrentImage] = useState(defaultImageUrl);
-  const [favorited, setFavorited] = useState(isFavorited);
-  const [isPending, startTransition] = useTransition();
   const imageUrl = currentImage || defaultImageUrl;
 
   const imageAlt = product.featuredImage?.altText ?? product.title;
@@ -54,27 +43,6 @@ export function ProductCard({
   ) {
     return null;
   }
-
-  const handleFavoriteToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated) {
-      router.push(
-        `/ingreso?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`,
-      );
-      return;
-    }
-    startTransition(async () => {
-      const newState = !favorited;
-      setFavorited(newState);
-      await toggleFavoriteAction(product.id, !newState);
-      toast.success(
-        newState
-          ? `${product.title} agregado a favoritos`
-          : `${product.title} eliminado de favoritos`,
-      );
-    });
-  };
 
   return (
     <article className="pb-card group relative flex flex-col">
@@ -113,17 +81,6 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Favorite heart */}
-        <button
-          type="button"
-          onClick={handleFavoriteToggle}
-          className="absolute left-2.5 top-2.5 z-10 transition-transform hover:scale-110"
-          aria-label={favorited ? "Quitar de favoritos" : "Agregar a favoritos"}
-        >
-          <HeartIcon
-            className={`h-5 w-5 drop-shadow-sm transition-colors ${favorited ? "fill-red-500 text-red-500" : "text-white"}`}
-          />
-        </button>
       </Link>
 
       {/* ── Info ───────────────────────────────────────────────────── */}

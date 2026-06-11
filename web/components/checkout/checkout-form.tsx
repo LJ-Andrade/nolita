@@ -195,9 +195,10 @@ export default function CheckoutForm({
                       {method.name}
                     </span>
                     {method.description && (
-                      <span className="block text-xs text-stone-brown">
-                        {method.description}
-                      </span>
+                      <span
+                        className="block text-xs text-stone-brown"
+                        dangerouslySetInnerHTML={{ __html: method.description }}
+                      />
                     )}
                   </span>
                 </span>

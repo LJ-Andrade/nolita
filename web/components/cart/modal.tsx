@@ -146,14 +146,7 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
         >
           <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full max-w-full flex-col overflow-x-hidden bg-white text-black md:w-[400px]">
             {/* ── Header ───────────────────────────────────────────── */}
-            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-              <button
-                onClick={closeCart}
-                className="flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-black"
-              >
-                <ArrowLeftIcon className="h-4 w-4" />
-                Continuar comprando
-              </button>
+            <div className="flex items-center justify-end border-b border-gray-100 px-5 py-4">
               <PriceModeSwitch />
             </div>
 

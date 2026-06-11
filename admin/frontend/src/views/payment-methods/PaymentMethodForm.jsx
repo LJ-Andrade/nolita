@@ -37,7 +37,7 @@ export default function PaymentMethodForm() {
     name: z.string().min(1, 'El nombre es requerido'),
     description: z.string().optional(),
     status: z.string().min(1, 'El estado es requerido'),
-    fee: z.number().min(0, 'La comisión debe ser mayor o igual a 0').default(0),
+    fee: z.coerce.number().min(0, 'La comisión debe ser mayor o igual a 0').default(0),
     price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   });
 
