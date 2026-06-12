@@ -130,7 +130,7 @@ export function VariantSelector({
                     isActive && isColor
                       ? "border-black ring-1 ring-black ring-offset-2"
                       : isColor &&
-                          "border-neutral-300 hover:border-black hover:ring-1 hover:ring-black hover:ring-offset-2",
+                          "border-black hover:ring-1 hover:ring-black hover:ring-offset-2",
                     !isAvailableForSale &&
                       "cursor-not-allowed overflow-hidden opacity-35 before:absolute before:inset-x-0 before:h-px before:-rotate-45 before:bg-neutral-300",
                   )}

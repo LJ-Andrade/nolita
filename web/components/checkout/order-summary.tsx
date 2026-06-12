@@ -340,17 +340,15 @@ export default function OrderSummary({
             />
           </div>
         )}
-        <div className="flex justify-between">
-          <span className="text-stone-brown">Envío</span>
-          {shippingFee > 0 ? (
+        {shippingFee > 0 && (
+          <div className="flex justify-between">
+            <span className="text-stone-brown">Envío</span>
             <Price
               amount={shippingFee.toString()}
               currencyCode={cart.cost.subtotalAmount.currencyCode}
             />
-          ) : (
-            <span className="text-green-600 font-medium">Gratis</span>
-          )}
-        </div>
+          </div>
+        )}
         {paymentFee > 0 && (
           <div className="flex justify-between">
             <span className="text-stone-brown">Recargo método de pago</span>
