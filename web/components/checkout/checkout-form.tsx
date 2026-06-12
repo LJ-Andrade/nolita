@@ -203,7 +203,7 @@ export default function CheckoutForm({
                   </span>
                 </span>
                 <span className="shrink-0 text-sm font-semibold">
-                  {parseFloat(method.fee) === 0 ? "Gratis" : `$ ${method.fee}`}
+                  {parseFloat(method.fee) === 0 ? "" : `$ ${method.fee}`}
                 </span>
               </label>
             ))}
