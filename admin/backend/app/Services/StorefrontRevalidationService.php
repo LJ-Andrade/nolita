@@ -13,6 +13,8 @@ class StorefrontRevalidationService
     public const SITE_CONTENT = 'site-content';
     public const SHOP_CONFIGURATION = 'shop-configuration';
     public const CHECKOUT_METHODS = 'checkout-methods';
+    private const EXTERNAL_REQUEST_TIMEOUT = 2;
+    private const EXTERNAL_CONNECT_TIMEOUT = 1;
 
     private const DEFAULT_PATHS_BY_TAG = [
         self::PRODUCTS => [
@@ -58,8 +60,18 @@ class StorefrontRevalidationService
         $tags = array_values(array_unique(array_filter($tags)));
         $paths = $this->resolvePaths($tags, $paths);
 
-        $this->triggerNextRevalidation($tags, $paths);
-        $this->purgeCloudflare($tags, $paths);
+        $revalidate = function () use ($tags, $paths): void {
+            $this->triggerNextRevalidation($tags, $paths);
+            $this->purgeCloudflare($tags, $paths);
+        };
+
+        if (app()->runningInConsole()) {
+            $revalidate();
+
+            return;
+        }
+
+        app()->terminating($revalidate);
     }
 
     private function triggerNextRevalidation(array $tags, array $paths): void
@@ -72,7 +84,8 @@ class StorefrontRevalidationService
         }
 
         try {
-            Http::timeout(5)
+            Http::connectTimeout(self::EXTERNAL_CONNECT_TIMEOUT)
+                ->timeout(self::EXTERNAL_REQUEST_TIMEOUT)
                 ->acceptJson()
                 ->withHeaders(['X-Revalidate-Token' => $token])
                 ->post($webhookUrl, [
@@ -120,7 +133,8 @@ class StorefrontRevalidationService
 
         try {
             if ($purgeEverything) {
-                Http::timeout(5)
+                Http::connectTimeout(self::EXTERNAL_CONNECT_TIMEOUT)
+                    ->timeout(self::EXTERNAL_REQUEST_TIMEOUT)
                     ->acceptJson()
                     ->withToken($apiToken)
                     ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", [
@@ -132,7 +146,8 @@ class StorefrontRevalidationService
             }
 
             foreach (array_chunk($urls, 30) as $chunk) {
-                Http::timeout(5)
+                Http::connectTimeout(self::EXTERNAL_CONNECT_TIMEOUT)
+                    ->timeout(self::EXTERNAL_REQUEST_TIMEOUT)
                     ->acceptJson()
                     ->withToken($apiToken)
                     ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", [

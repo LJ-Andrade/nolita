@@ -98,7 +98,7 @@ export default function PaymentMethodsList() {
 		},
 		{
 			key: 'fee',
-			label: 'Comisión',
+			label: 'Porcentaje',
 			sortable: true,
 			render: (value) => `${parseFloat(value || 0).toFixed(2)}%`,
 		},

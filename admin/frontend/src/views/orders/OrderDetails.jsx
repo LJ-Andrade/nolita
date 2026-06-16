@@ -288,7 +288,7 @@ export default function OrderDetails() {
                 <DetailRow label="Cupón" value={order.coupon_code || emptyValue} />
                 <DetailRow label="Descuento" value={discount > 0 ? `- ${formatMoney(discount)}` : formatMoney(0)} />
                 <DetailRow label="Envío" value={formatMoney(deliveryFee)} />
-                <DetailRow label="Recargo método de pago" value={formatMoney(paymentFee)} />
+                <DetailRow label="Ajuste método de pago" value={formatMoney(paymentFee)} />
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between gap-4 pt-2">
                   <span className="font-bold text-lg">Total</span>
@@ -368,7 +368,7 @@ export default function OrderDetails() {
             </CardHeader>
             <CardContent className="space-y-1">
               <DetailRow label="Método de pago" value={order.billing_address?.payment_method_name || order.payment_method || emptyValue} />
-              <DetailRow label="Recargo pago" value={formatMoney(order.billing_address?.payment_fee)} />
+              <DetailRow label="Ajuste pago" value={formatMoney(order.billing_address?.payment_fee)} />
               {order.coupon_code && (
                 <DetailRow label="Cupón aplicado" value={<span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" /> {order.coupon_code}</span>} />
               )}

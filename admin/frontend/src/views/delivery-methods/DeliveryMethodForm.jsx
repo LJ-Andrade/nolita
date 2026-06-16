@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 export default function DeliveryMethodForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [saving, setSaving] = React.useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, 'El nombre es requerido'),
@@ -39,7 +40,7 @@ export default function DeliveryMethodForm() {
     price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   });
 
-  const { form, loading, fetching, entityName, setEntityName } = useCrudForm({
+  const { form, fetching, entityName, setEntityName } = useCrudForm({
     endpoint: 'delivery-methods',
     id,
     schema: formSchema,
@@ -77,6 +78,8 @@ export default function DeliveryMethodForm() {
       formData.append('_method', 'PUT');
     }
 
+    setSaving(true);
+
     try {
       const response = id
         ? await axiosClient.post(`delivery-methods/${id}`, formData)
@@ -96,6 +99,8 @@ export default function DeliveryMethodForm() {
         toast.error(id ? 'Error al actualizar el método de envío' : 'Error al crear el método de envío');
       }
       throw error;
+    } finally {
+      setSaving(false);
     }
   });
 
@@ -201,14 +206,14 @@ export default function DeliveryMethodForm() {
                 />
 
                 <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => navigate('/metodos-envio')}>
+                  <Button type="button" variant="outline" onClick={() => navigate('/metodos-envio')} disabled={saving}>
                     <X className="mr-2 h-4 w-4" />
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Save className="mr-2 h-4 w-4" />
-                    {id ? 'Guardar' : 'Crear'}
+                    {saving ? 'Guardando...' : id ? 'Guardar' : 'Crear'}
                   </Button>
                 </div>
               </CardContent>

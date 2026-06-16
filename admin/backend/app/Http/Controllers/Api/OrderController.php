@@ -365,7 +365,7 @@ class OrderController extends Controller
 
 			$order->update([
 				'status' => 'pending',
-				'total_amount' => max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee,
+				'total_amount' => max(max($subtotal - $couponDiscountAmount, 0) + $paymentFee, 0) + $deliveryFee,
 				'price_mode' => $priceMode,
 				'payment_method' => (string) $validated['payment_method_id'],
 				'coupon_code' => $appliedCouponCode,
@@ -528,10 +528,10 @@ class OrderController extends Controller
 
 	private function calculatePaymentFee(float $subtotal, float $couponDiscountAmount, PaymentMethod $paymentMethod): float
 	{
-		$commissionPercent = max((float) $paymentMethod->fee, 0);
+		$paymentPercent = (float) $paymentMethod->fee;
 		$base = max($subtotal - $couponDiscountAmount, 0);
 
-		return round($base * $commissionPercent / 100, 2);
+		return round($base * $paymentPercent / 100, 2);
 	}
 
 	private function getVariantUnitPrice(?ProductVariant $variant, string $priceMode = 'retail'): float

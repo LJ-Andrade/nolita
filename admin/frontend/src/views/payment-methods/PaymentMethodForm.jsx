@@ -32,16 +32,17 @@ import { toast } from 'sonner';
 export default function PaymentMethodForm() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [saving, setSaving] = React.useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, 'El nombre es requerido'),
     description: z.string().optional(),
     status: z.string().min(1, 'El estado es requerido'),
-    fee: z.coerce.number().min(0, 'La comisión debe ser mayor o igual a 0').default(0),
+    fee: z.coerce.number().default(0),
     price_mode_scope: z.enum(['both', 'retail', 'wholesale']).default('both'),
   });
 
-  const { form, loading, fetching, entityName, setEntityName } = useCrudForm({
+  const { form, fetching, entityName, setEntityName } = useCrudForm({
     endpoint: 'payment-methods',
     id,
     schema: formSchema,
@@ -80,6 +81,8 @@ export default function PaymentMethodForm() {
       formData.append('_method', 'PUT');
     }
 
+    setSaving(true);
+
     try {
       const response = id
         ? await axiosClient.post(`payment-methods/${id}`, formData)
@@ -99,6 +102,8 @@ export default function PaymentMethodForm() {
         toast.error(id ? 'Error al actualizar el método de pago' : 'Error al crear el método de pago');
       }
       throw error;
+    } finally {
+      setSaving(false);
     }
   });
 
@@ -159,81 +164,83 @@ export default function PaymentMethodForm() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar estado" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Activo</SelectItem>
-                          <SelectItem value="inactive">Inactivo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="price_mode_scope"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Canal *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar canal" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="both">Mayorista y minorista</SelectItem>
+                            <SelectItem value="retail">Minorista</SelectItem>
+                            <SelectItem value="wholesale">Mayorista</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="price_mode_scope"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Canal *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                  <FormField
+                    control={form.control}
+                    name="fee"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Porcentaje (%)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar canal" />
-                          </SelectTrigger>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Ej: -10 o 10"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="both">Mayorista y minorista</SelectItem>
-                          <SelectItem value="retail">Minorista</SelectItem>
-                          <SelectItem value="wholesale">Mayorista</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="fee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comisión (%)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Ej: 10"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Activo</SelectItem>
+                            <SelectItem value="inactive">Inactivo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => navigate('/metodos-pago')}>
+                  <Button type="button" variant="outline" onClick={() => navigate('/metodos-pago')} disabled={saving}>
                     <X className="mr-2 h-4 w-4" />
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Save className="mr-2 h-4 w-4" />
-                    {id ? 'Guardar' : 'Crear'}
+                    {saving ? 'Guardando...' : id ? 'Guardar' : 'Crear'}
                   </Button>
                 </div>
               </CardContent>

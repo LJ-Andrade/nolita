@@ -133,39 +133,50 @@ export default function CheckoutForm({
     <div className="space-y-6">
       <CheckoutCard title="Método de pago">
         <div className="grid grid-cols-1 gap-3">
-          {paymentMethods.map((method) => (
-            <label
-              key={method.id}
-              className={`flex cursor-pointer items-center gap-3 border p-4 transition-all ${
-                selectedPayment === method.id
-                  ? "border-graphite bg-graphite/5 ring-1 ring-graphite"
-                  : "border-bone bg-parchment hover:bg-bone/20"
-              }`}
-            >
-              <input
-                type="radio"
-                name="payment_method_id"
-                value={method.id}
-                checked={selectedPayment === method.id}
-                onChange={() => handlePaymentChange(method.id)}
-                className="h-4 w-4 text-graphite focus:ring-graphite"
-              />
-              <span>
-                <span className="block text-sm font-bold">{method.name}</span>
-                {method.description && (
-                  <span
-                    className="block text-xs text-stone-brown"
-                    dangerouslySetInnerHTML={{ __html: method.description }}
+          {paymentMethods.map((method) => {
+            const feePercent = parseFloat(method.fee || "0");
+            const hasPaymentAdjustment = feePercent !== 0;
+
+            return (
+              <label
+                key={method.id}
+                className={`flex cursor-pointer items-center justify-between gap-3 border p-4 transition-all ${
+                  selectedPayment === method.id
+                    ? "border-graphite bg-graphite/5 ring-1 ring-graphite"
+                    : "border-bone bg-parchment hover:bg-bone/20"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payment_method_id"
+                    value={method.id}
+                    checked={selectedPayment === method.id}
+                    onChange={() => handlePaymentChange(method.id)}
+                    className="h-4 w-4 shrink-0 text-graphite focus:ring-graphite"
                   />
-                )}
-                {parseFloat(method.fee || "0") > 0 && (
-                  <span className="block text-xs font-semibold text-stone-brown">
-                    Recargo: {method.fee}%
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold">
+                      {method.name}
+                    </span>
+                    {method.description && (
+                      <span
+                        className="block text-xs text-stone-brown"
+                        dangerouslySetInnerHTML={{ __html: method.description }}
+                      />
+                    )}
+                  </span>
+                </span>
+                {hasPaymentAdjustment && (
+                  <span className="shrink-0 border border-bone bg-bone/30 px-2 py-1 text-xs font-semibold text-stone-brown">
+                    {feePercent > 0
+                      ? `Recargo: ${method.fee}%`
+                      : `Descuento: ${Math.abs(feePercent)}%`}
                   </span>
                 )}
-              </span>
-            </label>
-          ))}
+              </label>
+            );
+          })}
         </div>
       </CheckoutCard>
 

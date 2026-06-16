@@ -192,7 +192,7 @@ class OrderController extends Controller
 
                 $deliveryFee = (float) $deliveryMethod->fee;
                 $paymentFee = $this->calculatePaymentFee($subtotal, $couponDiscountAmount, $paymentMethod);
-                $total = max($subtotal - $couponDiscountAmount, 0) + $deliveryFee + $paymentFee;
+                $total = max(max($subtotal - $couponDiscountAmount, 0) + $paymentFee, 0) + $deliveryFee;
 
                 $order = Order::create([
                     'customer_id' => $customer->id,
@@ -333,9 +333,9 @@ class OrderController extends Controller
 
     private function calculatePaymentFee(float $subtotal, float $couponDiscountAmount, PaymentMethod $paymentMethod): float
     {
-        $commissionPercent = max((float) $paymentMethod->fee, 0);
+        $paymentPercent = (float) $paymentMethod->fee;
         $base = max($subtotal - $couponDiscountAmount, 0);
 
-        return round($base * $commissionPercent / 100, 2);
+        return round($base * $paymentPercent / 100, 2);
     }
 }

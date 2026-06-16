@@ -68,8 +68,14 @@ export default function OrderSummary({
       ((Math.max(subtotal - couponDiscount, 0) * paymentFeePercent) / 100) *
         100,
     ) / 100;
-  const total =
-    Math.max(subtotal - couponDiscount, 0) + shippingFee + paymentFee;
+  const baseAfterCoupon = Math.max(subtotal - couponDiscount, 0);
+  const total = Math.max(baseAfterCoupon + paymentFee, 0) + shippingFee;
+  const paymentAdjustmentPercent = Math.abs(paymentFeePercent).toLocaleString(
+    "es-AR",
+    {
+      maximumFractionDigits: 2,
+    },
+  );
   const hasConditions =
     priceMode === "wholesale" &&
     (shopConfig.min_quantity > 0 || shopConfig.min_amount > 0);
@@ -349,9 +355,18 @@ export default function OrderSummary({
             />
           </div>
         )}
-        {paymentFee > 0 && (
-          <div className="flex justify-between">
-            <span className="text-stone-brown">Recargo método de pago</span>
+        {paymentFee !== 0 && (
+          <div
+            className={clsx(
+              "flex justify-between",
+              paymentFee < 0 && "text-emerald-700",
+            )}
+          >
+            <span className={paymentFee < 0 ? "" : "text-stone-brown"}>
+              {paymentFee > 0
+                ? `Recargo método de pago (${paymentAdjustmentPercent}%)`
+                : `Descuento método de pago (${paymentAdjustmentPercent}%)`}
+            </span>
             <Price
               amount={paymentFee.toString()}
               currencyCode={cart.cost.subtotalAmount.currencyCode}

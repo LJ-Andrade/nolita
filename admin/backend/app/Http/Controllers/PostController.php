@@ -399,22 +399,32 @@ class PostController extends Controller
      */
     private function triggerRevalidation(?string $slug = null): void
     {
-        $webhookUrl = config('app.revalidate_webhook_url');
-        $token = config('app.revalidate_token');
+        $revalidate = function () use ($slug): void {
+            $webhookUrl = config('app.revalidate_webhook_url');
+            $token = config('app.revalidate_token');
 
-        if (!$webhookUrl || !$token) {
+            if (!$webhookUrl || !$token) {
+                return;
+            }
+
+            try {
+                $url = $webhookUrl . '?token=' . $token;
+                if ($slug) {
+                    $url .= '&slug=' . $slug;
+                }
+
+                Http::connectTimeout(1)->timeout(2)->post($url);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to trigger Next.js revalidation: ' . $e->getMessage());
+            }
+        };
+
+        if (app()->runningInConsole()) {
+            $revalidate();
+
             return;
         }
 
-        try {
-            $url = $webhookUrl . '?token=' . $token;
-            if ($slug) {
-                $url .= '&slug=' . $slug;
-            }
-
-            Http::timeout(10)->post($url);
-        } catch (\Exception $e) {
-            \Log::warning('Failed to trigger Next.js revalidation: ' . $e->getMessage());
-        }
+        app()->terminating($revalidate);
     }
 }

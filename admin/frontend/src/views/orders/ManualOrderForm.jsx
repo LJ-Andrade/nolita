@@ -57,8 +57,8 @@ const pricedAmount = (price, discount) => {
 };
 
 const calculatePaymentFee = (subtotal, method) => {
-	const commissionPercent = Number(method?.fee || 0);
-	return Number((Math.max(Number(subtotal || 0), 0) * commissionPercent / 100).toFixed(2));
+	const paymentPercent = Number(method?.fee || 0);
+	return Number((Math.max(Number(subtotal || 0), 0) * paymentPercent / 100).toFixed(2));
 };
 
 const methodAppliesToPriceMode = (method, priceMode) => {
@@ -147,7 +147,7 @@ export default function ManualOrderForm({ onCreated }) {
 			paymentMethods.find((method) => String(method.id) === String(form.payment_method_id)),
 		),
 	);
-	const estimatedTotal = subtotal + deliveryFee + paymentFee;
+	const estimatedTotal = Math.max(subtotal + paymentFee, 0) + deliveryFee;
 	const fieldsDisabled = !form.customer_id;
 
 	const updateField = (field, value) => {
@@ -446,7 +446,7 @@ export default function ManualOrderForm({ onCreated }) {
 					<div className="rounded-md border bg-background/50 p-3 text-sm">
 						<div className="flex justify-between"><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
 						<div className="flex justify-between"><span>Envío</span><strong>{formatMoney(deliveryFee)}</strong></div>
-						<div className="flex justify-between"><span>Pago</span><strong>{formatMoney(paymentFee)}</strong></div>
+						<div className="flex justify-between"><span>Ajuste pago</span><strong>{formatMoney(paymentFee)}</strong></div>
 						<div className="mt-2 flex justify-between border-t pt-2 text-base"><span>Total estimado</span><strong>{formatMoney(estimatedTotal)}</strong></div>
 					</div>
 				</div>

@@ -54,7 +54,7 @@ class PaymentMethodController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
-            'fee' => 'nullable|numeric|min:0',
+            'fee' => 'nullable|numeric',
             'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 
@@ -86,7 +86,7 @@ class PaymentMethodController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
-            'fee' => 'nullable|numeric|min:0',
+            'fee' => 'nullable|numeric',
             'price_mode_scope' => 'nullable|in:both,retail,wholesale',
         ]);
 

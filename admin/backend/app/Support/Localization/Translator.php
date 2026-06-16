@@ -30,7 +30,7 @@ final class Translator
         'notes' => 'Notas',
         'order' => 'Pedido',
         'order_type' => 'Tipo de pedido',
-        'payment_fee' => 'Recargo por pago',
+        'payment_fee' => 'Ajuste por pago',
         'payment_method' => 'Método de pago',
         'phone' => 'Teléfono',
         'postal_code' => 'Código postal',

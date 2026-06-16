@@ -2,6 +2,21 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 95: Storefront Checkout Order Number
+
+1. [x] `docs/SPECS.md`: Document checkout success order-number display.
+2. [x] `web/lib/vadmin/cart.ts` and checkout action: Preserve the VADMIN completed order ID in the success state.
+3. [x] `web/components/checkout` and success page: Render the completed order number for buyers.
+4. [x] Validation: Run focused storefront type/build checks.
+
+## Phase 94: Signed Payment Method Percentage
+
+1. [x] `docs/SPECS.md`: Document payment method signed percentage adjustments.
+2. [x] `admin/backend/app`: Allow negative payment method percentages and apply them in public/admin order totals.
+3. [x] `admin/frontend/src/views/payment-methods` and order views: Rename payment labels to percentage/adjustment and accept negative values.
+4. [x] `web/components/checkout`: Display payment discounts and include signed percentages in checkout totals.
+5. [x] Validation: Run focused backend syntax checks and frontend build checks.
+
 ## Phase 93: Admin List State URL Persistence
 
 1. [x] `docs/SPECS.md`: Document URL sync contract for admin CRUD list state.
@@ -10,12 +25,12 @@ This document tracks execution steps. One task per logical unit.
 4. [x] `admin/frontend/src/hooks/use-crud-list.js`: Prevent page reset when filter changes come from the URL (back/forward navigation).
 5. [x] Validation: Run admin frontend lint/build checks.
 
-## Phase 92: Payment Percentage Fee and Product List Order Cleanup
+## Phase 92: Payment Percentage Adjustment and Product List Order Cleanup
 
-1. [x] `docs/SPECS.md`: Document payment method percentage commissions and hidden product order column.
-2. [x] `admin/backend/app`: Calculate payment method `fee` as a percentage commission in public and admin order creation.
-3. [x] `admin/frontend/src/views/payment-methods` and order forms: Show and estimate payment commission as a percentage.
-4. [x] `web/components/checkout`: Display and calculate payment commission as a percentage in checkout totals.
+1. [x] `docs/SPECS.md`: Document payment method percentage adjustments and hidden product order column.
+2. [x] `admin/backend/app`: Calculate payment method `fee` as a percentage adjustment in public and admin order creation.
+3. [x] `admin/frontend/src/views/payment-methods` and order forms: Show and estimate payment adjustment as a percentage.
+4. [x] `web/components/checkout`: Display and calculate payment adjustment as a percentage in checkout totals.
 5. [x] `admin/frontend/src/views/products/ProductsList.jsx`: Remove the order column and inline order editor while keeping newest-first sorting.
 6. [x] Validation: Run focused PHP syntax checks and frontend builds.
 

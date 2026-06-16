@@ -486,7 +486,8 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 4. **Completion**: The `completeOrder` action sends collected data, cart lines, and active price mode to VADMIN checkout.
 5. **API Routing**: The storefront posts to the public VADMIN `POST /api/checkout` endpoint for both guests and authenticated customers. When an `auth_token` cookie is present, the storefront forwards it as a Bearer header so VADMIN can associate the order with the customer via the Sanctum `customer` guard. A missing or expired token must not block checkout; the order is persisted as a guest order in that case.
 6. **Customer Resolution (Backend)**: `OrderController::checkout` must resolve the customer via `auth('customer')->user()` so the public route can still link orders to authenticated customers when a valid Bearer token is sent.
-7. **Summary UI**:
+7. **Success UI**: After VADMIN completes checkout, the storefront success state must show the completed order ID as the buyer-facing order number (for example, `Pedido #123`) when it is present in the checkout response.
+8. **Summary UI**:
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
    - Allows removing items directly from the summary.
@@ -504,7 +505,7 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 - Checkout must fail with a clear message if stock is no longer available at completion time.
 - Delivery methods and payment methods must include `price_mode_scope` with allowed values `both`, `retail`, and `wholesale`.
 - Admin staff can choose the scope when creating or editing delivery methods, payment methods, and coupons.
-- Payment method `fee` is a percentage commission, not a fixed amount. Checkout totals must calculate the payment surcharge from the current order subtotal after coupon discount.
+- Payment method `fee` is a signed percentage adjustment, not a fixed amount. Positive values add a payment surcharge and negative values apply a payment discount from the current order subtotal after coupon discount.
 - The checkout UI must only present delivery and payment methods whose scope is `both` or matches the active storefront price mode.
 - Public and admin checkout creation must reject delivery methods, payment methods, and coupons whose scope does not match the order `price_mode`.
 
