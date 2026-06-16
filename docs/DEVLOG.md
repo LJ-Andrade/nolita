@@ -2,6 +2,13 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 96: Production Domain Cutover
+
+1. [x] `build-web.sh`: Point the default Cloudflare storefront URL to `https://nolita.com.ar`.
+2. [x] `web`: Configure production API URL and image allowlist for `nolita.com.ar`.
+3. [x] `admin/frontend`: Point production API resolution to `https://nolita.com.ar/api/`.
+4. [x] Validation: Search for remaining references to the old storefront domain and run storefront/admin production builds.
+
 ## Phase 95: Storefront Checkout Order Number
 
 1. [x] `docs/SPECS.md`: Document checkout success order-number display.

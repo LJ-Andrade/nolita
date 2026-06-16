@@ -109,7 +109,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "nolita.studiovimana.com.ar",
+        hostname: "nolita.com.ar",
         pathname: "/storage/**",
       }
     ],

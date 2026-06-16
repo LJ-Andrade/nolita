@@ -6,7 +6,7 @@ const ENVIRONMENTS = {
 		'192.168.56.1': 'http://nolita.test/api/',
 	},
 	production: {
-		'nolita.studiovimana.com.ar': 'https://nolita.studiovimana.com.ar/api/',
+		'nolita.com.ar': 'https://nolita.com.ar/api/',
 	},
 };
 

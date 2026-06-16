@@ -3,7 +3,7 @@ set -euo pipefail
 
 PM2_APP_NAME="${PM2_APP_NAME:-nolita-web}"
 EXPECTED_WEBHOOK_URL="${EXPECTED_WEBHOOK_URL:-http://127.0.0.1:3003/api/revalidate}"
-EXPECTED_CLOUDFLARE_STOREFRONT_URL="${EXPECTED_CLOUDFLARE_STOREFRONT_URL:-https://nolita.studiovimana.com.ar}"
+EXPECTED_CLOUDFLARE_STOREFRONT_URL="${EXPECTED_CLOUDFLARE_STOREFRONT_URL:-https://nolita.com.ar}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$ROOT_DIR/web"
