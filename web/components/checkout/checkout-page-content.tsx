@@ -212,6 +212,7 @@ export default function CheckoutPageContent({
             processingTitle={checkoutTexts.processingTitle}
             completeTitle={checkoutTexts.completeTitle}
             completeMessage={checkoutTexts.completeMessage}
+            orderId={checkoutState.orderId}
           />
         </section>
       ) : (

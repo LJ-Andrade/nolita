@@ -130,11 +130,20 @@ export async function updateCart(
   return lastCart;
 }
 
-export async function checkout(data?: any): Promise<{ success: boolean; message: string }> {
+type CheckoutResponse = {
+  message?: string;
+  order?: {
+    id?: number | string;
+  };
+};
+
+export async function checkout(
+  data?: any,
+): Promise<{ success: boolean; message: string; orderId?: string }> {
   const token = (await cookies()).get("auth_token")?.value;
 
   try {
-    await vadminFetch({
+    const res = await vadminFetch<CheckoutResponse>({
       path: "checkout",
       method: "POST",
       redirectOnServerError: false,
@@ -145,7 +154,12 @@ export async function checkout(data?: any): Promise<{ success: boolean; message:
         : undefined,
       body: data,
     });
-    return { success: true, message: "Checkout successful" };
+    const orderId = res.body.order?.id;
+    return {
+      success: true,
+      message: res.body.message || "Checkout successful",
+      orderId: orderId == null ? undefined : String(orderId),
+    };
   } catch (e: any) {
     return { success: false, message: e.message || "Checkout failed" };
   }

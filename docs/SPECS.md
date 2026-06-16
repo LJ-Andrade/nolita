@@ -138,7 +138,7 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 
 - The storefront navbar and footer must use the Nolita logo image asset from `web/public/logo-black.png` instead of text-only branding.
 - The storefront favicon must use the Nolita favicon image asset from `web/public/favicon.png`.
-- The storefront footer must follow the compact Nolita reference layout: logo on the left, terms link, business email, business phone, centered social icon row, copyright, and developer credit.
+- The storefront footer must follow the compact Nolita reference layout: logo on the left, terms link, business email, business phone, centered social icon row for configured social links only, copyright, and developer credit.
 - The storefront footer must not render category columns, customer care columns, newsletter signup, or descriptive copy unless a future approved design asks for them.
 
 ### Storefront Spanish Routes

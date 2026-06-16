@@ -80,26 +80,28 @@ export default async function Footer() {
           </div>
         </div>
 
-        <nav
-          aria-label="Redes sociales"
-          className="flex justify-center border-b border-black/10 py-14"
-        >
-          <ul className="flex items-center justify-center gap-4">
-            {socialLinks.map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={link.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 text-neutral-500 transition-colors hover:border-black hover:text-black"
-                >
-                  <SocialIcon icon={link.icon} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {socialLinks.length > 0 ? (
+          <nav
+            aria-label="Redes sociales"
+            className="flex justify-center border-b border-black/10 py-14"
+          >
+            <ul className="flex items-center justify-center gap-4">
+              {socialLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.label}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-300 text-neutral-500 transition-colors hover:border-black hover:text-black"
+                  >
+                    <SocialIcon icon={link.icon} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
 
         <div className="flex flex-col gap-4 pt-4 text-[10px] font-medium text-neutral-400 md:flex-row md:items-center md:justify-between">
           <p>
@@ -139,27 +141,35 @@ function getSocialLinks(content: Record<string, string>): SocialLink[] {
   const whatsapp = getSiteValue(content, ["business_whatsapp"]);
 
   return [
-    {
-      href: facebook || "https://www.facebook.com/",
-      label: "Facebook",
-      icon: "facebook",
-    },
-    {
-      href: instagram || "https://www.instagram.com/",
-      label: "Instagram",
-      icon: "instagram",
-    },
-    {
-      href: tiktok || "https://www.tiktok.com/",
-      label: "TikTok",
-      icon: "tiktok",
-    },
-    {
-      href: whatsapp ? toWhatsappHref(whatsapp) : "https://wa.me/5491124906000",
-      label: "WhatsApp",
-      icon: "whatsapp",
-    },
-  ];
+    facebook
+      ? {
+          href: facebook,
+          label: "Facebook",
+          icon: "facebook" as const,
+        }
+      : null,
+    instagram
+      ? {
+          href: instagram,
+          label: "Instagram",
+          icon: "instagram" as const,
+        }
+      : null,
+    tiktok
+      ? {
+          href: tiktok,
+          label: "TikTok",
+          icon: "tiktok" as const,
+        }
+      : null,
+    whatsapp
+      ? {
+          href: toWhatsappHref(whatsapp),
+          label: "WhatsApp",
+          icon: "whatsapp" as const,
+        }
+      : null,
+  ].filter((link): link is SocialLink => link !== null);
 }
 
 function toPhoneHref(phone: string) {

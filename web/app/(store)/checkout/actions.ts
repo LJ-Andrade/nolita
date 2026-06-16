@@ -5,6 +5,7 @@ import { checkout } from "lib/vadmin/cart";
 export type CheckoutState = {
   status: "idle" | "success" | "error";
   message: string;
+  orderId?: string;
 };
 
 function getRequiredString(formData: FormData, key: string): string {
@@ -76,6 +77,7 @@ export async function completeOrder(
     return {
       status: "success",
       message: result.message || "Checkout successful",
+      orderId: result.orderId,
     };
   }
 
@@ -84,4 +86,3 @@ export async function completeOrder(
     message: result.message || "No pudimos finalizar el pedido.",
   };
 }
-

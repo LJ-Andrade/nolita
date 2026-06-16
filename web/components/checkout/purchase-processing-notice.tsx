@@ -7,6 +7,7 @@ type PurchaseProcessingNoticeProps = {
   processingTitle: string;
   completeTitle: string;
   completeMessage: string;
+  orderId?: string;
 };
 
 function HtmlText({
@@ -31,6 +32,7 @@ export default function PurchaseProcessingNotice({
   processingTitle,
   completeTitle,
   completeMessage,
+  orderId,
 }: PurchaseProcessingNoticeProps) {
   return (
     <div className="w-full max-w-md bg-transparent p-6">
@@ -89,6 +91,15 @@ export default function PurchaseProcessingNotice({
           }`}
         />
 
+        {orderId ? (
+          <p
+            className={`text-xs font-semibold uppercase tracking-[0.18em] text-graphite transition-opacity duration-500 ${
+              isComplete ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            Número de pedido #{orderId}
+          </p>
+        ) : null}
       </div>
     </div>
   );
