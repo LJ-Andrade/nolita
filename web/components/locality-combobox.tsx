@@ -110,6 +110,7 @@ export default function LocalityCombobox({
 
   return (
     <Combobox
+      immediate
       value={selected}
       onChange={(loc: Locality | null) => {
         setSelected(loc);
@@ -121,7 +122,7 @@ export default function LocalityCombobox({
         <ComboboxInput
           id={inputId}
           autoComplete="off"
-          className={inputClassName}
+          className={`w-full ${inputClassName}`}
           placeholder={
             disabled ? "Seleccioná una provincia" : "Buscá tu localidad"
           }
