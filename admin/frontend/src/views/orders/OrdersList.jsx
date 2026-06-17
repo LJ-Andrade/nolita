@@ -41,6 +41,7 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useBulkSelect } from '@/hooks/use-bulk-select';
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
+import { PriceModeBadge } from "@/components/price-mode-badge";
 import ManualOrderForm from './ManualOrderForm';
 import { AdminTableShell } from "@/components/admin-table-shell";
 
@@ -532,6 +533,7 @@ export default function OrdersList() {
 									<TableHead className="w-[80px]">Order ID</TableHead>
 									<TableHead>Cliente</TableHead>
 									<TableHead>Fecha</TableHead>
+									<TableHead>Tipo</TableHead>
 									<TableHead>Estado</TableHead>
 									{showPaymentStatus && <TableHead>Pago</TableHead>}
 									<TableHead className="text-right">Total</TableHead>
@@ -541,12 +543,12 @@ export default function OrdersList() {
 							<TableBody className={loading ? "opacity-50 pointer-events-none" : ""}>
 								{loading && orders.length === 0 && (
 									<TableRow>
-										<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center">Cargando...</TableCell>
+										<TableCell colSpan={showPaymentStatus ? 9 : 8} className="text-center">Cargando...</TableCell>
 									</TableRow>
 								)}
 								{!loading && orders.length === 0 && (
 									<TableRow>
-										<TableCell colSpan={showPaymentStatus ? 8 : 7} className="text-center py-8 text-muted-foreground">
+										<TableCell colSpan={showPaymentStatus ? 9 : 8} className="text-center py-8 text-muted-foreground">
 											No se encontraron órdenes.
 										</TableCell>
 									</TableRow>
@@ -567,6 +569,9 @@ export default function OrdersList() {
 										</TableCell>
 										<TableCell>
 											{new Date(order.created_at).toLocaleDateString()}
+										</TableCell>
+										<TableCell>
+											<PriceModeBadge mode={order.price_mode} />
 										</TableCell>
 										<TableCell>
 											{renderStatusDropdown(order)}

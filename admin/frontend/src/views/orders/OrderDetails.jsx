@@ -34,6 +34,7 @@ import {
 import { toast } from 'sonner';
 import { PageHeader } from "@/components/page-header";
 import { SectionActionsBar } from "@/components/section-actions-bar";
+import { PriceModeBadge } from "@/components/price-mode-badge";
 import OrderActionsCard from "./OrderActionsCard";
 
 const emptyValue = "-";
@@ -199,7 +200,7 @@ export default function OrderDetails() {
             { label: 'PEDIDOS', href: '/pedidos' },
             { label: `Orden #${order.id}` },
           ]}
-          actions={<div className="flex items-center gap-2">{getStatusBadge(order.status)}{showPaymentStatus && getPaymentStatusBadge(order.payment_status)}</div>}
+          actions={<div className="flex items-center gap-2"><PriceModeBadge mode={order.price_mode} />{getStatusBadge(order.status)}{showPaymentStatus && getPaymentStatusBadge(order.payment_status)}</div>}
         />
         <p className="text-sm text-muted-foreground -mt-3">
           Creada {formatDateTime(order.created_at)} · Actualizada {formatDateTime(order.updated_at)}
