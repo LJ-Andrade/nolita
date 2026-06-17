@@ -17,34 +17,47 @@ db.json
 .env.sentry-build-plugin
 **/.env.sentry-build-plugin
 
-# Project specific
-backend/.env
-backend/database/database.sqlite
-backend/database/database.sqlite-journal
-backend/vendor/
-backend/node_modules/
-backend/public/storage
-backend/public/hot
-backend/public/build
-backend/storage/*.key
-backend/storage/pail
-backend/.phpunit.result.cache
+# Secrets and local env (templates *.env.example are kept on purpose)
+**/.env
+**/.env.local
+**/.env.*.local
+**/.env.backup
+!**/.env.example
+admin/frontend/.env
 
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/*.local
+# Leftover debug / key dumps (never commit)
+admin/backend/key.txt
+admin/backend/temp_key.txt
+admin/backend/test_gemini.php
+
+# Backend (Laravel)
+admin/backend/database/database.sqlite
+admin/backend/database/database.sqlite-journal
+admin/backend/vendor/
+admin/backend/node_modules/
+admin/backend/public/storage
+admin/backend/public/hot
+admin/backend/public/build
+admin/backend/storage/*.key
+admin/backend/storage/pail
+admin/backend/.phpunit.result.cache
+
+# Admin frontend (Vite)
+admin/frontend/node_modules/
+admin/frontend/dist/
+admin/frontend/dist-ssr/
+admin/frontend/*.local
 
 # Logs
 *.log
-backend/storage/logs/*.log
-frontend/logs
+admin/backend/storage/logs/*.log
+admin/frontend/logs
 
 # Misc
-backend/auth.json
-backend/.phpactor.json
-backend/Homestead.json
-backend/Homestead.yaml
+admin/backend/auth.json
+admin/backend/.phpactor.json
+admin/backend/Homestead.json
+admin/backend/Homestead.yaml
 
 # Claude Code worktrees
 .claude/worktrees/
