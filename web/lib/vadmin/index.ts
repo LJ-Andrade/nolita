@@ -468,12 +468,19 @@ export async function getProvinces(): Promise<Province[]> {
   return unwrapCollection(res.body);
 }
 
-export async function getLocalities(provinceId?: number): Promise<Locality[]> {
+export async function getLocalities(options?: {
+  provinceId?: number;
+  search?: string;
+  id?: number;
+  perPage?: number;
+}): Promise<Locality[]> {
   const res = await vadminFetch<Locality[] | PaginatedResponse<Locality>>({
     path: "localities",
     params: {
-      perPage: "1000",
-      province_id: provinceId ? String(provinceId) : undefined,
+      perPage: String(options?.perPage ?? 50),
+      province_id: options?.provinceId ? String(options.provinceId) : undefined,
+      search: options?.search || undefined,
+      id: options?.id ? String(options.id) : undefined,
     },
   });
   return unwrapCollection(res.body);

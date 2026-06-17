@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import type { CustomerSession } from "lib/vadmin/auth";
 import type { DeliveryMethod, PaymentMethod } from "lib/vadmin/types";
+import LocalityCombobox from "components/locality-combobox";
 
 type Province = { id: number; name: string };
-type Locality = { id: number; name: string; province_id: number };
 
 type CheckoutFormData = Partial<CustomerSession> & {
   city?: string | null;
@@ -75,6 +75,9 @@ export default function CheckoutForm({
   const [selectedLocality, setSelectedLocality] = useState(
     initialData?.locality_id ? String(initialData.locality_id) : "",
   );
+  const [selectedLocalityName, setSelectedLocalityName] = useState(
+    initialData?.city ?? "",
+  );
   const [selectedDelivery, setSelectedDelivery] = useState(
     deliveryMethods[0]?.id ?? "",
   );
@@ -82,45 +85,10 @@ export default function CheckoutForm({
     paymentMethods[0]?.id ?? "",
   );
 
-  // Localities are loaded per province on demand. Preloading the full country
-  // (~4000 localities) hit the API page size cap and silently truncated the
-  // list (e.g. Buenos Aires cut off around "C").
-  const [provinceLocalities, setProvinceLocalities] = useState<Locality[]>([]);
-  const [localitiesLoading, setLocalitiesLoading] = useState(false);
-
-  useEffect(() => {
-    if (!selectedProvince) {
-      setProvinceLocalities([]);
-      return;
-    }
-
-    let cancelled = false;
-    setLocalitiesLoading(true);
-    fetch(`/api/localities?province_id=${selectedProvince}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: Locality[]) => {
-        if (!cancelled) setProvinceLocalities(Array.isArray(data) ? data : []);
-      })
-      .catch(() => {
-        if (!cancelled) setProvinceLocalities([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLocalitiesLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedProvince]);
-
-  const selectedLocalityName =
-    provinceLocalities.find(
-      (locality) => String(locality.id) === selectedLocality,
-    )?.name ?? "";
-
   const handleProvinceChange = (provinceId: string) => {
     setSelectedProvince(provinceId);
     setSelectedLocality("");
+    setSelectedLocalityName("");
   };
 
   const handleDeliveryChange = (methodId: string) => {
@@ -289,26 +257,23 @@ export default function CheckoutForm({
             </Field>
 
             <Field id="locality_id" label="Localidad">
-              <select
-                id="locality_id"
-                name="locality_id"
-                required
+              <LocalityCombobox
+                inputId="locality_id"
+                provinceId={selectedProvince}
                 value={selectedLocality}
-                onChange={(event) => setSelectedLocality(event.target.value)}
-                disabled={!selectedProvince || localitiesLoading}
-                className={fieldClassName}
-              >
-                <option value="">
-                  {localitiesLoading
-                    ? "Cargando localidades..."
-                    : "Seleccionar localidad"}
-                </option>
-                {provinceLocalities.map((locality) => (
-                  <option key={locality.id} value={String(locality.id)}>
-                    {locality.name}
-                  </option>
-                ))}
-              </select>
+                initialLabel={selectedLocalityName}
+                disabled={!selectedProvince}
+                inputClassName={fieldClassName}
+                onChange={(id, name) => {
+                  setSelectedLocality(id);
+                  setSelectedLocalityName(name);
+                }}
+              />
+              <input
+                type="hidden"
+                name="locality_id"
+                value={selectedLocality}
+              />
               <input type="hidden" name="city" value={selectedLocalityName} />
               <input
                 type="hidden"

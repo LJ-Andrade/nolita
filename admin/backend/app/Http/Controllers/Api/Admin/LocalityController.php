@@ -26,6 +26,10 @@ class LocalityController extends Controller
             $query->where('province_id', $request->input('province_id'));
         }
 
+        if ($request->filled('id')) {
+            $query->where('id', $request->input('id'));
+        }
+
         $sortField = $request->input('sortField', 'name');
         $sortOrder = $request->input('sortOrder', 'asc');
         $query->orderBy($sortField, $sortOrder);
