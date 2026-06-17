@@ -57,7 +57,7 @@ export default function LocalityCombobox({
     }
 
     let cancelled = false;
-    fetch(`/api/localities?province_id=${provinceId}&id=${value}`)
+    fetch(`/storefront/localities?province_id=${provinceId}&id=${value}`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data: Locality[]) => {
         if (!cancelled && Array.isArray(data) && data[0]) setSelected(data[0]);
@@ -87,7 +87,7 @@ export default function LocalityCombobox({
         });
         if (trimmed) params.set("search", trimmed);
 
-        fetch(`/api/localities?${params.toString()}`)
+        fetch(`/storefront/localities?${params.toString()}`)
           .then((res) => (res.ok ? res.json() : []))
           .then((data: Locality[]) => {
             if (!cancelled) setOptions(Array.isArray(data) ? data : []);

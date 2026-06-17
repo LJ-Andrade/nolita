@@ -891,3 +891,10 @@ Once SPECS are approved, the actionable checklist will be expanded.
 1. [x] `docs/SPECS.md`: Document compact reference footer behavior.
 2. [x] `web/components/layout/footer.tsx`: Remove non-reference footer content and implement the compact Nolita footer.
 3. [x] Validate the web build.
+
+## Phase 39: Fix Checkout Locality Loading on Production
+
+1. [x] Diagnose: on `nolita.com.ar`, the public webserver routes every `/api/*` request directly to the Laravel backend, so the Next.js `web/app/api/localities` route handler used by the checkout/profile locality combobox was unreachable. The client received Laravel's raw paginated payload (`{data, links, meta}`) instead of a plain array, which the combobox's `Array.isArray` check silently rejected, leaving the locality list empty after selecting a province.
+2. [x] `web/app/api/localities/route.ts` → `web/app/storefront/localities/route.ts`: Move the storefront-only locality proxy outside the `/api` segment reserved for the Laravel backend.
+3. [x] `web/components/locality-combobox.tsx`: Point both client fetch calls at `/storefront/localities`.
+4. [x] Validate: production build, then confirmed `https://nolita.com.ar/storefront/localities?province_id=1` returns a plain locality array after restarting `nolita-web`.
