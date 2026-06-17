@@ -82,7 +82,10 @@ class OrderController extends Controller
 				$item->increment('quantity', $request->quantity);
 				$item->update([
 					'unit_price' => $unitPrice,
-					'subtotal' => $item->quantity * $unitPrice
+					'subtotal' => $item->quantity * $unitPrice,
+					'metadata' => array_merge($item->metadata ?? [], [
+						'product_code' => $variant->product->code,
+					]),
 				]);
 			} else {
 				// Create item
@@ -93,6 +96,9 @@ class OrderController extends Controller
 					'quantity' => $request->quantity,
 					'unit_price' => $unitPrice,
 					'subtotal' => $unitPrice * $request->quantity,
+					'metadata' => [
+						'product_code' => $variant->product->code,
+					],
 				]);
 			}
 
@@ -134,7 +140,10 @@ class OrderController extends Controller
 			$item->update([
 				'quantity' => $request->quantity,
 				'unit_price' => $unitPrice,
-				'subtotal' => $request->quantity * $unitPrice
+				'subtotal' => $request->quantity * $unitPrice,
+				'metadata' => array_merge($item->metadata ?? [], [
+					'product_code' => $item->variant?->product?->code,
+				]),
 			]);
 
 			$this->updateCartTotal($cart);
@@ -328,6 +337,9 @@ class OrderController extends Controller
 						'quantity' => $line['quantity'],
 						'unit_price' => $line['unit_price'],
 						'subtotal' => $line['subtotal'],
+						'metadata' => [
+							'product_code' => $variant->product->code,
+						],
 					]);
 				}
 			} else {
@@ -336,6 +348,9 @@ class OrderController extends Controller
 					$item->update([
 						'unit_price' => $line['unit_price'],
 						'subtotal' => $line['subtotal'],
+						'metadata' => array_merge($item->metadata ?? [], [
+							'product_code' => $line['product_code'],
+						]),
 					]);
 				}
 			}
@@ -499,6 +514,7 @@ class OrderController extends Controller
 				'variant_id' => (int) $variant->id,
 				'variant' => $variant,
 				'product_name' => $variant->product->name,
+				'product_code' => $variant->product->code,
 				'quantity' => (int) $line['quantity'],
 				'unit_price' => $unitPrice,
 				'subtotal' => round($unitPrice * (int) $line['quantity'], 2),

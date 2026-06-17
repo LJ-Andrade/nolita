@@ -228,6 +228,9 @@ class OrderController extends Controller
                         'quantity' => $line['quantity'],
                         'unit_price' => $line['unit_price'],
                         'subtotal' => $line['subtotal'],
+                        'metadata' => [
+                            'product_code' => $line['product_code'],
+                        ],
                     ]);
                 }
 
@@ -303,6 +306,7 @@ class OrderController extends Controller
                     'variant_id' => (int) $variant->id,
                     'product_id' => (int) $variant->product_id,
                     'product_name' => $variant->product->name,
+                    'product_code' => $variant->product->code,
                     'quantity' => (int) $line['quantity'],
                     'unit_price' => $unitPrice,
                     'subtotal' => round($unitPrice * (int) $line['quantity'], 2),

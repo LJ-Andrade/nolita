@@ -261,7 +261,7 @@ export default function OrderDetails() {
                         <TableRow key={item.id}>
                           <TableCell>
                             <div className="font-medium">{item.product_name || emptyValue}</div>
-                            <div className="text-xs text-muted-foreground">Código: {item.variant?.product?.code || item.product?.code || emptyValue}</div>
+                            <div className="text-xs text-muted-foreground">Código: {item.product_code || item.product?.code || item.variant?.product?.code || emptyValue}</div>
                           </TableCell>
                           <TableCell>{variantParts.length ? variantParts.join(" / ") : emptyValue}</TableCell>
                           <TableCell className="font-mono text-xs">{item.variant?.sku || emptyValue}</TableCell>

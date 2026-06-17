@@ -10,6 +10,10 @@ class OrderItem extends Model
 {
     use HasFactory;
 
+    protected $appends = [
+        'product_code',
+    ];
+
     protected $fillable = [
         'order_id',
         'product_id',
@@ -40,5 +44,20 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function getProductCodeAttribute(): ?string
+    {
+        $metadataCode = is_array($this->metadata) ? ($this->metadata['product_code'] ?? null) : null;
+        $productCode = $this->relationLoaded('product') ? $this->product?->code : null;
+        $variantProductCode = (
+            $this->relationLoaded('variant')
+            && $this->variant
+            && $this->variant->relationLoaded('product')
+        ) ? $this->variant->product?->code : null;
+
+        return $metadataCode
+            ?: $productCode
+            ?: $variantProductCode;
     }
 }
