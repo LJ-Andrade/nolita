@@ -90,6 +90,8 @@ class OrderController extends Controller
     {
         return response()->json($order->load([
             'customer',
+            'items.product',
+            'items.variant.product',
             'items.variant.color',
             'items.variant.size',
         ]));

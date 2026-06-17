@@ -10,6 +10,7 @@ final class Translator
         'address' => 'Dirección',
         'billing' => 'Facturación',
         'billing_contact' => 'Contacto de facturación',
+        'code' => 'Código',
         'coupon' => 'Cupón',
         'created_at' => 'Fecha de creación',
         'customer' => 'Cliente',

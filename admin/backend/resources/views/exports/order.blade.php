@@ -215,7 +215,7 @@
                     <tr>
                         <td>
                             {{ $plain($item['product_name']) }}<br>
-                            <span class="muted">{{ $label('product') }} #{{ $plain($item['product_id']) }}</span>
+                            <span class="muted">{{ $label('code') }}: {{ $plain($item['product_code']) }}</span>
                         </td>
                         <td>{{ $plain($item['color']) }}</td>
                         <td>{{ $plain($item['size']) }}</td>

@@ -16,6 +16,8 @@ final class OrderDocumentData
             'customer.locality',
             'items.variant.color',
             'items.variant.size',
+            'items.variant.product',
+            'items.product',
         ]);
 
         $shippingAddress = self::arrayValue($order->shipping_address);
@@ -27,6 +29,7 @@ final class OrderDocumentData
             return [
                 'product_name' => $item->product_name,
                 'product_id' => $item->product_id,
+                'product_code' => $item->variant?->product?->code ?? $item->product?->code,
                 'color' => $item->variant?->color?->name,
                 'size' => $item->variant?->size?->name,
                 'sku' => $item->variant?->sku,
