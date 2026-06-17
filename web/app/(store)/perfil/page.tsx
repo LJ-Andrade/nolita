@@ -1,6 +1,6 @@
 import ProfileForm from "components/profile/profile-form";
 import { getSession } from "lib/vadmin/auth";
-import { getProvinces, getLocalities } from "lib/vadmin";
+import { getProvinces } from "lib/vadmin";
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -15,10 +15,7 @@ export default async function PerfilPage() {
     redirect("/ingreso?redirect=/perfil");
   }
 
-  const [provinces, localities] = await Promise.all([
-    getProvinces(),
-    getLocalities(),
-  ]);
+  const provinces = await getProvinces();
 
   return (
     <div className="mx-auto min-h-[calc(100vh-200px)] w-full max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -34,7 +31,7 @@ export default async function PerfilPage() {
         </p>
       </div>
 
-      <ProfileForm customer={session} provinces={provinces} localities={localities} />
+      <ProfileForm customer={session} provinces={provinces} />
     </div>
   );
 }

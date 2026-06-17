@@ -63,7 +63,6 @@ export default function CheckoutPageContent({
   paymentMethods,
   session,
   provinces,
-  localities,
   shopConfig,
 }: {
   cart: Cart;
@@ -71,7 +70,6 @@ export default function CheckoutPageContent({
   paymentMethods: PaymentMethod[];
   session: any;
   provinces: { id: number; name: string }[];
-  localities: { id: number; name: string; province_id: number }[];
   shopConfig: ShopConfiguration;
 }) {
   const { cart: liveCart, clearCart, setIsOpen } = useCart();
@@ -224,7 +222,6 @@ export default function CheckoutPageContent({
             <CheckoutForm
               initialData={session}
               provinces={provinces}
-              localities={localities}
               deliveryMethods={availableDeliveryMethods}
               paymentMethods={availablePaymentMethods}
               onDeliveryChange={handleDeliveryChange}

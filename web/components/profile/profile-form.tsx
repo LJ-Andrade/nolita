@@ -30,11 +30,9 @@ type Locality = { id: number; name: string; province_id: number };
 export default function ProfileForm({
   customer,
   provinces,
-  localities,
 }: {
   customer: CustomerSession;
   provinces: Province[];
-  localities: Locality[];
 }) {
   const [state, formAction] = useActionState<ProfileFormState, FormData>(
     updateProfileAction,
@@ -47,15 +45,42 @@ export default function ProfileForm({
   const currentCustomer = state.customer || customer;
 
   const [selectedProvince, setSelectedProvince] = useState<string>(
-    customer.province_id ? String(customer.province_id) : ""
+    customer.province_id ? String(customer.province_id) : "",
   );
   const [selectedLocality, setSelectedLocality] = useState<string>(
-    customer.locality_id ? String(customer.locality_id) : ""
+    customer.locality_id ? String(customer.locality_id) : "",
   );
 
-  const provinceLocalities = selectedProvince
-    ? localities.filter(l => l.province_id === Number(selectedProvince))
-    : [];
+  // Localities are loaded per province on demand. Preloading the full country
+  // (~4000 localities) hit the API page size cap and silently truncated the
+  // list (e.g. Buenos Aires cut off around "C").
+  const [provinceLocalities, setProvinceLocalities] = useState<Locality[]>([]);
+  const [localitiesLoading, setLocalitiesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProvince) {
+      setProvinceLocalities([]);
+      return;
+    }
+
+    let cancelled = false;
+    setLocalitiesLoading(true);
+    fetch(`/api/localities?province_id=${selectedProvince}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Locality[]) => {
+        if (!cancelled) setProvinceLocalities(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setProvinceLocalities([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLocalitiesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProvince]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -218,10 +243,14 @@ export default function ProfileForm({
                 name="locality_id"
                 value={selectedLocality}
                 onChange={(e) => setSelectedLocality(e.target.value)}
-                disabled={!selectedProvince}
+                disabled={!selectedProvince || localitiesLoading}
                 className="rounded-[12px] border border-bone bg-parchment/50 px-4 py-3 text-sm outline-none transition-colors focus:border-graphite focus:ring-1 focus:ring-graphite disabled:opacity-50"
               >
-                <option value="">Seleccionar localidad</option>
+                <option value="">
+                  {localitiesLoading
+                    ? "Cargando localidades..."
+                    : "Seleccionar localidad"}
+                </option>
                 {provinceLocalities.map((loc) => (
                   <option key={loc.id} value={String(loc.id)}>
                     {loc.name}

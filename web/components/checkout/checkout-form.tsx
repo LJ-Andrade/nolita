@@ -57,7 +57,6 @@ const fieldClassName =
 export default function CheckoutForm({
   initialData = {},
   provinces,
-  localities,
   deliveryMethods,
   paymentMethods,
   onDeliveryChange,
@@ -65,7 +64,6 @@ export default function CheckoutForm({
 }: {
   initialData?: CheckoutFormData | null;
   provinces: Province[];
-  localities: Locality[];
   deliveryMethods: DeliveryMethod[];
   paymentMethods: PaymentMethod[];
   onDeliveryChange?: (methodId: string) => void;
@@ -84,11 +82,37 @@ export default function CheckoutForm({
     paymentMethods[0]?.id ?? "",
   );
 
-  const provinceLocalities = selectedProvince
-    ? localities.filter(
-        (locality) => locality.province_id === Number(selectedProvince),
-      )
-    : [];
+  // Localities are loaded per province on demand. Preloading the full country
+  // (~4000 localities) hit the API page size cap and silently truncated the
+  // list (e.g. Buenos Aires cut off around "C").
+  const [provinceLocalities, setProvinceLocalities] = useState<Locality[]>([]);
+  const [localitiesLoading, setLocalitiesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProvince) {
+      setProvinceLocalities([]);
+      return;
+    }
+
+    let cancelled = false;
+    setLocalitiesLoading(true);
+    fetch(`/api/localities?province_id=${selectedProvince}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: Locality[]) => {
+        if (!cancelled) setProvinceLocalities(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setProvinceLocalities([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLocalitiesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProvince]);
+
   const selectedLocalityName =
     provinceLocalities.find(
       (locality) => String(locality.id) === selectedLocality,
@@ -271,10 +295,14 @@ export default function CheckoutForm({
                 required
                 value={selectedLocality}
                 onChange={(event) => setSelectedLocality(event.target.value)}
-                disabled={!selectedProvince}
+                disabled={!selectedProvince || localitiesLoading}
                 className={fieldClassName}
               >
-                <option value="">Seleccionar localidad</option>
+                <option value="">
+                  {localitiesLoading
+                    ? "Cargando localidades..."
+                    : "Seleccionar localidad"}
+                </option>
                 {provinceLocalities.map((locality) => (
                   <option key={locality.id} value={String(locality.id)}>
                     {locality.name}
