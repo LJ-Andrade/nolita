@@ -19,6 +19,8 @@ final class OrderExportQuery
         $search = trim((string) $request->input('search', ''));
         $priceMode = $request->input('price_mode');
         $status = $request->input('status');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search): void {
@@ -38,6 +40,14 @@ final class OrderExportQuery
 
         if (in_array($status, ['pending', 'processing', 'completed', 'cancelled'], true)) {
             $query->where('status', $status);
+        }
+
+        if (filled($dateFrom)) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if (filled($dateTo)) {
+            $query->whereDate('created_at', '<=', $dateTo);
         }
 
         return $query;

@@ -15,8 +15,15 @@ import {
 	FileDown,
 	ReceiptText,
 	Check,
-	ExternalLink
+	ExternalLink,
+	Filter,
+	X
 } from 'lucide-react';
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,6 +92,9 @@ export default function OrdersList() {
 	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [activePriceMode, setActivePriceMode] = useState('');
 	const [activeStatus, setActiveStatus] = useState('');
+	const [dateFrom, setDateFrom] = useState('');
+	const [dateTo, setDateTo] = useState('');
+	const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 	const [meta, setMeta] = useState({});
 	const [page, setPage] = useState(1);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -113,15 +123,15 @@ export default function OrdersList() {
 
 	useEffect(() => {
 		setPage(1);
-	}, [debouncedSearch, activePriceMode, activeStatus]);
+	}, [debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
 
 	useEffect(() => {
 		fetchOrders();
-	}, [page, debouncedSearch, activePriceMode, activeStatus]);
+	}, [page, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
 
 	useEffect(() => {
 		clearSelection();
-	}, [page, debouncedSearch, activePriceMode, activeStatus]);
+	}, [page, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
 
 	const fetchOrders = async () => {
 		setLoading(true);
@@ -132,6 +142,8 @@ export default function OrdersList() {
 					search: debouncedSearch,
 					price_mode: activePriceMode || undefined,
 					status: activeStatus || undefined,
+					date_from: dateFrom || undefined,
+					date_to: dateTo || undefined,
 					perPage: 10
 				}
 			});
@@ -187,6 +199,8 @@ export default function OrdersList() {
 					search: debouncedSearch,
 					price_mode: activePriceMode || undefined,
 					status: activeStatus || undefined,
+					date_from: dateFrom || undefined,
+					date_to: dateTo || undefined,
 				},
 				responseType: 'blob',
 			});
@@ -407,6 +421,11 @@ export default function OrdersList() {
 		setActiveStatus((current) => current === value ? '' : value);
 	};
 
+	const clearAdvancedFilters = () => {
+		setDateFrom('');
+		setDateTo('');
+	};
+
 	return (
 		<div className="space-y-6">
 			<PageHeader
@@ -520,8 +539,59 @@ export default function OrdersList() {
 								onChange={(e) => setSearch(e.target.value)}
 							/>
 							</div>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								onClick={() => setIsAdvancedFiltersOpen((current) => !current)}
+								aria-expanded={isAdvancedFiltersOpen}
+								className="shrink-0"
+							>
+								<Filter className="mr-2 h-4 w-4" />
+								{"Filtros avanzados"}
+								<ChevronDown
+									className={cn('ml-2 h-4 w-4 transition-transform', isAdvancedFiltersOpen && 'rotate-180')}
+								/>
+							</Button>
 						</div>
 					</div>
+
+					<Collapsible open={isAdvancedFiltersOpen} onOpenChange={setIsAdvancedFiltersOpen}>
+						<CollapsibleContent className="space-y-4">
+							<div className="grid grid-cols-1 gap-4 p-4 border rounded-lg bg-muted/50 sm:grid-cols-2 lg:grid-cols-4">
+								<div className="space-y-2">
+									<label htmlFor="filterDateFrom" className="text-sm font-medium">
+										{"Fecha desde"}
+									</label>
+									<Input
+										id="filterDateFrom"
+										type="date"
+										value={dateFrom}
+										max={dateTo || undefined}
+										onChange={(e) => setDateFrom(e.target.value)}
+									/>
+								</div>
+								<div className="space-y-2">
+									<label htmlFor="filterDateTo" className="text-sm font-medium">
+										{"Fecha hasta"}
+									</label>
+									<Input
+										id="filterDateTo"
+										type="date"
+										value={dateTo}
+										min={dateFrom || undefined}
+										onChange={(e) => setDateTo(e.target.value)}
+									/>
+								</div>
+							</div>
+							<div className="flex justify-end">
+								<Button variant="ghost" size="sm" onClick={clearAdvancedFilters}>
+									<X className="mr-2 h-4 w-4" />
+									{"Limpiar Filtros"}
+								</Button>
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
 
 					<AdminTableShell>
 						<Table>

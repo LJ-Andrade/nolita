@@ -26,12 +26,15 @@ final class OrderDocumentData
         $customer = $order->customer;
 
         $items = $order->items->map(function ($item): array {
+            $variant = collect([
+                $item->variant?->color?->name,
+                $item->variant?->size?->name,
+            ])->filter()->implode(' / ');
+
             return [
                 'product_name' => $item->product_name,
-                'product_id' => $item->product_id,
                 'product_code' => $item->product_code,
-                'color' => $item->variant?->color?->name,
-                'size' => $item->variant?->size?->name,
+                'variant' => $variant,
                 'sku' => $item->variant?->sku,
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
@@ -39,6 +42,7 @@ final class OrderDocumentData
             ];
         });
 
+        $totalQuantity = (int) $items->sum('quantity');
         $subtotal = (float) $items->sum('subtotal');
         $discount = (float) ($order->coupon_discount_amount ?? 0);
         $deliveryFee = (float) ($shippingAddress['delivery_fee'] ?? 0);
@@ -58,7 +62,6 @@ final class OrderDocumentData
                 'delivery_method' => $shippingAddress['delivery_method_name'] ?? $shippingAddress['delivery_method_id'] ?? null,
                 'coupon_code' => $order->coupon_code,
                 'currency' => $order->currency,
-                'notes' => $order->notes,
             ],
             'customer' => [
                 'id' => $customer?->id,
@@ -95,13 +98,13 @@ final class OrderDocumentData
             ],
             'items' => $items,
             'totals' => [
+                'quantity' => $totalQuantity,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'delivery_fee' => $deliveryFee,
                 'payment_fee' => $paymentFee,
                 'total' => (float) $order->total_amount,
             ],
-            'generated_at' => now(),
         ];
     }
 

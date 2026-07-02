@@ -23,7 +23,6 @@ import {
   Plus,
   Trash2,
   List,
-  Wand2,
   Check,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +30,6 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ImageGallery } from "@/components/ui/image-gallery";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { PageHeader } from "@/components/page-header";
-import { isSuperAdmin } from "@/components/can";
 
 const PRODUCT_LIST_RETURN_URL_KEY = "admin.products.lastListUrl";
 
@@ -69,12 +67,10 @@ export default function ProductForm() {
   const [colors, setColors] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [productName, setProductName] = useState("");
-  const [fillingFakeData, setFillingFakeData] = useState(false);
   const [bulkValues, setBulkValues] = useState({
     stock: "",
     minStock: "",
   });
-  const canFillFakeData = isSuperAdmin();
 
   const formSchema = z.object({
     name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -255,96 +251,6 @@ export default function ProductForm() {
     }
   }, [id, form]);
 
-  const fetchFakeImage = async (
-    width = 800,
-    height = 800,
-    filename = "image.jpg",
-  ) => {
-    try {
-      const res = await fetch(`https://picsum.photos/${width}/${height}`);
-      const blob = await res.blob();
-      return new File([blob], filename, { type: "image/jpeg" });
-    } catch (error) {
-      console.error("Error fetching fake image:", error);
-      return null;
-    }
-  };
-
-  const fillFakeData = async () => {
-    if (id) {
-      toast.error("Ocurrió un error" || "No válido en modo edición");
-      return;
-    }
-
-    setFillingFakeData(true);
-    toast.info("Generando datos y descargando imágenes completas de prueba...");
-
-    try {
-      const randomCat =
-        categories.length > 0
-          ? categories[Math.floor(Math.random() * categories.length)].id
-          : "";
-      const randomTags =
-        tags.length > 0 ? tags.slice(0, 2).map((t) => t.id) : [];
-      const randomSizes =
-        sizes.length > 0 ? sizes.slice(0, 3).map((s) => s.id) : [];
-      const randomColors =
-        colors.length > 0 ? colors.slice(0, 2).map((c) => c.id) : [];
-
-      const fakeName = "Producto Auto " + Math.floor(Math.random() * 1000);
-
-      form.reset({
-        ...form.getValues(),
-        name: fakeName,
-        code: "PROD-" + Math.floor(Math.random() * 10000),
-        description:
-          "<p>Esta es una descripción generada automáticamente para pruebas con imágenes de Picsum.</p>",
-        fabric: "Algodón",
-        cost_price: 1500,
-        sale_price: 3500,
-        wholesale_price: 2800,
-        discount: 5,
-        wholesale_discount: 0,
-        category_id: randomCat.toString(),
-        tag_ids: randomTags,
-        size_ids: randomSizes,
-        color_ids: randomColors,
-        status: "published",
-        hide_on_wholesale: false,
-      });
-      setProductName(fakeName);
-
-      // Gallery
-      const g1 = await fetchFakeImage(500, 700, "gal1.jpg");
-      const g2 = await fetchFakeImage(500, 700, "gal2.jpg");
-      const newGallery = [];
-      if (g1)
-        newGallery.push({
-          id: `new-${Date.now()}-1`,
-          file: g1,
-          preview: URL.createObjectURL(g1),
-        });
-      if (g2)
-        newGallery.push({
-          id: `new-${Date.now()}-2`,
-          file: g2,
-          preview: URL.createObjectURL(g2),
-        });
-      setGallery(newGallery);
-
-      // Generate Variants
-      setTimeout(() => {
-        generateVariants();
-        toast.success("¡Datos y fotos cargados!");
-      }, 500);
-    } catch (error) {
-      console.error(error);
-      toast.error("Hubo un error al generar fotos falsas.");
-    } finally {
-      setFillingFakeData(false);
-    }
-  };
-
   const generateVariants = () => {
     const selectedSizeIds = form.getValues("size_ids") || [];
     const selectedColorIds = form.getValues("color_ids") || [];
@@ -426,7 +332,7 @@ export default function ProductForm() {
     }
   };
 
-  const onSubmit = (values) => {
+  const onSubmit = (values, { exitAfterSave = true } = {}) => {
     setLoading(true);
 
     const formData = new FormData();
@@ -493,13 +399,18 @@ export default function ProductForm() {
       : axiosClient.post("products", formData);
 
     request
-      .then(() => {
+      .then((response) => {
         toast.success(
           id
             ? "Producto actualizado correctamente"
             : "Producto creado correctamente",
         );
-        navigate(getProductsListReturnUrl());
+        if (exitAfterSave) {
+          navigate(getProductsListReturnUrl());
+          return;
+        }
+        const newId = response?.data?.data?.id;
+        navigate(newId ? `/productos/editar/${newId}` : getProductsListReturnUrl());
       })
       .catch((error) => {
         if (error.response?.data?.errors) {
@@ -1159,21 +1070,6 @@ export default function ProductForm() {
 
           {/* Row 5: Actions */}
           <div className="flex justify-end gap-2">
-            {!id && canFillFakeData && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={fillFakeData}
-                disabled={loading || fillingFakeData}
-              >
-                {fillingFakeData ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Wand2 className="mr-2 h-4 w-4" />
-                )}
-                Llenar Datos
-              </Button>
-            )}
             <Button
               variant="outline"
               onClick={() => navigate(getProductsListReturnUrl())}
@@ -1182,9 +1078,26 @@ export default function ProductForm() {
               <X className="mr-2 h-4 w-4" />
               {"Cancelar"}
             </Button>
+            {!id && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={form.handleSubmit((values) =>
+                  onSubmit(values, { exitAfterSave: true }),
+                )}
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Save className="mr-2 h-4 w-4" />
+                {"Guardar y salir"}
+              </Button>
+            )}
             <Button
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={loading || fillingFakeData}
+              type="button"
+              onClick={form.handleSubmit((values) =>
+                onSubmit(values, { exitAfterSave: !!id }),
+              )}
+              disabled={loading}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Save className="mr-2 h-4 w-4" />

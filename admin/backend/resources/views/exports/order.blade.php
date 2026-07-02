@@ -19,34 +19,41 @@
             margin: 0;
         }
 
+        .first-page-panel {
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            padding: 14px;
+        }
+
         .document-header {
             border-bottom: 3px solid #111827;
             margin-bottom: 18px;
             padding-bottom: 14px;
+            position: relative;
         }
 
-        .document-title {
-            font-size: 24px;
+        .header-label {
+            color: #6b7280;
+            display: block;
+            font-size: 9px;
             font-weight: 700;
-            letter-spacing: 0;
+            margin-bottom: 2px;
+            text-transform: uppercase;
         }
 
-        .document-meta {
+        .header-value {
+            color: #111827;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .order-date {
             color: #4b5563;
             font-size: 11px;
-            margin-top: 4px;
-        }
-
-        .summary-grid {
-            margin-bottom: 14px;
-            width: 100%;
-        }
-
-        .summary-grid td {
-            border: 1px solid #d1d5db;
-            padding: 8px;
-            vertical-align: top;
-            width: 33.333%;
+            font-weight: 400;
+            position: absolute;
+            right: 0;
+            top: 0;
         }
 
         .summary-label {
@@ -68,9 +75,62 @@
             margin-top: 16px;
         }
 
+        .method-row {
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .methods-table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .methods-table td {
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            vertical-align: top;
+            width: 33.333%;
+        }
+
+        .method-fee {
+            color: #4b5563;
+            display: block;
+            font-size: 10px;
+            font-weight: 400;
+            margin-top: 3px;
+        }
+
+        .info-panel {
+            border-top: 1px solid #d1d5db;
+            padding-top: 14px;
+        }
+
+        .info-columns {
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .info-column {
+            display: table-cell;
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .info-line {
+            margin-bottom: 5px;
+        }
+
+        .info-label {
+            color: #6b7280;
+            font-weight: 700;
+            margin-right: 3px;
+        }
+
         .section-title {
-            background: #111827;
-            color: #ffffff;
+            background: #e5e7eb;
+            color: #111827;
             font-size: 12px;
             font-weight: 700;
             padding: 7px 9px;
@@ -98,6 +158,43 @@
             text-align: right;
         }
 
+        .items-table {
+            font-size: 10px;
+            line-height: 1.25;
+            table-layout: fixed;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 5px 6px;
+            vertical-align: middle;
+        }
+
+        .product-column {
+            width: 41%;
+        }
+
+        .variant-column {
+            width: 25%;
+        }
+
+        .quantity-column {
+            width: 10%;
+        }
+
+        .money-column {
+            width: 12%;
+        }
+
+        .compact-cell {
+            overflow-wrap: anywhere;
+            white-space: nowrap;
+        }
+
+        .product-meta {
+            display: inline;
+        }
+
         .muted {
             color: #6b7280;
         }
@@ -113,8 +210,8 @@
         }
 
         .total-row td {
-            background: #111827;
-            color: #ffffff;
+            background: #e5e7eb;
+            color: #111827;
             font-size: 13px;
             font-weight: 700;
         }
@@ -129,103 +226,82 @@
         $plain = static fn ($value) => filled($value) ? $value : '-';
     @endphp
 
-    <div class="document-header">
-        <h1 class="document-title">{{ $label('order') }} #{{ $order['id'] }}</h1>
-        <p class="document-meta">
-            {{ $label('generated_at') }} {{ $generated_at->format('d/m/Y H:i:s') }}
-        </p>
-    </div>
+    <div class="first-page-panel">
+        <div class="document-header">
+            <div class="order-date">{{ $order['created_at']?->format('d/m/Y H:i') ?? '-' }}</div>
+            <span class="header-label">{{ $label('order') }}</span>
+            <span class="header-value">#{{ $order['id'] }}</span>
+        </div>
 
-    <table class="summary-grid">
-        <tr>
-            <td>
-                <span class="summary-label">{{ $label('order_type') }}</span>
-                <span class="summary-value">{{ $plain($order['order_type_label']) }}</span>
-            </td>
-            <td>
-                <span class="summary-label">{{ $label('created_at') }}</span>
-                <span class="summary-value">{{ $order['created_at']?->format('d/m/Y H:i') ?? '-' }}</span>
-            </td>
-            <td>
-                <span class="summary-label">{{ $label('total') }}</span>
-                <span class="summary-value">{{ $money($totals['total']) }} {{ $plain($order['currency']) }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span class="summary-label">{{ $label('payment_method') }}</span>
-                <span class="summary-value">{{ $plain($order['payment_method_label']) }}</span>
-            </td>
-            <td>
-                <span class="summary-label">{{ $label('delivery_method') }}</span>
-                <span class="summary-value">{{ $plain($order['delivery_method']) }}</span>
-            </td>
-            <td>
-                <span class="summary-label">{{ $label('coupon') }}</span>
-                <span class="summary-value">{{ $plain($order['coupon_code']) }}</span>
-            </td>
-        </tr>
-    </table>
+        <div class="method-row">
+            <table class="methods-table">
+                <tr>
+                    <td>
+                        <span class="summary-label">{{ $label('order_type') }}</span>
+                        <span class="summary-value">{{ $plain($order['order_type_label']) }}</span>
+                    </td>
+                    <td>
+                        <span class="summary-label">{{ $label('delivery_method') }}</span>
+                        <span class="summary-value">{{ $plain($order['delivery_method']) }}</span>
+                        @if($totals['delivery_fee'] > 0)
+                            <span class="method-fee">{{ $label('delivery_fee') }}: {{ $money($totals['delivery_fee']) }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        <span class="summary-label">{{ $label('payment_method') }}</span>
+                        <span class="summary-value">{{ $plain($order['payment_method_label']) }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
 
-    <div class="section">
-        <div class="section-title">{{ $label('customer_header') }}</div>
-        <table>
-            <tr>
-                <th>{{ $label('customer_id') }}</th>
-                <th>{{ $label('name') }}</th>
-                <th>{{ $label('dni_cuit') }}</th>
-                <th>{{ $label('email') }}</th>
-            </tr>
-            <tr>
-                <td>{{ $plain($customer['id']) }}</td>
-                <td>{{ $plain($customer['name']) }}</td>
-                <td>{{ $plain($customer['dni_or_cuit']) }}</td>
-                <td>{{ $plain($customer['email']) }}</td>
-            </tr>
-            <tr>
-                <th>{{ $label('phone') }}</th>
-                <th>{{ $label('address') }}</th>
-                <th>{{ $label('locality') }}</th>
-                <th>{{ $label('province_postal_code') }}</th>
-            </tr>
-            <tr>
-                <td>{{ $plain($customer['phone']) }}</td>
-                <td>{{ $plain($customer['address']) }}</td>
-                <td>{{ $plain($customer['locality']) }}</td>
-                <td>{{ $plain($customer['province']) }} / {{ $plain($customer['postal_code']) }}</td>
-            </tr>
-        </table>
+        <div class="section">
+            <div class="info-panel">
+                <div class="info-columns">
+                    <div class="info-column">
+                        <div class="info-line"><span class="info-label">{{ $label('name') }}:</span> <strong>{{ $plain($customer['name']) }}</strong></div>
+                        <div class="info-line"><span class="info-label">{{ $label('dni_cuit') }}:</span> {{ $plain($customer['dni_or_cuit']) }}</div>
+                        <div class="info-line"><span class="info-label">{{ $label('email') }}:</span> {{ $plain($customer['email']) }}</div>
+                        <div class="info-line"><span class="info-label">{{ $label('phone') }}:</span> {{ $plain($customer['phone']) }}</div>
+                    </div>
+                    <div class="info-column">
+                        <div class="info-line"><span class="info-label">{{ $label('address') }}:</span> {{ $plain($customer['address']) }}</div>
+                        <div class="info-line"><span class="info-label">{{ $label('province') }}:</span> {{ $plain($customer['province']) }}</div>
+                        <div class="info-line"><span class="info-label">{{ $label('locality') }}:</span> {{ $plain($customer['locality']) }}</div>
+                        <div class="info-line"><span class="info-label">{{ $label('postal_code') }}:</span> {{ $plain($customer['postal_code']) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="section">
         <div class="section-title">{{ $label('items') }}</div>
-        <table>
+        <table class="items-table">
             <thead>
                 <tr>
-                    <th>{{ $label('product') }}</th>
-                    <th>{{ $label('color') }}</th>
-                    <th>{{ $label('size') }}</th>
-                    <th class="numeric">{{ $label('quantity') }}</th>
-                    <th class="numeric">{{ $label('unit_price') }}</th>
-                    <th class="numeric">{{ $label('subtotal') }}</th>
+                    <th class="product-column">{{ $label('product') }}</th>
+                    <th class="variant-column">{{ $label('variant') }}</th>
+                    <th class="numeric quantity-column">{{ $label('quantity') }}</th>
+                    <th class="numeric money-column">P.U.</th>
+                    <th class="numeric money-column">{{ $label('subtotal') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($items as $item)
                     <tr>
-                        <td>
-                            {{ $plain($item['product_name']) }}<br>
-                            <span class="muted">{{ $label('code') }}: {{ $plain($item['product_code']) }}</span>
+                        <td class="compact-cell">
+                            {{ $plain($item['product_name']) }}
+                            <span class="muted product-meta">({{ $plain($item['product_code']) }} / {{ $plain($item['sku']) }})</span>
                         </td>
-                        <td>{{ $plain($item['color']) }}</td>
-                        <td>{{ $plain($item['size']) }}</td>
+                        <td class="compact-cell">{{ $plain($item['variant']) }}</td>
                         <td class="numeric">{{ $item['quantity'] }}</td>
                         <td class="numeric">{{ $money($item['unit_price']) }}</td>
                         <td class="numeric">{{ $money($item['subtotal']) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">{{ $label('no_items_found') }}</td>
+                        <td colspan="5">{{ $label('no_items_found') }}</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -234,12 +310,12 @@
 
     <table class="totals">
         <tr>
-            <td>{{ $label('subtotal') }}</td>
-            <td class="numeric">{{ $money($totals['subtotal']) }}</td>
+            <td>{{ $label('total_quantity') }}</td>
+            <td class="numeric">{{ $totals['quantity'] }}</td>
         </tr>
         <tr>
-            <td>{{ $label('discount') }}</td>
-            <td class="numeric">- {{ $money($totals['discount']) }}</td>
+            <td>{{ $label('subtotal') }}</td>
+            <td class="numeric">{{ $money($totals['subtotal']) }}</td>
         </tr>
         <tr>
             <td>{{ $label('delivery_fee') }}</td>
@@ -249,21 +325,16 @@
             <td>{{ $label('payment_fee') }}</td>
             <td class="numeric">{{ $money($totals['payment_fee']) }}</td>
         </tr>
+        @if($order['coupon_code'] || $totals['discount'] > 0)
+            <tr>
+                <td>{{ $label('coupon') }} {{ $plain($order['coupon_code']) }}</td>
+                <td class="numeric">- {{ $money($totals['discount']) }}</td>
+            </tr>
+        @endif
         <tr class="total-row">
             <td>{{ $label('total') }}</td>
             <td class="numeric">{{ $money($totals['total']) }}</td>
         </tr>
     </table>
-
-    @if($order['notes'])
-        <div class="section">
-            <div class="section-title">{{ $label('notes') }}</div>
-            <table>
-                <tr>
-                    <td>{{ $order['notes'] }}</td>
-                </tr>
-            </table>
-        </div>
-    @endif
 </body>
 </html>

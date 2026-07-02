@@ -28,7 +28,6 @@ import {
   XCircle,
   RefreshCw,
   ReceiptText,
-  MessageSquareText,
   Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -299,18 +298,6 @@ export default function OrderDetails() {
             </CardContent>
           </Card>
 
-          {order.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquareText className="h-5 w-5" /> Notas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{order.notes}</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <div className="space-y-6">
