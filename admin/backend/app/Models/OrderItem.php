@@ -55,9 +55,33 @@ class OrderItem extends Model
             && $this->variant
             && $this->variant->relationLoaded('product')
         ) ? $this->variant->product?->code : null;
+        $variantSku = $this->relationLoaded('variant') ? $this->variant?->sku : null;
 
-        return $metadataCode
-            ?: $productCode
-            ?: $variantProductCode;
+        return self::filledString($metadataCode)
+            ?: self::filledString($productCode)
+            ?: self::filledString($variantProductCode)
+            ?: self::codeFromSku($variantSku);
+    }
+
+    private static function codeFromSku(mixed $sku): ?string
+    {
+        $value = self::filledString($sku);
+        if ($value === null) {
+            return null;
+        }
+
+        $prefix = self::filledString(explode('-', $value)[0] ?? null);
+        if ($prefix === null || strtoupper($prefix) === 'SKU') {
+            return null;
+        }
+
+        return $prefix;
+    }
+
+    private static function filledString(mixed $value): ?string
+    {
+        $string = trim((string) $value);
+
+        return $string !== '' ? $string : null;
     }
 }
