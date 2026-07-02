@@ -29,6 +29,7 @@ import {
 	Truck,
 	Layout,
 	MapPin,
+	Mail,
 } from "lucide-react"
 
 
@@ -158,6 +159,12 @@ const items = [
 				title: "Contenido",
 				url: "/contenido-configuracion",
 				icon: Layout,
+				permission: "users.view",
+			},
+			{
+				title: "Suscripciones",
+				url: "/newsletter",
+				icon: Mail,
 				permission: "users.view",
 			},
 		],

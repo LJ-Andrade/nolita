@@ -50,6 +50,10 @@
 - [x] Create checkout UI components
 - [x] Implement delivery and payment methods fetching
 
+### Marketing & Engagement
+- [x] Add configurable newsletter popup on the storefront with session/permanent dismissal rules
+- [x] Add newsletter subscribers CRUD and popup content configuration under `Sitio > Newsletter`
+
 ### Maintenance & Migration
 - [x] Create maintenance page in `web/app/maintenance/page.tsx`
 - [x] Update `vadminFetch` to redirect to `/maintenance` on API connection failures

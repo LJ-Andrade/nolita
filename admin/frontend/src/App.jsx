@@ -39,6 +39,7 @@ import SystemConfigurations from './views/settings/SystemConfigurations';
 import SkinSettings from './views/settings/SkinSettings';
 import ShopConfigurationForm from './views/settings/ShopConfigurationForm';
 import ContentSettings from './views/site/ContentSettings';
+import NewsletterSubscribers from './views/newsletter/NewsletterSubscribers';
 import RolesList from './views/roles/RolesList';
 
 import RoleForm from './views/roles/RoleForm';
@@ -543,6 +544,12 @@ function App() {
 				<Route path="/contenido-configuracion" element={
 					<ProtectedRoute>
 						<ContentSettings />
+					</ProtectedRoute>
+				} />
+
+				<Route path="/newsletter" element={
+					<ProtectedRoute permission="users.view">
+						<NewsletterSubscribers />
 					</ProtectedRoute>
 				} />
 

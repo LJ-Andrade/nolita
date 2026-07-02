@@ -22,6 +22,8 @@ use App\Http\Controllers\AutopostController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\ImageSettingsController;
 use App\Http\Controllers\ShopConfigurationController;
+use App\Http\Controllers\NewsletterPopupConfigController;
+use App\Http\Controllers\NewsletterSubscriberController;
 use App\Http\Controllers\Api\NotificationPreferenceController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Admin\ProvinceController;
@@ -55,6 +57,9 @@ Route::get('/public/site-content', [\App\Http\Controllers\SiteContentController:
 Route::post('/public/contact', [ContactController::class, 'store']);
 
 Route::get('/public/shop-configuration', [ShopConfigurationController::class, 'publicInfo']);
+
+Route::get('/public/newsletter/popup-config', [NewsletterPopupConfigController::class, 'publicInfo']);
+Route::post('/public/newsletter/subscribe', [NewsletterSubscriberController::class, 'subscribe']);
 
 Route::get('/system-settings', [SystemSettingsController::class, 'index']);
 Route::get('/system-settings/{key}', [SystemSettingsController::class, 'show']);
@@ -175,6 +180,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/shop-configuration', [ShopConfigurationController::class, 'show'])->middleware('permission:users.view');
         Route::put('/shop-configuration', [ShopConfigurationController::class, 'update'])->middleware('permission:users.view');
+
+        // Newsletter popup configuration
+        Route::get('/newsletter-popup-config', [NewsletterPopupConfigController::class, 'show'])->middleware('permission:users.view');
+        Route::put('/newsletter-popup-config', [NewsletterPopupConfigController::class, 'update'])->middleware('permission:users.view');
+
+        // Newsletter subscribers CRUD
+        Route::get('/newsletter-subscribers', [NewsletterSubscriberController::class, 'index'])->middleware('permission:users.view');
+        Route::get('/newsletter-subscribers/{newsletterSubscriber}', [NewsletterSubscriberController::class, 'show'])->middleware('permission:users.view');
+        Route::post('/newsletter-subscribers', [NewsletterSubscriberController::class, 'store'])->middleware('permission:users.view');
+        Route::put('/newsletter-subscribers/{newsletterSubscriber}', [NewsletterSubscriberController::class, 'update'])->middleware('permission:users.view');
+        Route::delete('/newsletter-subscribers/{newsletterSubscriber}', [NewsletterSubscriberController::class, 'destroy'])->middleware('permission:users.view');
+        Route::post('/newsletter-subscribers/bulk-delete', [NewsletterSubscriberController::class, 'bulkDelete'])->middleware('permission:users.view');
 
         // Customers
     Route::get('admin/customers/export', [CustomerExportController::class, 'registered'])->middleware('permission:users.view');

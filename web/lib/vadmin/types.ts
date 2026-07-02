@@ -163,7 +163,7 @@ export type PaymentMethod = {
   id: string;
   name: string;
   description: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   fee: string;
   price_mode_scope?: "both" | "retail" | "wholesale";
 };
@@ -172,4 +172,19 @@ export type ShopConfiguration = {
   id: number;
   min_quantity: number;
   min_amount: number;
+};
+
+export type NewsletterPopupConfig = {
+  id: number;
+  is_enabled: boolean;
+  delay_seconds: number;
+  title: string | null;
+  subtitle: string | null;
+  name_label: string | null;
+  name_placeholder: string | null;
+  email_label: string | null;
+  email_placeholder: string | null;
+  customer_type_text: string | null;
+  submit_text: string | null;
+  dismiss_text: string | null;
 };

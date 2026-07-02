@@ -47,12 +47,13 @@ export const TAGS = {
   shopConfiguration: "shop-configuration",
   checkoutMethods: "checkout-methods",
   cart: "cart",
+  newsletter: "newsletter",
 };
 
 export const HIDDEN_PRODUCT_TAG = "vadmin-hidden";
 export const DEFAULT_OPTION = "Default";
 export const SHOPIFY_GRAPHQL_API_ENDPOINT = "/api/2023-01/graphql.json";
- 
+
 export const COLOR_MAP: Record<string, string> = {
   beige: "#D4B896",
   negro: "#1A1A1A",
