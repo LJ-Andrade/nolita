@@ -8,6 +8,7 @@ import {
   Cart,
   Collection,
   Menu,
+  NewsletterPopupConfig,
   Page,
   Product,
   ShopConfiguration,
@@ -435,6 +436,24 @@ export async function getShopConfiguration(): Promise<ShopConfiguration> {
   } catch (e) {
     console.error("Error fetching shop configuration:", e);
     return { id: 0, min_quantity: 0, min_amount: 0 };
+  }
+}
+
+export async function getNewsletterPopupConfig(): Promise<NewsletterPopupConfig | null> {
+  "use cache";
+  cacheTag(TAGS.newsletter);
+  cacheLife("days");
+
+  try {
+    const res = await vadminFetch<{ data: NewsletterPopupConfig }>({
+      path: "public/newsletter/popup-config",
+      tags: [TAGS.newsletter],
+      redirectOnServerError: false,
+    });
+    return res.body.data;
+  } catch (e) {
+    console.error("Error fetching newsletter popup config:", e);
+    return null;
   }
 }
 

@@ -13,6 +13,7 @@ class StorefrontRevalidationService
     public const SITE_CONTENT = 'site-content';
     public const SHOP_CONFIGURATION = 'shop-configuration';
     public const CHECKOUT_METHODS = 'checkout-methods';
+    public const NEWSLETTER = 'newsletter';
     private const EXTERNAL_REQUEST_TIMEOUT = 2;
     private const EXTERNAL_CONNECT_TIMEOUT = 1;
 
@@ -49,6 +50,9 @@ class StorefrontRevalidationService
         self::CHECKOUT_METHODS => [
             '/finalizar-compra',
             '/checkout',
+        ],
+        self::NEWSLETTER => [
+            '/',
         ],
     ];
 

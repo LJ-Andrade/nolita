@@ -850,3 +850,30 @@ The admin dashboard home must prioritize operational information that helps staf
 ### 15.4 Future Dashboard Candidates
 
 - A low-stock variants card is the next preferred dashboard enhancement, using variant `min_stock` and current stock to surface urgent replenishment needs.
+
+## 16. Newsletter Popup and Subscribers
+
+### 16.1 Overview
+
+The storefront must show a configurable newsletter popup a few seconds after the visitor enters the site, capturing name, email, and optional customer type (`minorista`/`mayorista`). Submissions are stored as newsletter subscribers, managed from a CRUD in VADMIN under `Sitio > Newsletter`.
+
+### 16.2 Popup Configuration Contract
+
+- Popup content is a single-row configuration exposed at:
+  - `GET /api/public/newsletter/popup-config` (public, storefront).
+  - `GET /api/newsletter-popup-config` and `PUT /api/newsletter-popup-config` (admin, `users.view`).
+- Configurable fields: `is_enabled`, `delay_seconds`, `title`, `subtitle`, `name_label`, `name_placeholder`, `email_label`, `email_placeholder`, `customer_type_text`, `submit_text`, `dismiss_text`.
+- When `is_enabled` is false, the storefront must not render the popup.
+- Saving the config must trigger storefront revalidation with the `newsletter` tag.
+
+### 16.3 Subscribers Contract
+
+- Subscriber fields: `name`, `email` (unique), `customer_type` (`minorista`/`mayorista`).
+- Admin CRUD under `/api/newsletter-subscribers` (`users.view`), including search, sorting, pagination, and single/bulk delete.
+- Public submission at `POST /api/public/newsletter/subscribe` upserts by email so repeat submissions do not create duplicates.
+- Customer type is required in the storefront popup: the visitor must select `minorista` or `mayorista` to submit.
+
+### 16.4 Visibility and Dismissal Rules
+
+- The popup appears once per browser session, tracked via `sessionStorage` (`nolita_newsletter_shown`). It reappears only in a new tab/session.
+- The "No mostrar más" checkbox sets a persistent flag in `localStorage` (`nolita_newsletter_dismissed`) that blocks the popup permanently on that browser. This is client-side only and does not identify anonymous visitors across devices.

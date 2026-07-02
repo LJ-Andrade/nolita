@@ -2,6 +2,15 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 97: Newsletter Popup and Subscribers
+
+1. [x] `docs/SPECS.md`: Document the newsletter popup behavior, subscribers CRUD, and public endpoints.
+2. [x] `admin/backend`: Add `newsletter_popup_config` (single-row) and `newsletter_subscribers` migrations, models, resources, and controllers.
+3. [x] `admin/backend/routes/api.php`: Register public config/subscribe endpoints and admin-protected CRUD + config routes; add `NEWSLETTER` revalidation tag.
+4. [x] `admin/frontend`: Add "Newsletter" under the "Sitio" menu, `/newsletter` route, subscribers list (CrudTable), subscriber form modal, and "Personalizar popup" config modal.
+5. [x] `web`: Add `getNewsletterPopupConfig`, `NewsletterPopupConfig` type, `newsletter` tag, subscribe server action, popup client component, and store-layout mount.
+6. [ ] Validation: Run backend migrations (requires MySQL up), then verify popup end-to-end (delay, session/local dismissal, subscription persistence).
+
 ## Phase 96: Production Domain Cutover
 
 1. [x] `build-web.sh`: Point the default Cloudflare storefront URL to `https://nolita.com.ar`.
