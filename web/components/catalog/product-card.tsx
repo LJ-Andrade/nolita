@@ -7,18 +7,20 @@ import Link from "next/link";
 import { useState } from "react";
 import { ProductPrice } from "components/product/product-price";
 import { usePriceMode } from "components/price-mode/price-mode-context";
-import { isProductPurchasableInMode } from "lib/pricing";
+import { isProductVisibleInMode } from "lib/pricing";
 
 type ProductCardProps = {
   product: Product;
   priority?: boolean;
   showColors?: boolean;
+  discountOnly?: boolean;
 };
 
 export function ProductCard({
   product,
   priority = false,
   showColors = true,
+  discountOnly = false,
 }: ProductCardProps) {
   const { priceMode } = usePriceMode();
   const defaultImageUrl =
@@ -37,10 +39,7 @@ export function ProductCard({
     return COLOR_MAP[name.toLowerCase()] ?? "#CCCCCC";
   };
 
-  if (
-    priceMode === "wholesale" &&
-    (product.hideOnWholesale || !isProductPurchasableInMode(product, priceMode))
-  ) {
+  if (!isProductVisibleInMode(product, priceMode, discountOnly)) {
     return null;
   }
 
@@ -80,7 +79,6 @@ export function ProductCard({
             </span>
           </div>
         )}
-
       </Link>
 
       {/* ── Info ───────────────────────────────────────────────────── */}
@@ -127,7 +125,6 @@ export function ProductCard({
                   />
                 );
               })}
-
             </div>
           )}
         </div>

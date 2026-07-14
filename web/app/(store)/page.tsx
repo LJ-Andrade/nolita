@@ -44,37 +44,14 @@ function sortProducts(products: Product[], sort: string): Product[] {
           parseFloat(b.priceRange.minVariantPrice.amount) -
           parseFloat(a.priceRange.minVariantPrice.amount),
       );
-    case "discount_desc": {
-      const withDiscount = copy.filter(
-        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
-      );
-      return withDiscount.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime(),
-      );
-    }
+    case "discount_desc":
     case "newest":
-    default: {
-      const withDiscount = copy.filter(
-        (p) => (p.discount ?? 0) > 0 || p.hasDiscount,
-      );
-      const withoutDiscount = copy.filter(
-        (p) => (p.discount ?? 0) === 0 && !p.hasDiscount,
-      );
-      return [
-        ...withDiscount.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() -
-            new Date(a.createdAt).getTime(),
-        ),
-        ...withoutDiscount.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() -
-            new Date(a.createdAt).getTime(),
-        ),
-      ];
-    }
+    default:
+      // Load order as returned by the backend (newest first). No discount-first
+      // grouping or any other reordering. The "Con descuento" filter keeps this
+      // order and is applied client-side per price mode (retail/wholesale), so
+      // it is not filtered here where the active mode is unknown.
+      return copy;
   }
 }
 
@@ -197,6 +174,7 @@ export default async function HomePage(props: {
       : [searchParams.color]
     : [];
   const sort = searchParams.sort ?? "newest";
+  const discountOnly = sort === "discount_desc";
   const [products, collections, content, categoryFilterProducts] =
     await Promise.all([
       getProducts({ category }),
@@ -272,7 +250,8 @@ export default async function HomePage(props: {
           categories={allFilterCategories}
           colors={allColors}
           sizes={allSizes}
-          total={sortedProducts.length}
+          products={sortedProducts}
+          discountOnly={discountOnly}
           showAllCategoryNav={true}
         />
       </Suspense>
@@ -280,7 +259,10 @@ export default async function HomePage(props: {
       <section className="bg-white px-4 pb-40 pt-10 lg:px-8 lg:pb-48 lg:pt-14">
         <div className="mx-auto max-w-screen-2xl">
           <div className="sticky top-[64px] z-30 mb-6 flex flex-wrap items-center justify-between gap-3 border-b bg-white/90 py-3 backdrop-blur-md md:top-[76px]">
-            <ProductCount products={sortedProducts} />
+            <ProductCount
+              products={sortedProducts}
+              discountOnly={discountOnly}
+            />
             <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
               <Suspense fallback={null}>
                 <ActiveFilters categories={filterCategories} />
@@ -293,6 +275,7 @@ export default async function HomePage(props: {
           <ProductGrid
             products={sortedProducts}
             showColors={true}
+            discountOnly={discountOnly}
           />
         </div>
       </section>

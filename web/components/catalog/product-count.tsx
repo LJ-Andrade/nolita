@@ -1,20 +1,21 @@
 "use client";
 
 import { usePriceMode } from "components/price-mode/price-mode-context";
-import { isProductPurchasableInMode } from "lib/pricing";
+import { isProductVisibleInMode } from "lib/pricing";
 import type { Product } from "lib/vadmin/types";
 
 type ProductCountProps = {
   products: Product[];
+  discountOnly?: boolean;
 };
 
-export function ProductCount({ products }: ProductCountProps) {
+export function ProductCount({
+  products,
+  discountOnly = false,
+}: ProductCountProps) {
   const { priceMode } = usePriceMode();
-  const visibleCount = products.filter(
-    (product) =>
-      priceMode !== "wholesale" ||
-      (!product.hideOnWholesale &&
-        isProductPurchasableInMode(product, priceMode)),
+  const visibleCount = products.filter((product) =>
+    isProductVisibleInMode(product, priceMode, discountOnly),
   ).length;
 
   return (

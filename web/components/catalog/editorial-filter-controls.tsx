@@ -4,7 +4,9 @@ import clsx from "clsx";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Collection } from "lib/vadmin/types";
+import { usePriceMode } from "components/price-mode/price-mode-context";
+import { isProductVisibleInMode } from "lib/pricing";
+import type { Collection, Product } from "lib/vadmin/types";
 
 const SIZES_ORDER = [
   "XS",
@@ -29,7 +31,8 @@ type EditorialFilterControlsProps = {
   categories: Collection[];
   colors: ColorFilterOption[];
   sizes: string[];
-  total: number;
+  products: Product[];
+  discountOnly?: boolean;
   showAllCategoryNav?: boolean;
 };
 
@@ -37,12 +40,21 @@ export function EditorialFilterControls({
   categories,
   colors,
   sizes,
-  total,
+  products,
+  discountOnly = false,
   showAllCategoryNav = true,
 }: EditorialFilterControlsProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const { priceMode } = usePriceMode();
+  const total = useMemo(
+    () =>
+      products.filter((product) =>
+        isProductVisibleInMode(product, priceMode, discountOnly),
+      ).length,
+    [products, priceMode, discountOnly],
+  );
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [scrollOpacity, setScrollOpacity] = useState(0);
   const [footerOffset, setFooterOffset] = useState(0);
@@ -406,9 +418,9 @@ function CategoryPill({
       onClick={onClick}
       className={clsx(
         "border px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] outline-none transition-colors",
-          active
-            ? "border-[var(--pb-filter-accent)] bg-[var(--pb-filter-accent)] text-white"
-            : "border-black/15 bg-white text-black hover:border-black hover:text-black",
+        active
+          ? "border-[var(--pb-filter-accent)] bg-[var(--pb-filter-accent)] text-white"
+          : "border-black/15 bg-white text-black hover:border-black hover:text-black",
       )}
       style={{ borderRadius: 2 }}
     >

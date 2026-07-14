@@ -2,7 +2,7 @@
 
 import { AnimatedPrice } from "components/animated-price";
 import { usePriceMode } from "components/price-mode/price-mode-context";
-import { getProductModePrice } from "lib/pricing";
+import { getProductPriceDisplay } from "lib/pricing";
 import type { Product } from "lib/vadmin/types";
 
 type ProductPriceProps = {
@@ -17,19 +17,10 @@ export function ProductPrice({
   size = "card",
 }: ProductPriceProps) {
   const { priceMode } = usePriceMode();
-  const amount = getProductModePrice(product, priceMode);
-  const compareAtPrice =
-    priceMode === "retail"
-      ? product.compareAtPriceRange?.minVariantPrice
-      : null;
-  const hasDiscount = Boolean(
-    priceMode === "retail" &&
-    product.hasDiscount &&
-    compareAtPrice &&
-    Number(compareAtPrice.amount) > Number(amount),
+  const { amount, compareAtAmount, discount } = getProductPriceDisplay(
+    product,
+    priceMode,
   );
-  const compareAtAmount = hasDiscount ? compareAtPrice?.amount : undefined;
-  const discount = hasDiscount ? Math.round(Number(product.discount ?? 0)) : 0;
   const layoutClass =
     size === "detail"
       ? "flex flex-wrap items-center gap-3"
