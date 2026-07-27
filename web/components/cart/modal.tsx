@@ -13,14 +13,16 @@ import LoadingDots from "components/loading-dots";
 import { formatPriceAmount } from "components/price";
 import PriceModeSwitch from "components/price-mode/price-mode-switch";
 import { usePriceMode } from "components/price-mode/price-mode-context";
+import { cartIssueText, issuesByMerchandiseId } from "lib/cart-issues";
 import { DEFAULT_OPTION } from "lib/constants";
 import { createUrl } from "lib/utils";
+import type { CheckoutIssue } from "lib/vadmin/types";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { redirectToCheckout } from "./actions";
+import { usePathname, useRouter } from "next/navigation";
+import { Fragment, useEffect, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { checkCartAvailability } from "./actions";
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
@@ -39,6 +41,11 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
   const { cart, updateCartItem, isOpen, setIsOpen } = useCart();
   const { priceMode } = usePriceMode();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isValidating, startValidation] = useTransition();
+  const [availabilityIssues, setAvailabilityIssues] = useState<CheckoutIssue[]>(
+    [],
+  );
   const quantityRef = useRef(cart?.totalQuantity);
   const hasObservedCartQuantity = useRef(false);
   const closeCart = () => setIsOpen(false);
@@ -80,6 +87,34 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
     !shopConfig.min_amount ||
     totalAmount >= shopConfig.min_amount;
   const canCheckout = qtyMet && amountMet;
+  const issuesByLine = issuesByMerchandiseId(availabilityIssues);
+
+  // Re-check availability against VADMIN before leaving the cart, so a product
+  // paused or sold out after it was added cannot reach checkout.
+  const handleCheckout = () => {
+    const lines = (cart?.lines ?? []).map((line) => ({
+      merchandiseId: line.merchandise.id,
+      quantity: line.quantity,
+    }));
+
+    startValidation(async () => {
+      const availability = await checkCartAvailability(lines);
+      setAvailabilityIssues(availability.issues);
+
+      if (!availability.ok) {
+        availability.messages.forEach((message, index) =>
+          toast.error(message, {
+            id: `cart-availability-${index}`,
+            duration: 8000,
+          }),
+        );
+        return;
+      }
+
+      closeCart();
+      router.push("/finalizar-compra");
+    });
+  };
 
   const totalDiscount =
     cart?.lines.reduce((acc, item) => {
@@ -93,6 +128,15 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
       return acc;
     }, 0) ?? 0;
   const showDiscountTotal = totalDiscount > 0;
+
+  // Marks describe the cart as it was validated; any edit makes them stale.
+  const cartSignature = (cart?.lines ?? [])
+    .map((line) => `${line.merchandise.id}:${line.quantity}`)
+    .join("|");
+
+  useEffect(() => {
+    setAvailabilityIssues([]);
+  }, [cartSignature]);
 
   useEffect(() => {
     if (!cart) {
@@ -229,11 +273,16 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                         .map((o) => `${o.name}: ${o.value}`)
                         .join(" | ");
 
+                      const lineIssue = issuesByLine.get(merchandiseId);
+
                       return (
                         <li
                           key={item.id ?? merchandiseId}
                           className={clsx(
-                            "flex w-full min-w-0 gap-3 border-b border-gray-100 py-4 transition-all duration-300 last:border-0",
+                            "flex w-full min-w-0 gap-3 py-4 transition-all duration-300",
+                            lineIssue
+                              ? "border border-red-500 bg-red-50/60 px-3"
+                              : "border-b border-gray-100 last:border-0",
                             isRemoving && "translate-x-full opacity-0",
                           )}
                         >
@@ -282,6 +331,12 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                                 style={{ color: "#D4006A" }}
                               >
                                 {optionsLabel}
+                              </p>
+                            )}
+
+                            {lineIssue && (
+                              <p className="text-xs font-medium text-red-600">
+                                {cartIssueText(lineIssue)}
                               </p>
                             )}
 
@@ -366,9 +421,11 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                     <ArrowLeftIcon className="h-4 w-4" />
                     Continuar comprando
                   </button>
-                  <form action={redirectToCheckout}>
-                    <CheckoutButton disabled={canCheckout === false} />
-                  </form>
+                  <CheckoutButton
+                    disabled={canCheckout === false}
+                    pending={isValidating}
+                    onCheckout={handleCheckout}
+                  />
                 </div>
               </div>
             )}
@@ -379,13 +436,20 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
   );
 }
 
-function CheckoutButton({ disabled }: { disabled?: boolean }) {
-  const { pending } = useFormStatus();
-
+function CheckoutButton({
+  disabled,
+  pending,
+  onCheckout,
+}: {
+  disabled?: boolean;
+  pending: boolean;
+  onCheckout: () => void;
+}) {
   return (
     <button
       className="flex w-full items-center justify-center gap-2 bg-black py-4 text-sm font-semibold tracking-wide text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-      type="submit"
+      type="button"
+      onClick={onCheckout}
       disabled={disabled || pending}
     >
       {pending ? (

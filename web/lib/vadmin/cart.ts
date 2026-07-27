@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { getVadminImageUrl, vadminFetch } from "./index";
-import { Cart } from "./types";
+import { Cart, CheckoutIssue, CheckoutIssueReason } from "./types";
 import { TAGS } from "lib/constants";
 import { cacheTag } from "next/cache";
 
@@ -137,9 +137,57 @@ type CheckoutResponse = {
   };
 };
 
+export type { CheckoutIssue, CheckoutIssueReason };
+
+export type CartLineInput = { merchandiseId: string; quantity: number };
+
+/**
+ * Ask VADMIN whether the given lines can still be purchased, without creating
+ * an order. Uses the same availability rules and messages as checkout.
+ */
+export async function validateCartAvailability(
+  lines: CartLineInput[],
+  priceMode: "retail" | "wholesale",
+): Promise<{ ok: boolean; message?: string; issues?: CheckoutIssue[] }> {
+  const token = (await cookies()).get("auth_token")?.value;
+
+  try {
+    await vadminFetch({
+      path: "checkout/validate",
+      method: "POST",
+      redirectOnServerError: false,
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+      body: { lines, price_mode: priceMode },
+    });
+
+    return { ok: true };
+  } catch (e: any) {
+    const issues: CheckoutIssue[] | undefined = Array.isArray(
+      e?.body?.unavailable_items,
+    )
+      ? e.body.unavailable_items
+      : undefined;
+
+    return {
+      ok: false,
+      message: e.message || "No pudimos validar la disponibilidad del carrito.",
+      issues,
+    };
+  }
+}
+
 export async function checkout(
   data?: any,
-): Promise<{ success: boolean; message: string; orderId?: string }> {
+): Promise<{
+  success: boolean;
+  message: string;
+  orderId?: string;
+  issues?: CheckoutIssue[];
+}> {
   const token = (await cookies()).get("auth_token")?.value;
 
   try {
@@ -161,6 +209,16 @@ export async function checkout(
       orderId: orderId == null ? undefined : String(orderId),
     };
   } catch (e: any) {
-    return { success: false, message: e.message || "Checkout failed" };
+    const issues: CheckoutIssue[] | undefined = Array.isArray(
+      e?.body?.unavailable_items,
+    )
+      ? e.body.unavailable_items
+      : undefined;
+
+    return {
+      success: false,
+      message: e.message || "Checkout failed",
+      issues,
+    };
   }
 }

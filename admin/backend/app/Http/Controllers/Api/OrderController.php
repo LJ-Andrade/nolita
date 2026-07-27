@@ -219,7 +219,7 @@ class OrderController extends Controller
 			'postal_code' => ['required', 'string', 'max:20'],
 			'price_mode' => ['nullable', Rule::in(['retail', 'wholesale'])],
 			'lines' => ['nullable', 'array'],
-			'lines.*.merchandiseId' => ['required_with:lines', 'integer', 'exists:product_variants,id'],
+			'lines.*.merchandiseId' => ['required_with:lines', 'integer'],
 			'lines.*.quantity' => ['required_with:lines', 'integer', 'min:1'],
 			'province_id' => ['required', 'integer', 'exists:provinces,id'],
 			'locality_id' => [
@@ -264,15 +264,12 @@ class OrderController extends Controller
 		}
 
 		$deliveryFee = (float) $deliveryMethod->fee;
-		$checkoutLines = $cart
-			? $cart->items->map(fn (OrderItem $item): array => [
-				'variant_id' => (int) $item->product_variant_id,
-				'quantity' => (int) $item->quantity,
-			])->values()->all()
-			: collect($validated['lines'])->map(fn (array $line): array => [
-				'variant_id' => (int) $line['merchandiseId'],
-				'quantity' => (int) $line['quantity'],
-			])->values()->all();
+		$checkoutLines = $this->mapCheckoutLines($cart, $validated['lines'] ?? []);
+
+		$availabilityIssues = $this->findCheckoutAvailabilityIssues($checkoutLines, $priceMode);
+		if (!empty($availabilityIssues)) {
+			return $this->availabilityIssuesResponse($availabilityIssues);
+		}
 
 		$pricedLines = $this->buildPricedCheckoutLines($checkoutLines, $priceMode);
 		if (empty($pricedLines)) {
@@ -358,7 +355,7 @@ class OrderController extends Controller
 			foreach ($pricedLines as $line) {
 				$variant = ProductVariant::whereKey($line['variant_id'])->lockForUpdate()->firstOrFail();
 				if ($variant->stock < $line['quantity']) {
-					throw new \RuntimeException("No hay stock suficiente para {$line['product_name']}");
+					throw new \RuntimeException("Del artículo ({$line['label']}) ya no hay stock suficiente.");
 				}
 				$variant->decrement('stock', $line['quantity']);
 			}
@@ -497,7 +494,7 @@ class OrderController extends Controller
 			])
 			->values();
 
-		$variants = ProductVariant::with('product')
+		$variants = ProductVariant::with(['product', 'color', 'size'])
 			->whereIn('id', $groupedLines->pluck('variant_id'))
 			->get()
 			->keyBy('id');
@@ -515,11 +512,195 @@ class OrderController extends Controller
 				'variant' => $variant,
 				'product_name' => $variant->product->name,
 				'product_code' => $variant->product->code,
+				'label' => $this->checkoutLineLabel($variant, (int) $variant->id),
 				'quantity' => (int) $line['quantity'],
 				'unit_price' => $unitPrice,
 				'subtotal' => round($unitPrice * (int) $line['quantity'], 2),
 			];
 		})->filter()->values()->all();
+	}
+
+	/**
+	 * Check cart lines against current catalog state without creating an order.
+	 * Shares `findCheckoutAvailabilityIssues` with `checkout`, so the storefront
+	 * can block adding or checking out with the exact same rules and messages.
+	 */
+	public function validateCheckout(Request $request)
+	{
+		$validated = $request->validate([
+			'price_mode' => ['nullable', Rule::in(['retail', 'wholesale'])],
+			'lines' => ['nullable', 'array'],
+			'lines.*.merchandiseId' => ['required_with:lines', 'integer'],
+			'lines.*.quantity' => ['required_with:lines', 'integer', 'min:1'],
+		]);
+
+		$priceMode = $this->resolvePriceMode($validated['price_mode'] ?? null);
+		$payloadLines = $validated['lines'] ?? [];
+		// Explicit lines win so a single add-to-cart can be checked on its own.
+		// Without them, fall back to the authenticated customer's server cart.
+		$cart = empty($payloadLines) ? $this->resolveCustomerCart($request) : null;
+		$checkoutLines = $this->mapCheckoutLines($cart, $payloadLines);
+
+		if (empty($checkoutLines)) {
+			return response()->json(['message' => 'Cannot checkout an empty cart'], 400);
+		}
+
+		$issues = $this->findCheckoutAvailabilityIssues($checkoutLines, $priceMode);
+
+		if (!empty($issues)) {
+			return $this->availabilityIssuesResponse($issues);
+		}
+
+		return response()->json([
+			'message' => 'Cart is available',
+			'unavailable_items' => [],
+		]);
+	}
+
+	private function resolveCustomerCart(Request $request): ?Order
+	{
+		$customer = auth('customer')->user() ?: $request->user();
+
+		if (!$customer) {
+			return null;
+		}
+
+		return Order::where('customer_id', $customer->id)
+			->where('status', 'pending')
+			->with('items.variant.product')
+			->first();
+	}
+
+	/**
+	 * Normalize checkout lines to `variant_id`/`quantity` pairs from either the
+	 * customer's server cart or the guest payload.
+	 */
+	private function mapCheckoutLines(?Order $cart, array $payloadLines): array
+	{
+		if ($cart) {
+			return $cart->items->map(fn (OrderItem $item): array => [
+				'variant_id' => (int) $item->product_variant_id,
+				'quantity' => (int) $item->quantity,
+			])->values()->all();
+		}
+
+		return collect($payloadLines)->map(fn (array $line): array => [
+			'variant_id' => (int) $line['merchandiseId'],
+			'quantity' => (int) $line['quantity'],
+		])->values()->all();
+	}
+
+	private function availabilityIssuesResponse(array $issues)
+	{
+		$messages = array_column($issues, 'message');
+
+		return response()->json([
+			'message' => implode(' ', $messages),
+			'errors' => $messages,
+			'unavailable_items' => $issues,
+		], 422);
+	}
+
+	/**
+	 * Detect checkout lines that can no longer be purchased (inactive variant,
+	 * unpublished product, not sellable in the current price mode, or missing
+	 * stock). Returns an empty array when every line is still valid.
+	 */
+	private function findCheckoutAvailabilityIssues(array $lines, string $priceMode): array
+	{
+		$groupedLines = collect($lines)
+			->groupBy('variant_id')
+			->map(fn ($items, $variantId): array => [
+				'variant_id' => (int) $variantId,
+				'quantity' => (int) collect($items)->sum('quantity'),
+			])
+			->values();
+
+		if ($groupedLines->isEmpty()) {
+			return [];
+		}
+
+		$variants = ProductVariant::with(['product', 'color', 'size'])
+			->whereIn('id', $groupedLines->pluck('variant_id'))
+			->get()
+			->keyBy('id');
+
+		$issues = [];
+
+		foreach ($groupedLines as $line) {
+			$variant = $variants->get($line['variant_id']);
+			$label = $this->checkoutLineLabel($variant, $line['variant_id']);
+
+			if (!$this->isVariantPurchasable($variant, $priceMode)) {
+				$issues[] = [
+					'variant_id' => $line['variant_id'],
+					'label' => $label,
+					'reason' => 'unavailable',
+					'available' => 0,
+					'message' => "El artículo ({$label}) ya no está disponible, por favor seleccioná otro.",
+				];
+				continue;
+			}
+
+			$stock = (int) $variant->stock;
+
+			if ($stock <= 0) {
+				$issues[] = [
+					'variant_id' => $line['variant_id'],
+					'label' => $label,
+					'reason' => 'out_of_stock',
+					'available' => 0,
+					'message' => "Del artículo ({$label}) ya no hay stock.",
+				];
+				continue;
+			}
+
+			if ($stock < $line['quantity']) {
+				$units = $stock === 1 ? 'unidad' : 'unidades';
+				$issues[] = [
+					'variant_id' => $line['variant_id'],
+					'label' => $label,
+					'reason' => 'insufficient_stock',
+					'available' => $stock,
+					'message' => "Del artículo ({$label}) solo quedan {$stock} {$units}.",
+				];
+			}
+		}
+
+		return $issues;
+	}
+
+	private function isVariantPurchasable(?ProductVariant $variant, string $priceMode): bool
+	{
+		$product = $variant?->product;
+
+		if (!$product || !$variant->active || $product->status !== 'published') {
+			return false;
+		}
+
+		if ($priceMode === 'wholesale' && $product->hide_on_wholesale) {
+			return false;
+		}
+
+		return $this->getVariantUnitPrice($variant, $priceMode) > 0;
+	}
+
+	private function checkoutLineLabel(?ProductVariant $variant, int $variantId): string
+	{
+		$product = $variant?->product;
+
+		if (!$product) {
+			return "#{$variantId}";
+		}
+
+		$label = trim(implode(' ', array_filter([$product->code, $product->name])));
+		$attributes = array_filter([$variant->color?->name, $variant->size?->name]);
+
+		if (!empty($attributes)) {
+			$label = trim($label . ' - ' . implode(' / ', $attributes));
+		}
+
+		return $label !== '' ? $label : "#{$variantId}";
 	}
 
 	private function validateWholesaleMinimums(string $priceMode, array $pricedLines, float $subtotal): ?string

@@ -10,13 +10,43 @@ import type {
 import React, {
   createContext,
   use,
+  useCallback,
   useContext,
   useMemo,
+  useRef,
 } from "react";
-import { usePriceMode } from "components/price-mode/price-mode-context";
+import { usePriceMode, type PriceMode } from "components/price-mode/price-mode-context";
 import { priceVariantForMode } from "lib/pricing";
 
 type UpdateType = "plus" | "minus" | "delete";
+
+const GUEST_CART_KEY = "nolita_guest_cart";
+
+function readGuestCart(): Cart | undefined {
+  try {
+    const stored = window.localStorage.getItem(GUEST_CART_KEY);
+    return stored ? (JSON.parse(stored) as Cart) : undefined;
+  } catch {
+    // A corrupt or unreadable value must not break the store layout.
+    return undefined;
+  }
+}
+
+function writeGuestCart(cart: Cart) {
+  try {
+    window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+  } catch {
+    // Storage can be unavailable (private mode, quota). The in-memory cart still works.
+  }
+}
+
+function clearGuestCart() {
+  try {
+    window.localStorage.removeItem(GUEST_CART_KEY);
+  } catch {
+    // Ignored: see writeGuestCart.
+  }
+}
 
 type CartAction =
   | {
@@ -204,6 +234,66 @@ function createEmptyCart(): Cart {
   };
 }
 
+/**
+ * Recalculate every line for the given price mode. Pure, so it can be applied
+ * both to local price-mode changes and to carts arriving from another tab.
+ */
+function repriceCart(
+  cart: Cart | undefined,
+  priceMode: PriceMode,
+): Cart | undefined {
+  if (!cart) return cart;
+
+  const updatedLines = cart.lines
+    .map((item) => {
+      const product = item.merchandise.product as CartItem["merchandise"]["product"];
+      const discount =
+        priceMode === "wholesale"
+          ? product.wholesaleDiscount ?? 0
+          : product.retailDiscount ?? item.discount ?? 0;
+      const baseAmount =
+        priceMode === "wholesale"
+          ? product.wholesalePrice ?? "0"
+          : product.salePrice ?? product.retailPrice ?? String(Number(item.cost.totalAmount.amount) / item.quantity);
+      const unitAmount =
+        priceMode === "wholesale"
+          ? calculateDiscountedPrice(baseAmount, discount)
+          : product.retailPrice ?? calculateDiscountedPrice(baseAmount, discount);
+      if (Number(unitAmount) <= 0) {
+        return null;
+      }
+      const totalAmount = calculateItemCost(item.quantity, unitAmount);
+      const hasDiscount = Number(discount) > 0 && Number(unitAmount) < Number(baseAmount);
+
+      return {
+        ...item,
+        cost: {
+          ...item.cost,
+          totalAmount: {
+            ...item.cost.totalAmount,
+            amount: totalAmount,
+          },
+          compareAtTotalAmount: hasDiscount
+            ? {
+                amount: calculateItemCost(item.quantity, baseAmount),
+                currencyCode: item.cost.totalAmount.currencyCode,
+              }
+            : null,
+        },
+        discount,
+        hasDiscount,
+      };
+    })
+    .filter(Boolean) as CartItem[];
+
+  return {
+    ...cart,
+    priceMode,
+    lines: updatedLines,
+    ...updateCartTotals(updatedLines),
+  };
+}
+
 function cartReducer(state: Cart | undefined, action: CartAction): Cart {
   const currentCart = state || createEmptyCart();
 
@@ -308,117 +398,111 @@ export function CartProvider({
   const { priceMode } = usePriceMode();
   const initialCart = use(cartPromise);
   const [cart, setCart] = React.useState<Cart | undefined>(initialCart);
+  const cartRef = useRef<Cart | undefined>(initialCart);
+  // Authenticated carts live in VADMIN; only guest carts are persisted locally.
+  const isGuestCart = !initialCart;
+
+  const commitCart = useCallback(
+    (next: Cart | undefined, persist: boolean) => {
+      cartRef.current = next;
+      setCart(next);
+
+      if (!persist || !isGuestCart) return;
+
+      if (next) {
+        writeGuestCart(next);
+      } else {
+        clearGuestCart();
+      }
+    },
+    [isGuestCart],
+  );
+
+  /**
+   * Apply a mutation on top of the persisted cart instead of the in-memory
+   * snapshot, which may be stale when another tab has written since. Without
+   * this, the last tab to write silently erases the other tab's items.
+   */
+  const applyGuestUpdate = useCallback(
+    (reduce: (base: Cart | undefined) => Cart | undefined) => {
+      const base = isGuestCart ? readGuestCart() ?? cartRef.current : cartRef.current;
+      commitCart(reduce(base), true);
+    },
+    [commitCart, isGuestCart],
+  );
 
   React.useEffect(() => {
-    if (initialCart) {
-      setCart(initialCart);
-      return;
-    }
+    commitCart(initialCart ?? readGuestCart(), false);
+  }, [commitCart, initialCart]);
 
-    const storedCart = window.localStorage.getItem("nolita_guest_cart");
-    setCart(storedCart ? JSON.parse(storedCart) : initialCart);
-  }, [initialCart]);
+  // Pick up writes made by other tabs. The `storage` event only fires in tabs
+  // other than the writer, so there is no echo back to the origin tab.
+  React.useEffect(() => {
+    if (!isGuestCart) return;
+
+    const handleStorage = (event: StorageEvent) => {
+      // A null key means localStorage.clear() was called.
+      if (event.key !== null && event.key !== GUEST_CART_KEY) return;
+
+      const stored = readGuestCart();
+      // Reprice for display only. Writing back here would make two tabs echo
+      // storage events at each other indefinitely.
+      commitCart(stored ? repriceCart(stored, priceMode) : createEmptyCart(), false);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [commitCart, isGuestCart, priceMode]);
 
   React.useEffect(() => {
-    if (!cart || cart.id) return;
-    window.localStorage.setItem("nolita_guest_cart", JSON.stringify(cart));
-  }, [cart]);
+    applyGuestUpdate((base) => repriceCart(base, priceMode));
+  }, [applyGuestUpdate, priceMode]);
 
-  React.useEffect(() => {
-    setCart((currentCart) => {
-      if (!currentCart) return currentCart;
+  const dispatchCartAction = useCallback(
+    (action: CartAction) => {
+      applyGuestUpdate((base) => cartReducer(base, action));
+    },
+    [applyGuestUpdate],
+  );
 
-      const updatedLines = currentCart.lines
-        .map((item) => {
-          const product = item.merchandise.product as CartItem["merchandise"]["product"];
-          const discount =
-            priceMode === "wholesale"
-              ? product.wholesaleDiscount ?? 0
-              : product.retailDiscount ?? item.discount ?? 0;
-          const baseAmount =
-            priceMode === "wholesale"
-              ? product.wholesalePrice ?? "0"
-              : product.salePrice ?? product.retailPrice ?? String(Number(item.cost.totalAmount.amount) / item.quantity);
-          const unitAmount =
-            priceMode === "wholesale"
-              ? calculateDiscountedPrice(baseAmount, discount)
-              : product.retailPrice ?? calculateDiscountedPrice(baseAmount, discount);
-          if (Number(unitAmount) <= 0) {
-            return null;
-          }
-          const totalAmount = calculateItemCost(item.quantity, unitAmount);
-          const hasDiscount = Number(discount) > 0 && Number(unitAmount) < Number(baseAmount);
+  const updateCartItem = useCallback(
+    (merchandiseId: string, updateType: UpdateType) => {
+      dispatchCartAction({
+        type: "UPDATE_ITEM",
+        payload: { merchandiseId, updateType },
+      });
+    },
+    [dispatchCartAction],
+  );
 
-          return {
-            ...item,
-            cost: {
-              ...item.cost,
-              totalAmount: {
-                ...item.cost.totalAmount,
-                amount: totalAmount,
-              },
-              compareAtTotalAmount: hasDiscount
-                ? {
-                    amount: calculateItemCost(item.quantity, baseAmount),
-                    currencyCode: item.cost.totalAmount.currencyCode,
-                  }
-                : null,
-            },
-            discount,
-            hasDiscount,
-          };
-        })
-        .filter(Boolean) as CartItem[];
+  const addCartItem = useCallback(
+    (variant: ProductVariant, product: Product, qty: number = 1) => {
+      const pricedVariant = priceVariantForMode(variant, product, priceMode);
+      dispatchCartAction({
+        type: "ADD_ITEM",
+        payload: { variant: pricedVariant, product, qty },
+      });
+    },
+    [dispatchCartAction, priceMode],
+  );
 
-      return {
-        ...currentCart,
-        priceMode,
-        lines: updatedLines,
-        ...updateCartTotals(updatedLines),
-      };
-    });
-  }, [priceMode]);
+  const addMultipleCartItems = useCallback(
+    (variants: ProductVariant[], product: Product) => {
+      const pricedVariants = variants.map((variant) =>
+        priceVariantForMode(variant, product, priceMode),
+      );
+      dispatchCartAction({
+        type: "ADD_MULTIPLE_ITEMS",
+        payload: { variants: pricedVariants, product },
+      });
+    },
+    [dispatchCartAction, priceMode],
+  );
 
-  const dispatchCartAction = (action: CartAction) => {
-    setCart((currentCart) => cartReducer(currentCart, action));
-  };
-
-  const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
-    dispatchCartAction({
-      type: "UPDATE_ITEM",
-      payload: { merchandiseId, updateType },
-    });
-  };
-
-  const addCartItem = (
-    variant: ProductVariant,
-    product: Product,
-    qty: number = 1,
-  ) => {
-    const pricedVariant = priceVariantForMode(variant, product, priceMode);
-    dispatchCartAction({
-      type: "ADD_ITEM",
-      payload: { variant: pricedVariant, product, qty },
-    });
-  };
-
-  const addMultipleCartItems = (
-    variants: ProductVariant[],
-    product: Product,
-  ) => {
-    const pricedVariants = variants.map((variant) =>
-      priceVariantForMode(variant, product, priceMode),
-    );
-    dispatchCartAction({
-      type: "ADD_MULTIPLE_ITEMS",
-      payload: { variants: pricedVariants, product },
-    });
-  };
-
-  const clearCart = () => {
-    window.localStorage.removeItem("nolita_guest_cart");
-    dispatchCartAction({ type: "CLEAR_CART" });
-  };
+  const clearCart = useCallback(() => {
+    clearGuestCart();
+    commitCart(createEmptyCart(), false);
+  }, [commitCart]);
 
   const value = useMemo(
     () => ({
@@ -430,7 +514,15 @@ export function CartProvider({
       isOpen,
       setIsOpen,
     }),
-    [cart, isOpen, setIsOpen],
+    [
+      cart,
+      updateCartItem,
+      addCartItem,
+      addMultipleCartItems,
+      clearCart,
+      isOpen,
+      setIsOpen,
+    ],
   );
 
   return (

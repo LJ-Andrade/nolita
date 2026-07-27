@@ -150,6 +150,16 @@ export default function CheckoutPageContent({
       if (result.status === "success") {
         clearCart();
         setIsOpen(false);
+      } else if (result.status === "error") {
+        const messages = result.issues?.length
+          ? result.issues.map((issue) => issue.message)
+          : [result.message];
+
+        messages
+          .filter(Boolean)
+          .forEach((message, index) =>
+            toast.error(message, { id: `checkout-error-${index}`, duration: 8000 }),
+          );
       }
       setCheckoutState(result);
     });
@@ -174,10 +184,6 @@ export default function CheckoutPageContent({
   }, [currentCart.totalQuantity, isCheckoutProcessing, router, setIsOpen]);
 
   useEffect(() => {
-    if (checkoutState.status === "error" && checkoutState.message) {
-      toast.error(checkoutState.message);
-    }
-
     if (checkoutState.status !== "success") {
       setShowCompletion(false);
       return;
@@ -190,7 +196,7 @@ export default function CheckoutPageContent({
     }, MIN_PROCESSING_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [checkoutState.status, checkoutState.message]);
+  }, [checkoutState.status]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
@@ -238,6 +244,7 @@ export default function CheckoutPageContent({
               priceMode={priceMode}
               qtyMet={qtyMet}
               amountMet={amountMet}
+              availabilityIssues={checkoutState.issues}
             />
             <SubmitButton pending={isCheckoutPending} disabled={!canCheckout} />
           </div>

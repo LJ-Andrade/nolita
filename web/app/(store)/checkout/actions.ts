@@ -1,11 +1,13 @@
 ﻿"use server";
 
-import { checkout } from "lib/vadmin/cart";
+import { checkout, type CheckoutIssue } from "lib/vadmin/cart";
 
 export type CheckoutState = {
   status: "idle" | "success" | "error";
   message: string;
   orderId?: string;
+  /** Lines that are no longer purchasable (paused product or missing stock). */
+  issues?: CheckoutIssue[];
 };
 
 function getRequiredString(formData: FormData, key: string): string {
@@ -84,5 +86,6 @@ export async function completeOrder(
   return {
     status: "error",
     message: result.message || "No pudimos finalizar el pedido.",
+    issues: result.issues,
   };
 }

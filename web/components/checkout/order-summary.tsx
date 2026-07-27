@@ -2,7 +2,8 @@
 
 import Price from "components/price";
 import { formatPriceAmount } from "components/price";
-import { Cart, ShopConfiguration } from "lib/vadmin/types";
+import { cartIssueText, issuesByMerchandiseId } from "lib/cart-issues";
+import { Cart, CheckoutIssue, ShopConfiguration } from "lib/vadmin/types";
 import Image from "next/image";
 import { DeleteItemButton } from "components/cart/delete-item-button";
 import { useCart } from "components/cart/cart-context";
@@ -44,6 +45,7 @@ export default function OrderSummary({
   priceMode = "retail",
   qtyMet,
   amountMet,
+  availabilityIssues,
 }: {
   cart: Cart;
   shippingFee?: number;
@@ -52,8 +54,10 @@ export default function OrderSummary({
   priceMode?: "retail" | "wholesale";
   qtyMet: boolean;
   amountMet: boolean;
+  availabilityIssues?: CheckoutIssue[];
 }) {
   const { updateCartItem } = useCart();
+  const issuesByLine = issuesByMerchandiseId(availabilityIssues);
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(
@@ -160,11 +164,14 @@ export default function OrderSummary({
           const imageUrl =
             colorImage || item.merchandise.product.featuredImage.url;
 
+          const lineIssue = issuesByLine.get(merchandiseId);
+
           return (
             <li
               key={item.id ?? merchandiseId}
               className={clsx(
                 "flex items-start gap-4 transition-all duration-300 ease-in-out motion-reduce:transition-none",
+                lineIssue && "border border-red-500 bg-red-50/60 p-3",
                 isRemoving && "translate-x-full scale-95 opacity-0",
               )}
             >
@@ -206,6 +213,11 @@ export default function OrderSummary({
                       </p>
                     ))}
                   </div>
+                  {lineIssue && (
+                    <p className="mt-1 text-xs font-medium text-red-600">
+                      {cartIssueText(lineIssue)}
+                    </p>
+                  )}
                 </div>
                 <div className="mt-3 flex h-8 w-fit items-center border border-bone">
                   <EditItemQuantityButton

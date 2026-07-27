@@ -9,7 +9,7 @@ import { Product, ProductVariant } from "lib/vadmin/types";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { addItem } from "./actions";
+import { addItem, checkCartAvailability } from "./actions";
 import { useCart } from "./cart-context";
 
 function SubmitButton({
@@ -173,9 +173,29 @@ export function AddToCart({ product }: { product: Product }) {
     startTransition(async () => {
       if (!selectedVariantId) return;
 
-      const existed = cart?.lines?.some(
-        (line) => line.merchandise.id === selectedVariantId,
-      );
+      const existingQuantity =
+        cart?.lines?.find((line) => line.merchandise.id === selectedVariantId)
+          ?.quantity ?? 0;
+
+      // The catalog payload can be stale, so confirm with VADMIN before adding.
+      const availability = await checkCartAvailability([
+        {
+          merchandiseId: selectedVariantId,
+          quantity: existingQuantity + quantity,
+        },
+      ]);
+
+      if (!availability.ok) {
+        availability.messages.forEach((message, index) =>
+          toast.error(message, {
+            id: `add-to-cart-${index}`,
+            duration: 8000,
+          }),
+        );
+        return;
+      }
+
+      const existed = existingQuantity > 0;
 
       addCartItem(pricedVariant, product, quantity);
 

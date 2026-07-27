@@ -463,6 +463,18 @@ The catalog API product contract must expose enough pricing metadata for the sto
 - `retailDiscount`: discount metadata for retail `sale_price`.
 - `wholesaleDiscount`: discount metadata for wholesale `wholesale_price`.
 
+### 6.2.1 Guest Cart Persistence and Cross-Tab Sync
+
+Guest carts have no server-side representation; they live in `localStorage` under `nolita_guest_cart` and are sent inline as `lines` at checkout. Because the key is shared by every tab of the origin, the storefront must treat the persisted value as the source of truth:
+
+- Every guest cart mutation is a read-modify-write: the reducer base is the value currently in `localStorage`, not the in-memory React snapshot. A tab holding a stale snapshot must never overwrite another tab's items.
+- Persistence happens at mutation time. The provider must not blindly serialize its state on every render or state change.
+- Tabs converge through the `window` `storage` event. A `null` event key (`localStorage.clear()`) is treated as a cart change.
+- A cart received from another tab is repriced for the receiving tab's active price mode for display only, and is never written back. Writing back would make two tabs echo storage events at each other indefinitely.
+- Reads of the persisted cart tolerate corrupt or unavailable storage and fall back to an empty cart instead of throwing.
+- The active price mode (`nolita_price_mode`) is also synchronized across tabs through the `storage` event, so tabs cannot disagree about the mode used to price the shared cart. The mode cookie is browser-wide and is written only by the tab where the change originated.
+- Client-side stock mirroring in cart lines is a display hint only. Authoritative stock and availability are re-validated by VADMIN at checkout (see 6.3).
+
 ### 6.3 Product Discounts
 
 VADMIN product `discount` is a percentage applied to `sale_price`. VADMIN product `wholesale_discount` is a percentage applied to `wholesale_price`. The storefront must display discounted products with the original price struck through, the discounted final price, and a discount indicator for the active pricing mode. Cart and checkout calculations must use the discounted final unit price for the active pricing mode.
@@ -503,6 +515,14 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 - Guest checkout stores `customer_id = null`, persists `customer_data`, creates the order, and triggers the same admin notification flow as authenticated checkout.
 - Stock is reduced only when the order is completed, inside the checkout transaction. Adding products to cart must not reduce stock for guest or authenticated carts.
 - Checkout must fail with a clear message if stock is no longer available at completion time.
+- Before creating the order, VADMIN re-validates every checkout line against current catalog state, for both guest (inline `lines`) and authenticated (server cart) checkouts. A line is blocked when the variant no longer exists, the variant is not `active`, the product is not `published`, the product is not sellable in the requested `price_mode` (`hide_on_wholesale`, or unit price `<= 0`), or stock is lower than the requested quantity. Unavailable lines must never be silently dropped from the order.
+- The same availability rules are exposed for pre-checks through `POST /api/checkout/validate`, which never creates an order. It accepts `price_mode` and `lines`; explicit `lines` take precedence so a single add-to-cart can be checked on its own, and it falls back to the authenticated customer's server cart when `lines` is omitted. Success responds `200` with an empty `unavailable_items`; failures use the same `422` body as checkout. Both endpoints must share one availability method — the rules and messages may not be duplicated.
+- The storefront must call the validation endpoint before adding to cart (single variant and size curve) and before leaving the cart sidebar for checkout. Catalog `availableForSale` and `quantityAvailable` are display hints that can be stale; VADMIN is the authority. Blocked attempts show one alert per item and leave the cart and the current page untouched.
+- Blocked lines must also be marked in place, in both the cart sidebar and the checkout order summary: a red border on the line plus a short reason under the product options — `No hay stock de esta variante`, `Solo quedan N unidades disponibles`, or `Este producto ya no está disponible`. The alert keeps the long message with product code and name; the line-level text does not repeat them.
+- Marks describe the cart as it was validated. Any change to the cart lines or quantities clears them until the next validation.
+- When any line is blocked the endpoint responds `422` with `message` (all issues joined), `errors` (message list), and `unavailable_items`, where each entry has `variant_id`, `label` (`CODE Name - Color / Size`), `reason` (`unavailable`, `out_of_stock`, `insufficient_stock`), `available`, and `message`.
+- User-facing messages are: `El artículo (LABEL) ya no está disponible, por favor seleccioná otro.`, `Del artículo (LABEL) ya no hay stock.`, and `Del artículo (LABEL) solo quedan N unidades.`
+- The storefront must reject the submission in place: no page reload, no cart clearing, no navigation. It shows one toast per blocked item and keeps the filled checkout form intact so the buyer can adjust the cart and retry.
 - Delivery methods and payment methods must include `price_mode_scope` with allowed values `both`, `retail`, and `wholesale`.
 - Admin staff can choose the scope when creating or editing delivery methods, payment methods, and coupons.
 - Payment method `fee` is a signed percentage adjustment, not a fixed amount. Positive values add a payment surcharge and negative values apply a payment discount from the current order subtotal after coupon discount.

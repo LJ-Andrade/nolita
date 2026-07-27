@@ -7,10 +7,12 @@ import {
   getCart,
   removeFromCart,
   updateCart,
+  validateCartAvailability,
+  type CartLineInput,
 } from "lib/vadmin/cart";
+import type { CheckoutIssue } from "lib/vadmin/types";
 import { updateTag } from "next/cache";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 function isAuthFailure(error: any) {
   return (
@@ -143,7 +145,32 @@ export async function updateItemQuantity(
   }
 }
 
-export async function redirectToCheckout() {
-  redirect("/finalizar-compra");
+/**
+ * Block adding or checking out lines that are no longer purchasable. The
+ * client-side `availableForSale` flag can be stale, so VADMIN is the authority.
+ */
+export async function checkCartAvailability(
+  lines: CartLineInput[],
+): Promise<{ ok: boolean; messages: string[]; issues: CheckoutIssue[] }> {
+  if (!lines.length) {
+    return { ok: true, messages: [], issues: [] };
+  }
+
+  const priceMode =
+    (await cookies()).get("nolita_price_mode_v2")?.value === "retail"
+      ? "retail"
+      : "wholesale";
+
+  const result = await validateCartAvailability(lines, priceMode);
+
+  if (result.ok) {
+    return { ok: true, messages: [], issues: [] };
+  }
+
+  const messages = result.issues?.length
+    ? result.issues.map((issue) => issue.message)
+    : [result.message || "No pudimos validar la disponibilidad del carrito."];
+
+  return { ok: false, messages, issues: result.issues ?? [] };
 }
 

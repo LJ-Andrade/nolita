@@ -2,6 +2,41 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 100: Shared Availability Check on Add and Cart Checkout
+
+1. [x] `docs/SPECS.md`: Document `POST /api/checkout/validate`, the shared availability method, and the storefront pre-checks.
+2. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Add the missing `variant.active` condition to `isVariantPurchasable`.
+3. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Extract `mapCheckoutLines`, `resolveCustomerCart`, and `availabilityIssuesResponse`; add the `validateCheckout` action reusing `findCheckoutAvailabilityIssues`.
+4. [x] `admin/backend/routes/api.php`: Register the public `POST /checkout/validate` route.
+5. [x] `web/lib/vadmin/cart.ts` and `web/components/cart/actions.ts`: Add `validateCartAvailability` and the `checkCartAvailability` server action.
+6. [x] `web/components/cart/modal.tsx`: Replace the `redirectToCheckout` form with a validated client handler that alerts and stays put when a line is blocked; drop the now-unused `redirectToCheckout` action.
+7. [x] `web/components/cart/add-to-cart.tsx` and `web/components/product/add-size-curve-button.tsx`: Validate against VADMIN before adding, using existing cart quantity plus the requested quantity.
+8. [x] Validation: `php -l`, `npx tsc --noEmit`, and live API checks of `POST /api/checkout/validate` covering out-of-stock, insufficient stock, missing variant, paused product, inactive variant, and the available case. Test data was restored to its original state.
+9. [x] `docs/SPECS.md`: Document the in-place marking of blocked cart lines.
+10. [x] `web/lib/vadmin/types.ts` and `web/lib/cart-issues.ts`: Move `CheckoutIssue` to shared types and add `issuesByMerchandiseId` / `cartIssueText`.
+11. [x] `web/components/cart/modal.tsx`: Keep the returned issues in state, mark blocked lines with a red border and reason text, and clear the marks on any cart edit.
+12. [x] `web/components/checkout/order-summary.tsx` and `checkout-page-content.tsx`: Mark the same lines from `checkoutState.issues`.
+13. [ ] Validation: Verify the storefront UI flows in a real browser (add blocked variant, sidebar checkout with a paused product, red border and reason text on the offending line).
+
+## Phase 99: Guest Cart Cross-Tab Sync
+
+1. [x] `docs/SPECS.md`: Document guest cart persistence, read-modify-write mutations, and cross-tab `storage` synchronization (section 6.2.1).
+2. [x] `web/components/cart/cart-context.tsx`: Add `GUEST_CART_KEY` and guarded `readGuestCart`/`writeGuestCart`/`clearGuestCart` helpers.
+3. [x] `web/components/cart/cart-context.tsx`: Extract the price recalculation into a pure `repriceCart` helper.
+4. [x] `web/components/cart/cart-context.tsx`: Replace the blind persistence effect with `commitCart`/`applyGuestUpdate` so every mutation is applied on top of the persisted cart.
+5. [x] `web/components/cart/cart-context.tsx`: Add the `storage` listener that syncs incoming carts for display without writing back.
+6. [x] `web/components/price-mode/price-mode-context.tsx`: Sync the active price mode across tabs via `storage`.
+7. [x] Validation: `npx tsc --noEmit` and `npx next build` in `web` both pass. Prettier reports the same pre-existing warnings as before the change.
+8. [ ] Validation: Verify multi-tab behavior in a real browser (add in tab A and B, reload both, quantity changes, clear cart, price mode switch). Not run: the in-app browser pane does not execute the Next.js inline flight scripts, so the storefront never hydrates there and cannot be driven.
+
+## Phase 98: Checkout Availability Re-validation
+
+1. [x] `docs/SPECS.md`: Document checkout availability re-validation, the `422` error contract, and the storefront alert behavior.
+2. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Add `findCheckoutAvailabilityIssues`, `isVariantPurchasable`, and `checkoutLineLabel`; block checkout before order creation and reuse the label in the in-transaction stock guard.
+3. [x] `web/lib/vadmin/index.ts` and `web/lib/vadmin/cart.ts`: Expose the API error body and return typed `issues` from `checkout`.
+4. [x] `web/app/(store)/checkout/actions.ts` and `web/components/checkout/checkout-page-content.tsx`: Carry `issues` in `CheckoutState` and toast one alert per blocked item on submit without reloading.
+5. [x] Validation: `php -l` on the controller and `npx tsc --noEmit` in `web` (only pre-existing stale `.next` type error remains).
+
 ## Phase 97: Newsletter Popup and Subscribers
 
 1. [x] `docs/SPECS.md`: Document the newsletter popup behavior, subscribers CRUD, and public endpoints.

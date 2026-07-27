@@ -105,6 +105,7 @@ export async function vadminFetch<T>({
     if (!result.ok) {
       const error = new Error(data.message || "API Error");
       (error as any).status = result.status;
+      (error as any).body = data;
       throw error;
     }
 

@@ -78,6 +78,24 @@ export function PriceModeProvider({
     }
   }, [initialMode]);
 
+  // Keep every tab on the same mode: the guest cart is shared across tabs, so
+  // diverging modes would make each tab rewrite the other's line prices.
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      // A null key means localStorage.clear() was called.
+      if (event.key !== null && event.key !== PRICE_MODE_STORAGE_KEY) return;
+
+      const storedMode = readClientStoredPriceMode();
+      if (!storedMode) return;
+
+      // The cookie is browser-wide and was already written by the origin tab.
+      setPriceModeState(storedMode);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   const setPriceMode = useCallback((mode: PriceMode) => {
     const normalizedMode = normalizeMode(mode);
     setPriceModeState(normalizedMode);

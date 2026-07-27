@@ -135,6 +135,20 @@ export type Cart = {
   priceMode?: "retail" | "wholesale";
 };
 
+export type CheckoutIssueReason =
+  | "unavailable"
+  | "out_of_stock"
+  | "insufficient_stock";
+
+/** A cart line VADMIN refuses to sell, as reported by the availability check. */
+export type CheckoutIssue = {
+  variant_id: number;
+  label: string;
+  reason: CheckoutIssueReason;
+  available: number;
+  message: string;
+};
+
 export type Menu = {
   title: string;
   path: string;

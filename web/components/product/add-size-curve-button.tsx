@@ -1,6 +1,6 @@
 "use client";
 
-import { addMultipleItems } from "components/cart/actions";
+import { addMultipleItems, checkCartAvailability } from "components/cart/actions";
 import { useCart } from "components/cart/cart-context";
 import { usePriceMode } from "components/price-mode/price-mode-context";
 import { isProductPurchasableInMode } from "lib/pricing";
@@ -19,7 +19,7 @@ export function AddSizeCurveButton({
   className = "",
   compact = false,
 }: AddSizeCurveButtonProps) {
-  const { addMultipleCartItems } = useCart();
+  const { cart, addMultipleCartItems } = useCart();
   const { priceMode } = usePriceMode();
   const [isPending, startTransition] = useTransition();
   const availableVariants = isProductPurchasableInMode(product, priceMode)
@@ -30,6 +30,26 @@ export function AddSizeCurveButton({
 
   const handleAdd = () => {
     startTransition(async () => {
+      // The catalog payload can be stale, so confirm with VADMIN before adding.
+      const availability = await checkCartAvailability(
+        availableVariants.map((variant) => ({
+          merchandiseId: variant.id,
+          quantity:
+            (cart?.lines?.find((line) => line.merchandise.id === variant.id)
+              ?.quantity ?? 0) + 1,
+        })),
+      );
+
+      if (!availability.ok) {
+        availability.messages.forEach((message, index) =>
+          toast.error(message, {
+            id: `size-curve-${index}`,
+            duration: 8000,
+          }),
+        );
+        return;
+      }
+
       addMultipleCartItems(availableVariants, product);
       const error = await addMultipleItems(null, availableVariants.map((variant) => variant.id));
 
