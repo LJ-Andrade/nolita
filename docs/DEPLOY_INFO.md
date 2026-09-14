@@ -68,12 +68,28 @@ Steps, in order (any failure aborts the release):
 3. `git pull --ff-only origin main`.
 4. `composer install --no-dev` only when `composer.lock` changed.
 5. Builds the admin panel into `admin/frontend/dist-release`, removes source maps, and swaps it in for `dist` (previous build kept in `dist-previous`). `npm ci` only when the admin lockfile changed.
-6. Maintenance mode (`php artisan down`; the storefront shows `/maintenance` meanwhile), `migrate --force`, permission cache reset, `optimize`, `up`, `queue:restart`.
+6. Maintenance mode (`php artisan down`; the storefront shows `/maintenance` meanwhile), `migrate --force`, permission cache reset, `optimize`, `up`, `queue:restart`, queue worker cron install when missing, and a warning when queued jobs are stale.
 7. Runs `./build-web.sh` (build + PM2 restart) only when `web/` changed in the pull. `next build` rewrites `.next` while the old server runs, so backend/panel-only releases skip it.
 
-Options: `--skip-admin`, `--build-web`, `--skip-web`, `--no-maintenance`, `--force-deps`, `--allow-dirty`, `--reload-fpm`, `--skip-backup` (see `./fulldeploy --help`).
+Options: `--skip-admin`, `--build-web`, `--skip-web`, `--no-maintenance`, `--force-deps`, `--allow-dirty`, `--reload-fpm`, `--skip-backup`, `--skip-queue-cron` (see `./fulldeploy --help`).
 
 Restore a backup: `gunzip -c ../backup/<file>.sql.gz | mysql -u <user> -p <db>`. Roll back the panel: `mv admin/frontend/dist admin/frontend/dist-bad && mv admin/frontend/dist-previous admin/frontend/dist`.
+
+## Queue Worker (Emails)
+
+Customer purchase emails and admin notification emails are queued (`QUEUE_CONNECTION=database`). Without a worker they stay in the `jobs` table and are never sent. `fulldeploy` warns when queued jobs are older than 10 minutes.
+
+`fulldeploy` installs this automatically: when the site user's crontab has no `queue:work` entry, it appends the line below with the absolute PHP path (marked `# nolita-queue-worker (managed by fulldeploy)`). It never duplicates the entry, keeps existing cron lines, detects an entry created from CloudPanel, and refuses to install into root's crontab. Skip it with `--skip-queue-cron`. If CloudPanel later rewrites the crontab, the next deploy re-adds the entry; adding it from CloudPanel > Sites > Cron Jobs makes it permanent in the panel.
+
+The cron entry for the `nolita` site user needs no root, survives reboots, always runs the latest deployed code, and sends emails within about a minute:
+
+```cron
+* * * * * cd /home/nolita/htdocs/nolita.com.ar/nolita/admin/backend && php artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1
+```
+
+Alternative with root access: a Supervisor program running `php artisan queue:work --sleep=3 --tries=3 --max-time=3600` as `nolita` with `autorestart=true`. `fulldeploy` already runs `queue:restart` so Supervisor workers reload new code.
+
+Verify: `php artisan queue:failed` lists failed jobs; `mysql` `SELECT COUNT(*) FROM jobs;` should drop to 0 within a minute. Preview the purchase email with `php artisan mail:order-preview you@example.com --order=<id>`.
 
 ## Starting Services
 

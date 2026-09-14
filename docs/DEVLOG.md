@@ -2,6 +2,19 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 104: Customer Purchase Email
+
+1. [x] `docs/SPECS.md`: Document trigger, recipient, content, configuration, and preview command.
+2. [x] `admin/backend/config/customer_mail.php`: Storefront URL, brand, timezone, and non-production test recipient.
+3. [x] `admin/backend/app/Services/CustomerMailService.php` and `app/Mail/OrderPurchased.php`: Build snapshot data and queue the email after commit.
+4. [x] `admin/backend/resources/views/emails/customer`: Branded HTML layout, purchase template, and plain-text alternative.
+5. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Snapshot the payment method description and queue the email after checkout.
+6. [x] Remove the customer email sent on `completed` (`OrderObserver`, `OrderConfirmation`, old template).
+7. [x] `admin/backend/app/Console/Commands/SendOrderMailPreview.php`: Preview command that sends synchronously.
+8. [x] `admin/backend/tests`: Cover data, rendering, recipient, and test redirect.
+9. [x] `docs/DEPLOY_INFO.md`: Queue worker setup for production email delivery.
+10. [x] Validation: Run tests and send a preview to the requested address.
+
 ## Phase 103: Order Snapshot Independence
 
 1. [x] `docs/SPECS.md`: Document the order snapshot directive, item metadata keys, and customer snapshot sources.

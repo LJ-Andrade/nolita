@@ -274,6 +274,17 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - `order_items.product_id`/`product_variant_id` remain links for stock movements and sales statistics; statistics may show live product category/status.
 - Existing placed orders are backfilled once from the records that still exist: missing item snapshot keys from their variant/product, and missing customer snapshot fields (including `dni`) from their customer. Items whose variant was already deleted cannot be recovered.
 
+### Customer Purchase Email
+
+- The only customer order email is sent when storefront checkout completes. It is sent to every buyer (guest or registered) at the email saved in the order `customer_data`. The previous confirmation email sent when an admin marks an order `completed` is removed.
+- Subject and heading: `Gracias por comprar en Nolita`. The Nolita logo (`{storefront_url}/logo-black.png`) is shown at the top, linking to the storefront; the brand name is shown as text when images are blocked.
+- Content, built only from the order snapshot: greeting with the customer's first name, order number and date (Argentina timezone), items (product name, color/size, quantity, unit price, subtotal), subtotal, coupon discount when present, delivery fee, payment-method fee when present, total, delivery data (name, address, locality/province, postal code, phone, delivery method), and payment method name plus its description.
+- Checkout stores the selected payment method description in `billing_address.payment_method_description` so the email and later views do not depend on the live payment method.
+- Footer: business email and WhatsApp link from public business content when configured, plus an automatic-message notice. A plain-text alternative is always included.
+- The email is queued after the checkout transaction commits (3 tries, 60 s backoff). Mail failures are logged and never fail the checkout.
+- Configuration lives in `config/customer_mail.php`: `APP_STOREFRONT_URL` (default `https://nolita.com.ar`) and `CUSTOMER_MAIL_TEST_RECIPIENT`. Outside production, when a test recipient is set, every customer email is redirected to it.
+- `php artisan mail:order-preview {email} {--order=}` sends the purchase email for an existing placed order immediately (without the queue) to the given address, for template testing.
+
 ### Order Stock Lifecycle
 
 - `orders.stock_deducted_at` is the source of truth for stock ownership: a non-null value means the order's line-item quantities are currently subtracted from variant stock; `null` means they are not.

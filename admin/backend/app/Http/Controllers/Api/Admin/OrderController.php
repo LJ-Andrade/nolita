@@ -216,6 +216,7 @@ class OrderController extends Controller
                     'billing_address' => array_merge($customerData, [
                         'payment_method_id' => (string) $paymentMethod->id,
                         'payment_method_name' => $paymentMethod->name,
+                        'payment_method_description' => $paymentMethod->description,
                         'payment_fee' => $paymentFee,
                     ]),
                     'notes' => $validated['notes'] ?? null,

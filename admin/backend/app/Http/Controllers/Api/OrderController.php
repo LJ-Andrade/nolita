@@ -13,6 +13,7 @@ use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\ShopConfiguration;
 use App\Models\NotificationType;
+use App\Services\CustomerMailService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -414,6 +415,7 @@ class OrderController extends Controller
 					'locality' => $locality->name,
 					'payment_method_id' => (string) $validated['payment_method_id'],
 					'payment_method_name' => $paymentMethod->name,
+					'payment_method_description' => $paymentMethod->description,
 					'payment_fee' => $paymentFee,
 				],
 			]);
@@ -452,6 +454,7 @@ class OrderController extends Controller
 			}
 		}
 
+		app(CustomerMailService::class)->queueOrderPurchased($completedOrder);
 		$this->notifyOrderCreated($completedOrder);
 
 		return response()->json([

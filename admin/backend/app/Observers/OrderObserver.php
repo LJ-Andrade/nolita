@@ -4,32 +4,20 @@ namespace App\Observers;
 
 use App\Models\Order;
 use App\Models\NotificationType;
-use App\Mail\OrderConfirmation;
 use App\Services\NotificationService;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 
 class OrderObserver
 {
     public function updated(Order $order): void
     {
         try {
+            // The buyer email is sent at checkout (CustomerMailService); completion only notifies admins.
             if ($order->wasChanged('status') && $order->status === 'completed') {
-                $this->sendConfirmationEmail($order);
                 $this->notifyAdmins($order);
             }
         } catch (\Exception $e) {
             \Log::error('OrderObserver error: ' . $e->getMessage());
         }
-    }
-
-    protected function sendConfirmationEmail(Order $order): void
-    {
-        if (!$order->customer || !$order->customer->email) {
-            return;
-        }
-
-        Mail::to($order->customer->email)->queue(new OrderConfirmation($order));
     }
 
     protected function notifyAdmins(Order $order): void

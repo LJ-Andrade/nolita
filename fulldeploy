@@ -18,6 +18,7 @@
 #   --reload-fpm      Reload PHP-FPM at the end (requires sudo, never fatal).
 #   --skip-backup     Deploy without a database dump. Migrations become
 #                     irreversible: use only when the dump itself is broken.
+#   --skip-queue-cron Do not install the queue worker cron when it is missing.
 #
 # Everything below lives inside main(). `git pull` can rewrite this file while
 # it is running, and bash reads scripts lazily from disk: a plain top-level
@@ -43,6 +44,8 @@ FORCE_DEPS=0
 ALLOW_DIRTY=0
 RELOAD_FPM=0
 SKIP_BACKUP=0
+SKIP_QUEUE_CRON=0
+QUEUE_CRON_MARKER="# nolita-queue-worker (managed by fulldeploy)"
 MAINTENANCE_ON=0
 changed_files=""
 
@@ -166,6 +169,48 @@ backup_database() {
     done
 }
 
+# Queued emails need a worker. Installs a per-minute cron for the current user
+# when no queue:work entry exists yet (for example one created from CloudPanel).
+ensure_queue_cron() {
+  log "Checking the queue worker cron"
+
+  if [ "$SKIP_QUEUE_CRON" = "1" ]; then
+    info "Skipping queue worker cron check."
+    return 0
+  fi
+
+  if ! command -v crontab >/dev/null 2>&1; then
+    warn "crontab is not available. Configure the queue worker manually (docs/DEPLOY_INFO.md)."
+    return 0
+  fi
+
+  # A root crontab would write logs and cache files owned by root and break the site user.
+  if [ "$(id -u)" = "0" ]; then
+    warn "Running as root: not installing the cron. Run fulldeploy as the site user or add it from CloudPanel."
+    return 0
+  fi
+
+  local current_crontab
+  current_crontab="$(crontab -l 2>/dev/null || true)"
+
+  if printf '%s\n' "$current_crontab" | grep -q "queue:work"; then
+    info "Queue worker cron already present for $(id -un)."
+    return 0
+  fi
+
+  # Cron runs with a minimal PATH, so pin the PHP binary used by this deploy.
+  local php_bin cron_line
+  php_bin="$(command -v php || echo php)"
+  cron_line="* * * * * cd $BACKEND_DIR && $php_bin artisan queue:work --stop-when-empty --tries=3 --max-time=55 >> /dev/null 2>&1"
+
+  if { [ -n "$current_crontab" ] && printf '%s\n' "$current_crontab"; printf '%s\n%s\n' "$QUEUE_CRON_MARKER" "$cron_line"; } | crontab -; then
+    info "Installed queue worker cron for $(id -un):"
+    info "$cron_line"
+  else
+    warn "Could not install the queue worker cron. Add it manually (docs/DEPLOY_INFO.md)."
+  fi
+}
+
 # Builds the panel into dist-release and swaps it in with two renames, so Nginx
 # never serves a half-written dist/ while the build runs.
 build_admin() {
@@ -205,7 +250,8 @@ main() {
       --allow-dirty) ALLOW_DIRTY=1 ;;
       --reload-fpm) RELOAD_FPM=1 ;;
       --skip-backup) SKIP_BACKUP=1 ;;
-      -h|--help) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+      --skip-queue-cron) SKIP_QUEUE_CRON=1 ;;
+      -h|--help) sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
       *) fail "unknown option: $1" ;;
     esac
     shift
@@ -325,6 +371,25 @@ main() {
   # current job and exit; the supervisor restarts them on the new release.
   log "Restarting queue workers"
   php artisan queue:restart
+
+  ensure_queue_cron
+
+  # Customer and admin emails are queued. Old pending jobs mean no worker is consuming the queue.
+  local stale_jobs
+  stale_jobs="$(php -r '
+    require "vendor/autoload.php";
+    $app = require "bootstrap/app.php";
+    $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    if (config("queue.default") !== "database") { echo 0; exit; }
+    echo Illuminate\Support\Facades\DB::table(config("queue.connections.database.table", "jobs"))
+        ->where("created_at", "<", time() - 600)->count();
+  ' 2>/dev/null || echo "?")"
+  if [ "$stale_jobs" != "0" ]; then
+    warn "There are queued jobs older than 10 minutes ($stale_jobs). Emails are not being sent:"
+    warn "check the queue worker cron described in docs/DEPLOY_INFO.md."
+  else
+    info "No stale queued jobs."
+  fi
 
   if [ "$RELOAD_FPM" = "1" ]; then
     log "Reloading PHP-FPM"
