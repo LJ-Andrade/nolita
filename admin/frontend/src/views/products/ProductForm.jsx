@@ -832,7 +832,7 @@ export default function ProductForm() {
                       <div className="flex overflow-hidden h-9 border rounded-md bg-muted/20">
                         <Input
                           type="number"
-                          className="w-20 h-full border-0 rounded-none focus-visible:ring-0 px-3 text-sm bg-transparent"
+                          className="w-24 min-w-[96px] shrink-0 h-full border-0 rounded-none focus-visible:ring-0 px-3 text-sm bg-transparent"
                           placeholder="0"
                           value={bulkValues.stock}
                           onChange={(e) =>
@@ -862,7 +862,7 @@ export default function ProductForm() {
                       <div className="flex overflow-hidden h-9 border rounded-md bg-muted/20">
                         <Input
                           type="number"
-                          className="w-20 h-full border-0 rounded-none focus-visible:ring-0 px-3 text-sm bg-transparent"
+                          className="w-24 min-w-[96px] shrink-0 h-full border-0 rounded-none focus-visible:ring-0 px-3 text-sm bg-transparent"
                           placeholder="0"
                           value={bulkValues.minStock}
                           onChange={(e) =>
@@ -891,15 +891,15 @@ export default function ProductForm() {
                 </div>
               )}
 
-              <div className="border rounded-md overflow-hidden bg-card">
+              <div className="max-w-full border rounded-md overflow-x-auto bg-card">
                 {hasVariants ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{"Combinación"}</TableHead>
+                        <TableHead className="whitespace-nowrap">{"Combinación"}</TableHead>
                         <TableHead>{"SKU"}</TableHead>
                         <TableHead>{"Stock"}</TableHead>
-                        <TableHead>{"Stock Mínimo"}</TableHead>
+                        <TableHead className="whitespace-nowrap">{"Stock Mínimo"}</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -914,7 +914,7 @@ export default function ProductForm() {
                         return (
                           <TableRow key={index}>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 whitespace-nowrap">
                                 {color && (
                                   <div
                                     className="w-4 h-4 rounded-full border"
@@ -938,6 +938,7 @@ export default function ProductForm() {
                                   form.setValue("variants", newVariants);
                                 }}
                                 placeholder="SKU"
+                                className="min-w-[140px]"
                               />
                             </TableCell>
                             <TableCell>
@@ -952,7 +953,7 @@ export default function ProductForm() {
                                     parseInt(e.target.value) || 0;
                                   form.setValue("variants", newVariants);
                                 }}
-                                className="w-20"
+                                className="w-24 min-w-[96px]"
                               />
                             </TableCell>
                             <TableCell>
@@ -967,7 +968,7 @@ export default function ProductForm() {
                                     parseInt(e.target.value) || 0;
                                   form.setValue("variants", newVariants);
                                 }}
-                                className="w-20"
+                                className="w-24 min-w-[96px]"
                               />
                             </TableCell>
 
