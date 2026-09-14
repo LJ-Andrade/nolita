@@ -56,7 +56,10 @@ class ProductTagController extends Controller
             return ProductTagResource::collection($query->get());
         }
 
-        return ProductTagResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return ProductTagResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

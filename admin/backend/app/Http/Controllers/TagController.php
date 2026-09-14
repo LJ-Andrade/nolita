@@ -59,7 +59,10 @@ class TagController extends Controller
             return TagResource::collection($query->get());
         }
 
-        return TagResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return TagResource::collection($query->paginate($perPage));
     }
 
     /**

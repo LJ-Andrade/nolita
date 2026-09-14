@@ -28,6 +28,8 @@ export default function NewsletterSubscribers() {
 		meta,
 		page,
 		setPage,
+		perPage,
+		setPerPage,
 		filters,
 		setFilter,
 		sortBy,
@@ -210,6 +212,8 @@ export default function NewsletterSubscribers() {
 						meta={meta}
 						page={page}
 						onPageChange={setPage}
+						perPage={perPage}
+						onPerPageChange={setPerPage}
 						prevLabel={"Anterior"}
 						nextLabel={"Siguiente"}
 					/>

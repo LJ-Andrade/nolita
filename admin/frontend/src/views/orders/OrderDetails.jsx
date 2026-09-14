@@ -125,12 +125,13 @@ export default function OrderDetails() {
   const updateStatus = async (newStatus) => {
     setUpdating(true);
     try {
-      await axiosClient.put(`admin/orders/${id}`, { status: newStatus });
-      toast.success('Estado actualizado correctamente');
+      const { data } = await axiosClient.put(`admin/orders/${id}`, { status: newStatus });
+      toast.success(data?.message || 'Estado actualizado correctamente');
       setOrder({ ...order, status: newStatus });
       setSelectedStatus(newStatus);
     } catch (error) {
-      toast.error('Error al actualizar el estado');
+      setSelectedStatus(order.status);
+      toast.error(error.response?.data?.message || 'Error al actualizar el estado');
     } finally {
       setUpdating(false);
     }
@@ -251,19 +252,15 @@ export default function OrderDetails() {
                       </TableRow>
                     )}
                     {items.map((item) => {
-                      const variantParts = [
-                        item.variant?.color?.name,
-                        item.variant?.size?.name,
-                      ].filter(Boolean);
-
+                      // Order items render only their frozen snapshot, never the live product.
                       return (
                         <TableRow key={item.id}>
                           <TableCell>
                             <div className="font-medium">{item.product_name || emptyValue}</div>
-                            <div className="text-xs text-muted-foreground">Código: {item.product_code || item.product?.code || item.variant?.product?.code || emptyValue}</div>
+                            <div className="text-xs text-muted-foreground">Código: {item.product_code || emptyValue}</div>
                           </TableCell>
-                          <TableCell>{variantParts.length ? variantParts.join(" / ") : emptyValue}</TableCell>
-                          <TableCell className="font-mono text-xs">{item.variant?.sku || emptyValue}</TableCell>
+                          <TableCell>{item.variant_label || emptyValue}</TableCell>
+                          <TableCell className="font-mono text-xs">{item.sku || emptyValue}</TableCell>
                           <TableCell className="text-right">{item.quantity || 0}</TableCell>
                           <TableCell className="text-right">{formatMoney(item.unit_price)}</TableCell>
                           <TableCell className="text-right font-semibold">{formatMoney(item.subtotal)}</TableCell>
@@ -322,10 +319,8 @@ export default function OrderDetails() {
             </CardHeader>
             <CardContent className="space-y-1">
               {(() => {
-                const cd = order.customer_data || {};
-                const name = order.customer?.name || cd.name;
-                const email = order.customer?.email || cd.email;
-                const phone = order.customer?.phone || cd.phone;
+                const cd = { ...(order.shipping_address || {}), ...(order.customer_data || {}) };
+                const { name, email, phone } = cd;
                 return (
                   <>
                     <DetailRow label="Nombre" value={name} />
@@ -333,6 +328,7 @@ export default function OrderDetails() {
                     <DetailRow label="Teléfono" value={phone} />
                     {cd.whatsapp && <DetailRow label="WhatsApp" value={cd.whatsapp} />}
                     {cd.cuit && <DetailRow label="CUIT" value={cd.cuit} />}
+                    {cd.dni && <DetailRow label="DNI" value={cd.dni} />}
                     {cd.address && (
                       <>
                         <Separator className="my-2" />

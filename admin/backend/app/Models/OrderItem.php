@@ -10,8 +10,15 @@ class OrderItem extends Model
 {
     use HasFactory;
 
+    /**
+     * Snapshot attributes read only from `metadata`, so placed orders never depend on live catalog data.
+     */
     protected $appends = [
         'product_code',
+        'sku',
+        'color_name',
+        'size_name',
+        'variant_label',
     ];
 
     protected $fillable = [
@@ -31,6 +38,22 @@ class OrderItem extends Model
         'metadata' => 'array',
     ];
 
+    /**
+     * Frozen variant data stored in `metadata` when an order is placed.
+     * Expects the variant with `product`, `color`, and `size` loaded.
+     *
+     * @return array{product_code: ?string, sku: ?string, color: ?string, size: ?string}
+     */
+    public static function snapshotFromVariant(ProductVariant $variant): array
+    {
+        return [
+            'product_code' => self::filledString($variant->product?->code),
+            'sku' => self::filledString($variant->sku),
+            'color' => self::filledString($variant->color?->name),
+            'size' => self::filledString($variant->size?->name),
+        ];
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
@@ -48,19 +71,36 @@ class OrderItem extends Model
 
     public function getProductCodeAttribute(): ?string
     {
-        $metadataCode = is_array($this->metadata) ? ($this->metadata['product_code'] ?? null) : null;
-        $productCode = $this->relationLoaded('product') ? $this->product?->code : null;
-        $variantProductCode = (
-            $this->relationLoaded('variant')
-            && $this->variant
-            && $this->variant->relationLoaded('product')
-        ) ? $this->variant->product?->code : null;
-        $variantSku = $this->relationLoaded('variant') ? $this->variant?->sku : null;
+        return $this->snapshotValue('product_code') ?: self::codeFromSku($this->snapshotValue('sku'));
+    }
 
-        return self::filledString($metadataCode)
-            ?: self::filledString($productCode)
-            ?: self::filledString($variantProductCode)
-            ?: self::codeFromSku($variantSku);
+    public function getSkuAttribute(): ?string
+    {
+        return $this->snapshotValue('sku');
+    }
+
+    public function getColorNameAttribute(): ?string
+    {
+        return $this->snapshotValue('color');
+    }
+
+    public function getSizeNameAttribute(): ?string
+    {
+        return $this->snapshotValue('size');
+    }
+
+    public function getVariantLabelAttribute(): ?string
+    {
+        $label = collect([$this->color_name, $this->size_name])->filter()->implode(' / ');
+
+        return $label !== '' ? $label : null;
+    }
+
+    private function snapshotValue(string $key): ?string
+    {
+        $metadata = is_array($this->metadata) ? $this->metadata : [];
+
+        return self::filledString($metadata[$key] ?? null);
     }
 
     private static function codeFromSku(mixed $sku): ?string

@@ -125,7 +125,10 @@ class PostController extends Controller
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
-        return PostResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return PostResource::collection($query->paginate($perPage));
     }
 
     /**

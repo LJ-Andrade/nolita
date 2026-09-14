@@ -45,7 +45,10 @@ class PaymentMethodController extends Controller
             $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
         }
 
-        return PaymentMethodResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return PaymentMethodResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

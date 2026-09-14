@@ -23,23 +23,18 @@ function buildOrderXls(order) {
   const rows = [
     ["Pedido", `#${order.id}`],
     ["Estado", order.status],
-    ["Cliente", order.customer?.name || order.shipping_address?.name || emptyValue],
-    ["Email", order.customer?.email || order.shipping_address?.email || emptyValue],
-    ["Teléfono", order.customer?.phone || order.shipping_address?.phone || emptyValue],
+    ["Cliente", order.customer_data?.name || order.shipping_address?.name || emptyValue],
+    ["Email", order.customer_data?.email || order.shipping_address?.email || emptyValue],
+    ["Teléfono", order.customer_data?.phone || order.shipping_address?.phone || emptyValue],
     ["Total", formatMoney(order.total_amount)],
   ];
 
   const itemRows = (order.items || []).map((item) => {
-    const variant = [
-      item.variant?.color?.name,
-      item.variant?.size?.name,
-    ].filter(Boolean).join(" / ");
-
     return `
       <tr>
         <td>${escapeHtml(item.product_name)}</td>
-        <td>${escapeHtml(variant)}</td>
-        <td>${escapeHtml(item.variant?.sku || emptyValue)}</td>
+        <td>${escapeHtml(item.variant_label || "")}</td>
+        <td>${escapeHtml(item.sku || emptyValue)}</td>
         <td>${escapeHtml(item.quantity || 0)}</td>
         <td>${escapeHtml(formatMoney(item.unit_price))}</td>
         <td>${escapeHtml(formatMoney(item.subtotal))}</td>

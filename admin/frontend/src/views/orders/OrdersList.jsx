@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '@/lib/axios';
 import {
@@ -9,8 +9,6 @@ import {
 	CheckCircle,
 	XCircle,
 	RefreshCw,
-	ChevronLeft,
-	ChevronRight,
 	ChevronDown,
 	FileDown,
 	ReceiptText,
@@ -51,6 +49,8 @@ import { cn } from "@/lib/utils";
 import { PriceModeBadge } from "@/components/price-mode-badge";
 import ManualOrderForm from './ManualOrderForm';
 import { AdminTableShell } from "@/components/admin-table-shell";
+import { CrudPagination } from "@/components/crud-pagination";
+import { getStoredPerPage, storePerPage } from "@/hooks/use-crud-list";
 
 const showPaymentStatus = false;
 
@@ -97,6 +97,8 @@ export default function OrdersList() {
 	const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 	const [meta, setMeta] = useState({});
 	const [page, setPage] = useState(1);
+	const [perPage, setPerPage] = useState(() => getStoredPerPage());
+	const latestRequestId = useRef(0);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [exportingFormat, setExportingFormat] = useState(null);
 	const [exportingOrderPdfId, setExportingOrderPdfId] = useState(null);
@@ -127,13 +129,15 @@ export default function OrdersList() {
 
 	useEffect(() => {
 		fetchOrders();
-	}, [page, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
+	}, [page, perPage, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
 
 	useEffect(() => {
 		clearSelection();
-	}, [page, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
+	}, [page, perPage, debouncedSearch, activePriceMode, activeStatus, dateFrom, dateTo]);
 
 	const fetchOrders = async () => {
+		// Ignore responses from requests superseded by newer filters/pages.
+		const requestId = ++latestRequestId.current;
 		setLoading(true);
 		try {
 			const response = await axiosClient.get('admin/orders', {
@@ -144,15 +148,19 @@ export default function OrdersList() {
 					status: activeStatus || undefined,
 					date_from: dateFrom || undefined,
 					date_to: dateTo || undefined,
-					perPage: 10
+					perPage
 				}
 			});
+			if (requestId !== latestRequestId.current) return;
 			setOrders(response.data.data);
 			setMeta(response.data.meta || {});
 		} catch (error) {
+			if (requestId !== latestRequestId.current) return;
 			toast.error('Error al cargar órdenes');
 		} finally {
-			setLoading(false);
+			if (requestId === latestRequestId.current) {
+				setLoading(false);
+			}
 		}
 	};
 
@@ -179,7 +187,7 @@ export default function OrdersList() {
 	const handleBulkDelete = async () => {
 		setIsDeleting(true);
 		try {
-			await axiosClient.post("admin/orders/bulk-delete");
+			await axiosClient.post("admin/orders/bulk-delete", { ids: selectedIds });
 			toast.success(`${selectedIds.length} órdenes eliminadas`);
 			clearSelection();
 			fetchOrders();
@@ -284,11 +292,11 @@ export default function OrdersList() {
 		)));
 
 		try {
-			await axiosClient.put(`admin/orders/${order.id}`, { status: newStatus });
-			toast.success('Estado actualizado correctamente');
+			const { data } = await axiosClient.put(`admin/orders/${order.id}`, { status: newStatus });
+			toast.success(data?.message || 'Estado actualizado correctamente');
 		} catch (error) {
 			setOrders(previousOrders);
-			toast.error('Error al actualizar el estado');
+			toast.error(error.response?.data?.message || 'Error al actualizar el estado');
 		} finally {
 			setUpdatingStatusId(null);
 		}
@@ -316,25 +324,14 @@ export default function OrdersList() {
 		}
 	};
 
+	const handlePerPageChange = (value) => {
+		storePerPage(value);
+		setPerPage(value);
+		setPage(1);
+	};
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [orderToDelete, setOrderToDelete] = useState(null);
-
-	const renderPagination = () => {
-		if (!meta.last_page || meta.last_page <= 1) return null;
-		const pages = [];
-		const startPage = Math.max(1, page - 2);
-		const endPage = Math.min(meta.last_page, startPage + 4);
-		const adjustedStartPage = Math.max(1, endPage - 4);
-
-		for (let i = adjustedStartPage; i <= endPage; i++) {
-			pages.push(
-				<Button key={i} variant={page === i ? "default" : "outline"} size="sm" onClick={() => setPage(i)}>
-					{i}
-				</Button>
-			);
-		}
-		return pages;
-	};
 
 	const getStatusBadge = (status) => {
 		switch (status) {
@@ -533,7 +530,7 @@ export default function OrdersList() {
 							<div className="relative w-full">
 							<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 							<Input
-								placeholder="Buscar orden o cliente..."
+								placeholder="Buscar por #pedido, nombre, email, teléfono o CUIT..."
 								className="pl-9"
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
@@ -633,8 +630,8 @@ export default function OrdersList() {
 										</TableCell>
 										<TableCell>
 											<div className="flex flex-col">
-												<span className="font-medium">{order.customer?.name || order.customer_data?.name || 'Invitado'}</span>
-												<span className="text-xs text-muted-foreground">{order.customer?.email || order.customer_data?.email}</span>
+												<span className="font-medium">{order.customer_data?.name || order.customer?.name || 'Invitado'}</span>
+												<span className="text-xs text-muted-foreground">{order.customer_data?.email || order.customer?.email}</span>
 											</div>
 										</TableCell>
 										<TableCell>
@@ -723,21 +720,15 @@ export default function OrdersList() {
 						</Table>
 					</AdminTableShell>
 
-					{meta.last_page > 1 && (
-						<div className="flex items-center justify-end space-x-2 py-4">
-							<Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-								<ChevronLeft className="h-4 w-4 mr-2" />
-								Anterior
-							</Button>
-							<div className="flex items-center space-x-1">
-								{renderPagination()}
-							</div>
-							<Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page === meta.last_page}>
-								Siguiente
-								<ChevronRight className="h-4 w-4 ml-2" />
-							</Button>
-						</div>
-					)}
+					<CrudPagination
+						meta={meta}
+						page={page}
+						onPageChange={setPage}
+						perPage={perPage}
+						onPerPageChange={handlePerPageChange}
+						prevLabel="Anterior"
+						nextLabel="Siguiente"
+					/>
 
 					{selectedCount > 0 && (
 						<div className="flex items-center justify-between py-4 border-t">

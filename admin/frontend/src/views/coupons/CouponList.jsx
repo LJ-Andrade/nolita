@@ -51,6 +51,8 @@ export default function CouponList() {
 		meta,
 		page,
 		setPage,
+		perPage,
+		setPerPage,
 		filters,
 		setFilter,
 		clearFilters,
@@ -330,6 +332,8 @@ export default function CouponList() {
 						meta={meta}
 						page={page}
 						onPageChange={setPage}
+						perPage={perPage}
+						onPerPageChange={setPerPage}
 						prevLabel={"Anterior"}
 						nextLabel={"Siguiente"}
 					/>

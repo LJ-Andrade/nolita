@@ -55,7 +55,10 @@ class ProductCategoryController extends Controller
             return ProductCategoryResource::collection($query->get());
         }
 
-        return ProductCategoryResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return ProductCategoryResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

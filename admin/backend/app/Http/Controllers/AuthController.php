@@ -61,12 +61,9 @@ class AuthController extends Controller
             ->get();
 
         $mapDashboardOrder = static function (Order $order): array {
-            $customerData = is_array($order->customer_data) ? $order->customer_data : [];
-            $customerName = $order->customer?->name
-                ?? ($customerData['name'] ?? null)
-                ?? 'Invitado';
-            $customerEmail = $order->customer?->email
-                ?? ($customerData['email'] ?? null);
+            $customerData = $order->customerSnapshot();
+            $customerName = $customerData['name'] ?? $order->customer?->name ?? 'Invitado';
+            $customerEmail = $customerData['email'] ?? $order->customer?->email;
 
             return [
                 'id' => $order->id,

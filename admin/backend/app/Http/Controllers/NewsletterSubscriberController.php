@@ -37,7 +37,10 @@ class NewsletterSubscriberController extends Controller
             return NewsletterSubscriberResource::collection($query->get());
         }
 
-        return NewsletterSubscriberResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return NewsletterSubscriberResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

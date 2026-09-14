@@ -99,6 +99,8 @@ export default function ProductsList() {
     meta,
     page,
     setPage,
+    perPage,
+    setPerPage,
     filters,
     setFilter,
     clearFilters,
@@ -794,6 +796,8 @@ export default function ProductsList() {
               meta={meta}
               page={page}
               onPageChange={setPage}
+              perPage={perPage}
+              onPerPageChange={setPerPage}
               prevLabel={"Anterior"}
               nextLabel={"Siguiente"}
             />

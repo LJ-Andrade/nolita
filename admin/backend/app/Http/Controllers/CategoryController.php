@@ -59,7 +59,10 @@ class CategoryController extends Controller
             return CategoryResource::collection($query->get());
         }
 
-        return CategoryResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return CategoryResource::collection($query->paginate($perPage));
     }
 
     /**

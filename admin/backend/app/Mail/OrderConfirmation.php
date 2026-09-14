@@ -30,7 +30,7 @@ class OrderConfirmation extends Mailable
             view: 'emails.order-confirmation',
             with: [
                 'order' => $this->order,
-                'customer' => $this->order->customer,
+                'customer' => $this->order->customerSnapshot(),
                 'items' => $this->order->items,
             ],
         );

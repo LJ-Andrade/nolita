@@ -222,6 +222,13 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Collapsed row action menus for narrow/mobile layouts must use at least a 40 x 40 trigger and larger menu icons/touch rows so actions remain easy to tap.
 - Admin list columns that display HTML saved from textarea/rich-text inputs must render through the shared rich text preview instead of showing raw HTML strings.
 
+### Admin List Pagination
+
+- Admin list pagination must expose first-page, previous-page, next-page, and last-page controls through the shared `CrudPagination` component.
+- Admin paginated lists must allow switching between 10 and 20 rows per page. Changing the rows-per-page value must reset the list to page 1 and clear current row selections where selection is supported.
+- The selected rows-per-page value must be persisted in `localStorage` (`vadmin.list.perPage`) and restored after page reloads.
+- Admin list views must send the selected rows-per-page value as `perPage` to VADMIN. Paginated admin index endpoints must honor `perPage` (clamped to 1-100) and return `data` plus `meta` with `current_page`, `last_page`, `per_page`, and `total`.
+
 ### Admin Product Pricing Form
 
 - The product form must keep separate discount inputs for retail and wholesale pricing.
@@ -255,6 +262,31 @@ It communicates strictly via REST API with the existing VADMIN backend (Laravel)
 - Manual order creation must validate stock and reduce stock only when the created order status is `completed`; draft/pending/processing manual orders must not reduce stock.
 - Manual order creation must preserve the existing order schema (`customer_data`, `shipping_address`, `billing_address`, `price_mode`, items, totals) so exports and existing order detail screens remain compatible.
 - The admin orders UI must hide payment-status controls and payment-status badges while keeping the backend `payment_status` contract available for production compatibility.
+- The admin orders `search` parameter (shared by the list and exports) must be case-insensitive and match: the exact order id (numeric input, optional leading `#`); the checkout snapshot in `customer_data` (`name`, `email`, `phone`, `whatsapp`, `cuit`, `city`, `locality`), which covers guest orders; the linked registered customer (`name`, `email`, `phone`, `dni`); and the linked guest customer (`name`, `email`, `phone`, `whatsapp`, `cuit`). `%` and `_` in the input are matched literally.
+- The admin orders list must discard responses from superseded requests so fast typing or filter changes never render stale results.
+
+### Order Snapshot Independence
+
+- Everything shown for a placed order must be independent of live product, variant, color, size, and customer records. Editing, unpublishing, or deleting a product, variant, color, size, or customer must never change how an existing order is displayed, exported, or emailed.
+- A customer server cart (never checked out) stays live. The snapshot is frozen at checkout and at manual admin order creation.
+- Each order item stores `product_name`, `quantity`, `unit_price`, and `subtotal` as columns, and `metadata.product_code`, `metadata.sku`, `metadata.color`, and `metadata.size` as the frozen variant snapshot. `OrderItem` exposes them as `product_code`, `sku`, `color_name`, `size_name`, and `variant_label`, read only from the snapshot.
+- The order customer snapshot is `customer_data` (name, email, phone, whatsapp, cuit, dni, address, city, postal code, province, locality). Order screens, PDF/list exports, dashboard summaries, admin notifications, and confirmation email content must read customer data from the snapshot (`customer_data`, then `shipping_address`). The live customer relation is only a link (and the confirmation email recipient), never a display source.
+- `order_items.product_id`/`product_variant_id` remain links for stock movements and sales statistics; statistics may show live product category/status.
+- Existing placed orders are backfilled once from the records that still exist: missing item snapshot keys from their variant/product, and missing customer snapshot fields (including `dni`) from their customer. Items whose variant was already deleted cannot be recovered.
+
+### Order Stock Lifecycle
+
+- `orders.stock_deducted_at` is the source of truth for stock ownership: a non-null value means the order's line-item quantities are currently subtracted from variant stock; `null` means they are not.
+- Storefront checkout subtracts stock and sets `stock_deducted_at`. Manual admin orders created as `completed` subtract stock and set it; manual orders created with any other status do not.
+- A customer server cart is a `pending` order with `customer_data = null` (never checked out). Cart lookups (`getCart`, `addToCart`, `checkout`, `checkout/validate`) must only match such orders, so a placed `pending` order is never reused as a cart.
+- Changing an order status to `cancelled` must return every deducted line-item quantity to its current variant exactly once and clear `stock_deducted_at`. Orders without deducted stock change status without stock movement.
+- Changing an order status to `completed`, or reactivating a `cancelled` order to `pending`/`processing`/`completed`, must subtract stock when `stock_deducted_at` is `null`. If any variant lacks stock, the change must fail with a 422 listing the shortages and the status must stay unchanged.
+- Other status changes (e.g. `pending` to `processing`) and payment-status changes must never move stock.
+- Deleting an order (single or bulk) must return deducted stock unless the order is `completed` (goods already delivered). Carts and orders without deducted stock are deleted without stock movement.
+- Stock movements must run inside a database transaction with order and variant row locks, and the status/flag must change only after the full movement succeeds.
+- Line items whose variant no longer exists are skipped when returning stock and reported as shortages when subtracting.
+- The admin status update response must include a `message` describing any stock movement so the UI can show it.
+- Existing orders are backfilled once: checked-out orders (`customer_data` not null) in `pending`, `processing`, or `completed` are marked as having deducted stock. Existing `cancelled` orders are not reconciled.
 - The admin orders list must expose toggleable filter buttons above the table, separate from the standard CRUD filter layout.
 - Order type filters must support toggling between all orders, wholesale orders (`price_mode = wholesale`), and retail orders (`price_mode = retail`).
 - Order status filters must support toggling each status on and off with distinct status-colored buttons for `pending`, `processing`, `completed`, and `cancelled`.

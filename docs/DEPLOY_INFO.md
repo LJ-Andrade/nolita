@@ -52,6 +52,29 @@ server {
 }
 ```
 
+## Releasing Changes (`fulldeploy`)
+
+Run every release from the project root on the server:
+
+```bash
+cd /home/nolita/htdocs/nolita.com.ar/nolita
+./fulldeploy
+```
+
+Steps, in order (any failure aborts the release):
+
+1. Checks tools, `admin/backend/.env`, `admin/frontend/.env.production` (`VITE_API_URL`), branch `main`, and a clean working tree.
+2. Dumps MySQL to `../backup/<db>-<timestamp>.sql.gz` (keeps the last 10) and verifies the dump is complete. Nothing is deployed if the dump fails.
+3. `git pull --ff-only origin main`.
+4. `composer install --no-dev` only when `composer.lock` changed.
+5. Builds the admin panel into `admin/frontend/dist-release`, removes source maps, and swaps it in for `dist` (previous build kept in `dist-previous`). `npm ci` only when the admin lockfile changed.
+6. Maintenance mode (`php artisan down`; the storefront shows `/maintenance` meanwhile), `migrate --force`, permission cache reset, `optimize`, `up`, `queue:restart`.
+7. Runs `./build-web.sh` (build + PM2 restart) only when `web/` changed in the pull. `next build` rewrites `.next` while the old server runs, so backend/panel-only releases skip it.
+
+Options: `--skip-admin`, `--build-web`, `--skip-web`, `--no-maintenance`, `--force-deps`, `--allow-dirty`, `--reload-fpm`, `--skip-backup` (see `./fulldeploy --help`).
+
+Restore a backup: `gunzip -c ../backup/<file>.sql.gz | mysql -u <user> -p <db>`. Roll back the panel: `mv admin/frontend/dist admin/frontend/dist-bad && mv admin/frontend/dist-previous admin/frontend/dist`.
+
 ## Starting Services
 
 ### Laravel API

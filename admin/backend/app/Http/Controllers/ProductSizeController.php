@@ -43,7 +43,10 @@ class ProductSizeController extends Controller
             return ProductSizeResource::collection($query->get());
         }
 
-        return ProductSizeResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return ProductSizeResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

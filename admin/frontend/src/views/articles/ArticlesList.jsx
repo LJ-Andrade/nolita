@@ -63,6 +63,8 @@ export default function ArticlesList() {
 		meta,
 		page,
 		setPage,
+		perPage,
+		setPerPage,
 		filters,
 		setFilter,
 		clearFilters,
@@ -472,6 +474,8 @@ export default function ArticlesList() {
 						meta={meta}
 						page={page}
 						onPageChange={setPage}
+						perPage={perPage}
+						onPerPageChange={setPerPage}
 						prevLabel={"Anterior"}
 						nextLabel={"Siguiente"}
 					/>

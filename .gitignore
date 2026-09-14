@@ -45,6 +45,8 @@ admin/backend/.phpunit.result.cache
 # Admin frontend (Vite)
 admin/frontend/node_modules/
 admin/frontend/dist/
+admin/frontend/dist-release/
+admin/frontend/dist-previous/
 admin/frontend/dist-ssr/
 admin/frontend/*.local
 

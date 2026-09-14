@@ -26,7 +26,7 @@ class OrderController extends Controller
 	public function getCart(Request $request)
 	{
 		$cart = Order::where('customer_id', $request->user()->id)
-			->where('status', 'pending')
+			->activeCart()
 			->with(['items.variant.product.colors', 'items.variant.product.media', 'items.variant.color', 'items.variant.size'])
 			->latest()
 			->first();
@@ -60,17 +60,16 @@ class OrderController extends Controller
 		DB::beginTransaction();
 		try {
 			// Find or create cart
-			$cart = Order::firstOrCreate(
-				[
+			$cart = Order::activeCart()
+				->where('customer_id', $request->user()->id)
+				->first()
+				?? Order::create([
 					'customer_id' => $request->user()->id,
-					'status' => 'pending'
-				],
-				[
+					'status' => 'pending',
 					'total_amount' => 0,
 					'currency' => 'ARS',
 					'price_mode' => $priceMode,
-				]
-			);
+				]);
 			$cart->update(['price_mode' => $priceMode]);
 
 			// Find or create item
@@ -126,7 +125,7 @@ class OrderController extends Controller
 		$item = OrderItem::with('variant.product')->findOrFail($itemId);
 		$cart = $item->order;
 
-		if ($cart->customer_id !== $request->user()->id || $cart->status !== 'pending') {
+		if ($cart->customer_id !== $request->user()->id || ! $this->isActiveCart($cart)) {
 			return response()->json(['message' => 'Unauthorized'], 403);
 		}
 
@@ -166,7 +165,7 @@ class OrderController extends Controller
 		$item = OrderItem::with('variant')->findOrFail($itemId);
 		$cart = $item->order;
 
-		if ($cart->customer_id !== $request->user()->id || $cart->status !== 'pending') {
+		if ($cart->customer_id !== $request->user()->id || ! $this->isActiveCart($cart)) {
 			return response()->json(['message' => 'Unauthorized'], 403);
 		}
 
@@ -250,7 +249,7 @@ class OrderController extends Controller
 
 		$cart = $customer
 			? Order::where('customer_id', $customer->id)
-				->where('status', 'pending')
+				->activeCart()
 				->with('items.variant.product')
 				->first()
 			: null;
@@ -334,20 +333,18 @@ class OrderController extends Controller
 						'quantity' => $line['quantity'],
 						'unit_price' => $line['unit_price'],
 						'subtotal' => $line['subtotal'],
-						'metadata' => [
-							'product_code' => $variant->product->code,
-						],
+						'metadata' => OrderItem::snapshotFromVariant($variant),
 					]);
 				}
 			} else {
+				// Freeze the live cart lines into the placed order snapshot.
 				foreach ($order->items as $item) {
 					$line = collect($pricedLines)->firstWhere('variant_id', (int) $item->product_variant_id);
 					$item->update([
+						'product_name' => $line['product_name'],
 						'unit_price' => $line['unit_price'],
 						'subtotal' => $line['subtotal'],
-						'metadata' => array_merge($item->metadata ?? [], [
-							'product_code' => $line['product_code'],
-						]),
+						'metadata' => array_merge($item->metadata ?? [], OrderItem::snapshotFromVariant($line['variant'])),
 					]);
 				}
 			}
@@ -366,6 +363,7 @@ class OrderController extends Controller
 				'phone' => $validated['phone'] ?? null,
 				'whatsapp' => $validated['whatsapp'],
 				'cuit' => $validated['cuit'],
+				'dni' => $customer?->dni,
 				'address' => $validated['address'],
 				'city' => $city,
 				'postal_code' => $validated['postal_code'],
@@ -377,6 +375,7 @@ class OrderController extends Controller
 
 			$order->update([
 				'status' => 'pending',
+				'stock_deducted_at' => now(),
 				'total_amount' => max(max($subtotal - $couponDiscountAmount, 0) + $paymentFee, 0) + $deliveryFee,
 				'price_mode' => $priceMode,
 				'payment_method' => (string) $validated['payment_method_id'],
@@ -477,6 +476,14 @@ class OrderController extends Controller
 		return response()->json($orders);
 	}
 
+	/**
+	 * A cart is a pending order that was never checked out.
+	 */
+	private function isActiveCart(Order $order): bool
+	{
+		return $order->status === Order::STATUS_PENDING && $order->customer_data === null;
+	}
+
 	private function updateCartTotal(Order $cart)
 	{
 		$cart->update([
@@ -566,7 +573,7 @@ class OrderController extends Controller
 		}
 
 		return Order::where('customer_id', $customer->id)
-			->where('status', 'pending')
+			->activeCart()
 			->with('items.variant.product')
 			->first();
 	}

@@ -39,15 +39,17 @@ class OrderObserver
             return;
         }
 
+        $customer = $order->customerSnapshot();
+
         $notificationService = app(NotificationService::class);
         $notificationService->sendToSubscribers(
             $notificationType,
             'Nuevo Pedido #' . $order->id,
-            'Cliente: ' . ($order->customer->name ?? 'N/A') . ' - Total: ' . $order->currency . ' ' . number_format($order->total_amount, 2),
+            'Cliente: ' . ($customer['name'] ?? 'N/A') . ' - Total: ' . $order->currency . ' ' . number_format($order->total_amount, 2),
             [
                 'order_id' => $order->id,
-                'customer_name' => $order->customer->name ?? 'N/A',
-                'customer_email' => $order->customer->email ?? 'N/A',
+                'customer_name' => $customer['name'] ?? 'N/A',
+                'customer_email' => $customer['email'] ?? 'N/A',
                 'total' => $order->total_amount,
                 'currency' => $order->currency,
             ]

@@ -51,7 +51,10 @@ class CouponController extends Controller
             return CouponResource::collection($query->get());
         }
 
-        return CouponResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return CouponResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

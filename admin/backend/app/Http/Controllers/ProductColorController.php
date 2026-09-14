@@ -44,7 +44,10 @@ class ProductColorController extends Controller
             return ProductColorResource::collection($query->get());
         }
 
-        return ProductColorResource::collection($query->paginate(10));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+
+
+        return ProductColorResource::collection($query->paginate($perPage));
     }
 
     public function store(Request $request)

@@ -11,31 +11,19 @@ final class OrderDocumentData
 {
     public static function make(Order $order): array
     {
-        $order->loadMissing([
-            'customer.province',
-            'customer.locality',
-            'items.variant.color',
-            'items.variant.size',
-            'items.variant.product',
-            'items.product',
-        ]);
+        // Documents are built only from the order snapshot, never from live product or customer records.
+        $order->loadMissing('items');
 
         $shippingAddress = self::arrayValue($order->shipping_address);
         $billingAddress = self::arrayValue($order->billing_address);
-        $customerData = self::arrayValue($order->customer_data);
-        $customer = $order->customer;
+        $customerData = $order->customerSnapshot();
 
         $items = $order->items->map(function ($item): array {
-            $variant = collect([
-                $item->variant?->color?->name,
-                $item->variant?->size?->name,
-            ])->filter()->implode(' / ');
-
             return [
                 'product_name' => $item->product_name,
                 'product_code' => $item->product_code,
-                'variant' => $variant,
-                'sku' => $item->variant?->sku,
+                'variant' => $item->variant_label ?? '',
+                'sku' => $item->sku,
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'subtotal' => (float) $item->subtotal,
@@ -64,17 +52,17 @@ final class OrderDocumentData
                 'currency' => $order->currency,
             ],
             'customer' => [
-                'id' => $customer?->id,
-                'name' => $customer?->name ?? $customerData['name'] ?? $shippingAddress['name'] ?? null,
-                'dni' => $customer?->dni,
-                'cuit' => $customerData['cuit'] ?? $shippingAddress['cuit'] ?? $billingAddress['cuit'] ?? null,
-                'dni_or_cuit' => $customerData['cuit'] ?? $shippingAddress['cuit'] ?? $billingAddress['cuit'] ?? $customer?->dni,
-                'email' => $customer?->email ?? $customerData['email'] ?? $shippingAddress['email'] ?? null,
-                'phone' => $customer?->phone ?? $customerData['phone'] ?? $shippingAddress['phone'] ?? null,
-                'address' => $customer?->address ?? $customerData['address'] ?? $shippingAddress['address'] ?? null,
-                'postal_code' => $customer?->postal_code ?? $customerData['postal_code'] ?? $shippingAddress['postal_code'] ?? null,
-                'province' => $customer?->province?->name ?? $customerData['province'] ?? $shippingAddress['province'] ?? null,
-                'locality' => $customer?->locality?->name ?? $customerData['locality'] ?? $customerData['city'] ?? $shippingAddress['locality'] ?? $shippingAddress['city'] ?? null,
+                'id' => $order->customer_id,
+                'name' => $customerData['name'] ?? null,
+                'dni' => $customerData['dni'] ?? null,
+                'cuit' => $customerData['cuit'] ?? $billingAddress['cuit'] ?? null,
+                'dni_or_cuit' => $customerData['cuit'] ?? $billingAddress['cuit'] ?? $customerData['dni'] ?? null,
+                'email' => $customerData['email'] ?? null,
+                'phone' => $customerData['phone'] ?? null,
+                'address' => $customerData['address'] ?? null,
+                'postal_code' => $customerData['postal_code'] ?? null,
+                'province' => $customerData['province'] ?? null,
+                'locality' => $customerData['locality'] ?? $customerData['city'] ?? null,
             ],
             'shipping' => [
                 'name' => $shippingAddress['name'] ?? null,

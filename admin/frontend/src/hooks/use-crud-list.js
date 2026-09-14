@@ -3,6 +3,28 @@ import axiosClient from "@/lib/axios";
 import { toast } from "sonner";
 import { useBulkSelect } from "./use-bulk-select";
 
+export const PER_PAGE_STORAGE_KEY = "vadmin.list.perPage";
+export const PER_PAGE_OPTIONS = [10, 20];
+
+export function getStoredPerPage(defaultPerPage = 10) {
+  if (typeof window === "undefined") return defaultPerPage;
+  try {
+    const storedValue = Number(window.localStorage.getItem(PER_PAGE_STORAGE_KEY));
+    return PER_PAGE_OPTIONS.includes(storedValue) ? storedValue : defaultPerPage;
+  } catch {
+    return defaultPerPage;
+  }
+}
+
+export function storePerPage(value) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(PER_PAGE_STORAGE_KEY, String(value));
+  } catch {
+    /* ignore */
+  }
+}
+
 function readQueryParams() {
   if (typeof window === "undefined") return new URLSearchParams();
   return new URLSearchParams(window.location.search);
@@ -33,6 +55,7 @@ function replaceQueryParams(params) {
  * @param {string} config.endpoint - API endpoint (e.g., 'product-categories')
  * @param {Object} config.defaultSort - Default sort configuration { column: 'id', direction: 'desc' }
  * @param {string[]} config.filterKeys - Array of filter keys to manage (e.g., ['search', 'filter_id'])
+ * @param {number} config.defaultPerPage - Default rows per page when nothing is stored (default: 10)
  * @param {number} config.debounceMs - Debounce delay in milliseconds (default: 500)
  * @param {string} config.storageKey - Optional localStorage key for filters (only used when syncUrl=false)
  * @param {boolean} config.syncUrl - Whether to sync list state with URL query params (default: true)
@@ -42,6 +65,7 @@ export function useCrudList({
   endpoint,
   defaultSort = { column: "id", direction: "desc" },
   filterKeys = ["search"],
+  defaultPerPage = 10,
   debounceMs = 500,
   storageKey = null,
   syncUrl = true,
@@ -92,6 +116,7 @@ export function useCrudList({
   const [page, setPage] = useState(() =>
     syncUrl ? readIntParam("page", 1) : 1,
   );
+  const [perPage, setPerPage] = useState(() => getStoredPerPage(defaultPerPage));
   const [sortBy, setSortBy] = useState(() =>
     syncUrl ? readParam("sort_by", defaultSort.column) : defaultSort.column,
   );
@@ -166,7 +191,7 @@ export function useCrudList({
   // Clear selection when data changes
   useEffect(() => {
     clearSelection();
-  }, [page, debouncedFilters, sortBy, sortDir, clearSelection]);
+  }, [page, perPage, debouncedFilters, sortBy, sortDir, clearSelection]);
 
   // Fetch items
   const fetchItems = useCallback(
@@ -175,6 +200,7 @@ export function useCrudList({
 
       const params = {
         page,
+        perPage,
         sort_by: sortBy,
         sort_dir: sortDir,
         ...Object.entries(debouncedFilters).reduce((acc, [key, value]) => {
@@ -195,7 +221,7 @@ export function useCrudList({
           if (!silent) setLoading(false);
         });
     },
-    [endpoint, page, sortBy, sortDir, debouncedFilters],
+    [endpoint, page, perPage, sortBy, sortDir, debouncedFilters],
   );
 
   useEffect(() => {
@@ -228,6 +254,12 @@ export function useCrudList({
     setFilters(cleared);
     setPage(1);
   }, [filterKeys]);
+
+  const handlePerPageChange = useCallback((value) => {
+    storePerPage(value);
+    setPerPage(value);
+    setPage(1);
+  }, []);
 
   // Delete single item
   const deleteItem = useCallback(
@@ -338,6 +370,8 @@ export function useCrudList({
     // Pagination
     page,
     setPage,
+    perPage,
+    setPerPage: handlePerPageChange,
 
     // Sorting
     sortBy,

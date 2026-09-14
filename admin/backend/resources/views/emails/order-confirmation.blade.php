@@ -7,7 +7,7 @@
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #333;">Confirmación de Pedido</h2>
     
-    <p>Hola {{ $customer->name }},</p>
+    <p>Hola {{ $customer['name'] ?? '' }},</p>
     
     <p>Tu pedido #{{ $order->id }} ha sido confirmado.</p>
     

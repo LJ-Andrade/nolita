@@ -2,6 +2,38 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 103: Order Snapshot Independence
+
+1. [x] `docs/SPECS.md`: Document the order snapshot directive, item metadata keys, and customer snapshot sources.
+2. [x] `admin/backend/app/Models`: Add item snapshot builder/accessors and the order customer snapshot helper.
+3. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php` and `Api/Admin/OrderController.php`: Freeze item and customer snapshots at checkout and manual creation.
+4. [x] Backend readers: Use snapshots in order show, PDF data, list exports, dashboard, observer notifications, confirmation email, and stock shortage messages.
+5. [x] `admin/backend/database/migrations`: Backfill item metadata and customer snapshot fields for placed orders.
+6. [x] `admin/frontend/src/views/orders`: Read variant, SKU, code, and customer data from the snapshot.
+7. [x] `admin/backend/tests`: Cover snapshot independence after variant/product/customer changes and the backfill.
+8. [x] Validation: Run backend tests, PHP syntax checks, and admin frontend lint.
+
+## Phase 102: Order Stock Lifecycle
+
+1. [x] `docs/SPECS.md`: Document stock ownership, cancellation, reactivation, completion, deletion, and cart identification rules.
+2. [x] `admin/backend/database/migrations`: Add `orders.stock_deducted_at` and backfill checked-out active orders.
+3. [x] `admin/backend/app/Services/OrderStockService.php`: Transactional deduct/restore, status transitions, and eligible deletion.
+4. [x] `admin/backend/app/Http/Controllers/Api/Admin/OrderController.php`: Use the service for manual creation, status updates, delete, and bulk delete.
+5. [x] `admin/backend/app/Http/Controllers/Api/OrderController.php`: Mark checkout deductions and restrict cart lookups to never-checked-out orders.
+6. [x] `admin/frontend/src/views/orders`: Show stock messages/errors on status change and send selected ids on bulk delete.
+7. [x] `admin/backend/tests`: Cover cancellation, idempotency, reactivation shortage, completion, deletion, and cart reuse.
+8. [x] Validation: Run backend tests, PHP syntax checks, and admin frontend lint.
+
+## Phase 101: Admin Pagination Controls
+
+1. [x] `docs/SPECS.md`: Document pagination controls, 10/20 rows per page, persistence, and the `perPage` contract.
+2. [x] `admin/backend/app/Http/Controllers/Api/Admin/OrderController.php`: Return `data` + `meta` so the orders list paginates.
+3. [x] Admin backend index controllers: Honor `perPage` in paginated CRUD endpoints.
+4. [x] `admin/frontend/src/components/crud-pagination.jsx`: Add the rows-per-page selector.
+5. [x] `admin/frontend/src/hooks/use-crud-list.js`: Track persisted `perPage`, reset to page 1 on change, and send it to VADMIN.
+6. [x] Admin list views: Wire rows-per-page into shared pagination and the orders list.
+7. [x] Validation: Run pagination tests and lint touched frontend files.
+
 ## Phase 100: Shared Availability Check on Add and Cart Checkout
 
 1. [x] `docs/SPECS.md`: Document `POST /api/checkout/validate`, the shared availability method, and the storefront pre-checks.

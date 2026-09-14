@@ -43,15 +43,15 @@ final class OrdersExport implements FromQuery, ShouldAutoSize, WithHeadings, Wit
     public function map($order): array
     {
         /** @var Order $order */
-        $shippingAddress = is_array($order->shipping_address) ? $order->shipping_address : [];
+        $customer = $order->customerSnapshot();
 
         return [
             $order->id,
             $order->created_at?->format('Y-m-d H:i:s'),
             $order->status,
-            $order->customer?->name ?? $shippingAddress['name'] ?? '',
-            $order->customer?->email ?? $shippingAddress['email'] ?? '',
-            $order->customer?->phone ?? $shippingAddress['phone'] ?? '',
+            $customer['name'] ?? '',
+            $customer['email'] ?? '',
+            $customer['phone'] ?? '',
             $order->payment_method ?? '',
             $order->coupon_code ?? '',
             (float) ($order->coupon_discount_amount ?? 0),

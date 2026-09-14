@@ -68,14 +68,14 @@
         <tbody>
             @forelse($orders as $order)
                 @php
-                    $shippingAddress = is_array($order->shipping_address) ? $order->shipping_address : [];
+                    $customerSnapshot = $order->customerSnapshot();
                 @endphp
                 <tr>
                     <td>#{{ $order->id }}</td>
                     <td>{{ $order->created_at?->format('Y-m-d') }}</td>
                     <td>{{ $order->status }}</td>
-                    <td>{{ $order->customer?->name ?? ($shippingAddress['name'] ?? '') }}</td>
-                    <td>{{ $order->customer?->email ?? ($shippingAddress['email'] ?? '') }}</td>
+                    <td>{{ $customerSnapshot['name'] ?? '' }}</td>
+                    <td>{{ $customerSnapshot['email'] ?? '' }}</td>
                     <td class="numeric">{{ $order->items_count }}</td>
                     <td class="numeric">{{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}</td>
                 </tr>

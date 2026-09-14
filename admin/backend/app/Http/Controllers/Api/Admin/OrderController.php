@@ -7,9 +7,11 @@ use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\DeliveryMethod;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\OrderStockService;
 use App\Support\Exports\OrderExportQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,8 +23,20 @@ class OrderController extends Controller
     {
         $query = OrderExportQuery::fromRequest($request);
 
-        $perPage = $request->input('perPage', 10);
-        return response()->json($query->paginate($perPage));
+        $perPage = min(max((int) $request->input('perPage', 10), 1), 100);
+        $orders = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $orders->items(),
+            'meta' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+                'from' => $orders->firstItem(),
+                'to' => $orders->lastItem(),
+            ],
+        ]);
     }
 
     public function options()
@@ -88,16 +102,11 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        return response()->json($order->load([
-            'customer',
-            'items.product',
-            'items.variant.product',
-            'items.variant.color',
-            'items.variant.size',
-        ]));
+        // Items are served from their frozen snapshot, never from live variants.
+        return response()->json($order->load(['customer', 'items']));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, OrderStockService $stock)
     {
         $validated = $request->validate([
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
@@ -166,24 +175,16 @@ class OrderController extends Controller
                 $pricedLines,
                 $subtotal,
                 $couponDiscountAmount,
-                $appliedCouponCode
+                $appliedCouponCode,
+                $stock
             ): Order {
-                if ($validated['status'] === 'completed') {
-                    foreach ($pricedLines as $line) {
-                        $variant = ProductVariant::whereKey($line['variant_id'])->lockForUpdate()->firstOrFail();
-                        if ($variant->stock < $line['quantity']) {
-                            throw new \RuntimeException("No hay stock suficiente para {$line['product_name']}.");
-                        }
-                        $variant->decrement('stock', $line['quantity']);
-                    }
-                }
-
                 $customerData = [
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                     'phone' => $validated['phone'] ?? null,
                     'whatsapp' => $validated['whatsapp'] ?? null,
                     'cuit' => $validated['cuit'] ?? null,
+                    'dni' => $customer->dni,
                     'address' => $validated['address'] ?? null,
                     'postal_code' => $validated['postal_code'] ?? null,
                     'province_id' => $validated['province_id'] ?? $customer->province_id,
@@ -228,17 +229,16 @@ class OrderController extends Controller
                         'quantity' => $line['quantity'],
                         'unit_price' => $line['unit_price'],
                         'subtotal' => $line['subtotal'],
-                        'metadata' => [
-                            'product_code' => $line['product_code'],
-                        ],
+                        'metadata' => $line['snapshot'],
                     ]);
                 }
 
-                return $order->fresh([
-                    'customer',
-                    'items.variant.color',
-                    'items.variant.size',
-                ]);
+                // Only completed manual orders take stock at creation.
+                if ($validated['status'] === Order::STATUS_COMPLETED) {
+                    $stock->deduct($order);
+                }
+
+                return $order->fresh(['customer', 'items']);
             });
         } catch (\RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
@@ -247,33 +247,53 @@ class OrderController extends Controller
         return response()->json($order, 201);
     }
 
-    public function update(Request $request, Order $order)
+    public function update(Request $request, Order $order, OrderStockService $stock)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'sometimes|string|in:pending,processing,completed,cancelled',
             'payment_status' => 'sometimes|string|in:unpaid,processing,paid',
         ]);
 
-        $order->update($request->only('status', 'payment_status'));
+        $message = 'Pedido actualizado correctamente.';
+        $stockAction = null;
 
-        return response()->json($order);
+        if (array_key_exists('status', $validated)) {
+            $result = $stock->transitionStatus($order, $validated['status']);
+            $order = $result['order'];
+            $message = $result['message'];
+            $stockAction = $result['stock_action'];
+        }
+
+        // Payment status never moves stock.
+        if (array_key_exists('payment_status', $validated)) {
+            $order->update(['payment_status' => $validated['payment_status']]);
+        }
+
+        return response()->json(array_merge($order->toArray(), [
+            'message' => $message,
+            'stock_action' => $stockAction,
+        ]));
     }
 
-    public function bulkDelete(Request $request)
+    public function bulkDelete(Request $request, OrderStockService $stock)
     {
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:orders,id',
         ]);
 
-        Order::whereIn('id', $request->ids)->delete();
+        $deletedIds = $stock->deleteOrders($request->ids);
 
-        return response()->json(['message' => 'Orders deleted successfully']);
+        return response()->json([
+            'message' => 'Orders deleted successfully',
+            'deleted_ids' => $deletedIds,
+        ]);
     }
 
-    public function destroy(Order $order)
+    public function destroy(Order $order, OrderStockService $stock)
     {
-        $order->delete();
+        $stock->deleteOrders([$order->id]);
+
         return response()->json(['message' => 'Order deleted successfully']);
     }
 
@@ -288,7 +308,7 @@ class OrderController extends Controller
             ->values();
 
         $variants = ProductVariant::query()
-            ->with('product')
+            ->with(['product', 'color', 'size'])
             ->whereIn('id', $groupedLines->pluck('variant_id'))
             ->get()
             ->keyBy('id');
@@ -307,6 +327,7 @@ class OrderController extends Controller
                     'product_id' => (int) $variant->product_id,
                     'product_name' => $variant->product->name,
                     'product_code' => $variant->product->code,
+                    'snapshot' => OrderItem::snapshotFromVariant($variant),
                     'quantity' => (int) $line['quantity'],
                     'unit_price' => $unitPrice,
                     'subtotal' => round($unitPrice * (int) $line['quantity'], 2),
