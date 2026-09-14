@@ -23,11 +23,7 @@ export default async function Footer() {
     COMPANY_NAME ||
     SITE_NAME ||
     "Nolita";
-  const developerLabel =
-    getSiteValue(businessInfo, [
-      "footer_developer_label",
-      "business_developer_label",
-    ]) || "Diseño & Desarrollo por Studio Vimana";
+  const developerLabel = "Desarrollado por";
   const developerUrl =
     getSiteValue(businessInfo, [
       "footer_developer_url",
@@ -112,9 +108,17 @@ export default async function Footer() {
             href={developerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-black"
+            className="flex items-end gap-2.5 text-xs font-medium leading-none text-neutral-600 transition-colors hover:text-black"
           >
-            {developerLabel}
+            <span>{developerLabel}</span>
+            <Image
+              src="/logo-vimana-dark.svg"
+              alt="Studio Vimana"
+              width={94}
+              height={26}
+              unoptimized
+              className="h-[26px] w-auto"
+            />
           </a>
         </div>
       </div>

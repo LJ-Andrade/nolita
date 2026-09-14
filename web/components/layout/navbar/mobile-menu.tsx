@@ -3,7 +3,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import {
   ArrowLeftOnRectangleIcon,
-  Bars3Icon,
   HeartIcon,
   Squares2X2Icon,
   UserCircleIcon,
@@ -18,7 +17,6 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
-  const openMobileMenu = () => setIsOpen(true);
   const closeMobileMenu = () => setIsOpen(false);
 
   useEffect(() => {
@@ -37,13 +35,6 @@ export default function MobileMenu({ menu, customer }: { menu: any[]; customer: 
 
   return (
     <>
-      <button
-        onClick={openMobileMenu}
-        aria-label="Open mobile menu"
-        className="flex h-10 w-10 items-center justify-center text-black transition-colors hover:bg-neutral-50 md:hidden"
-      >
-        <Bars3Icon className="h-5 w-5" />
-      </button>
       <Transition show={isOpen}>
         <Dialog onClose={closeMobileMenu} className="relative z-50">
           <Transition.Child

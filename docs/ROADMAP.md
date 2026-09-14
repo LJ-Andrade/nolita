@@ -86,3 +86,7 @@
 ### Planned Enhancements
 - [ ] Add coupon bulk delete endpoint and advanced filtering if the module expands
 - [ ] Add stock alerts when variants go below `min_stock`
+
+### Technical Debt
+- [ ] Generate `web/lib/vadmin/types.ts` from an OpenAPI spec instead of hand-mirroring Laravel API Resources. `types.ts` still carries Shopify Storefront API naming (`handle`, `availableForSale`, `priceRange`) left over from before the move to VADMIN, and nothing catches drift when a Resource shape changes on the backend. Expose an OpenAPI spec from `admin/backend` (e.g. `dedoc/scramble`) and generate types with `openapi-typescript` as a build step.
+- [ ] Migrate `admin/frontend` from `.jsx` to `.tsx` incrementally. 27k+ lines with no type coverage; Vite supports mixed `.jsx`/`.tsx` so this can happen file-by-file alongside normal feature work rather than as a dedicated rewrite.
