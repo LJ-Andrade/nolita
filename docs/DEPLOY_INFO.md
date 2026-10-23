@@ -9,9 +9,9 @@
            │              │              │
       /vadmin/      /api/*          / (Next.js)
            │              │              │
-           ▼              ▼              ▼
-   admin/frontend/   localhost:8000  localhost:3002
-      (static)     (Laravel API)   (Next.js)
+            ▼              ▼              ▼
+    admin/frontend/   localhost:8000  localhost:3001
+       (static)     (Laravel API)   (Next.js)
                           │
                           ▼
                     MySQL (nolita)
@@ -23,7 +23,7 @@
 |------|---------|------|
 | 443 | Nginx (HTTPS) | Main entry point |
 | 8000 | Laravel API | admin/backend/public |
-| 3002 | Next.js | web/ |
+| 3001 | Next.js | web/ |
 
 ## Domains
 
@@ -38,7 +38,7 @@
 Routes:
 - `/vadmin/*` → Static files from `admin/frontend/dist`
 - `/api/*` → Proxy to Laravel on port 8000
-- `/*` → Proxy to Next.js on port 3002
+- `/*` → Proxy to Next.js on port 3001
 
 ### Server 8000 - Laravel Backend (Nginx/PHP-FPM)
 
@@ -110,8 +110,10 @@ If the PM2 app has not been created yet:
 
 ```bash
 cd /home/nolita/htdocs/nolita.com.ar/nolita/web
-pm2 start npm --name "nolita-web" -- run start -- -p 3002
+PORT=3001 pm2 start npm --name "nolita-web" -- run start
 ```
+
+PM2 auto-starts on reboot through the enabled systemd unit `pm2-nolita` (created with `pm2 startup systemd -u nolita --hp /home/nolita`, run once with root on 2026-10-17). The unit runs `pm2 resurrect`, so keep `pm2 save` current after adding or changing PM2 apps so they survive a reboot.
 
 ## Admin Frontend
 
@@ -203,7 +205,7 @@ Frontend Sentry DSN changes require rebuilding `admin/frontend` and `web`; backe
 Because Nginx proxies public `/api/*` requests to Laravel, VADMIN should call the Next.js revalidation route directly through the local PM2 port:
 
 ```bash
-NEXTJS_REVALIDATE_WEBHOOK_URL=http://127.0.0.1:3002/api/revalidate
+NEXTJS_REVALIDATE_WEBHOOK_URL=http://127.0.0.1:3001/api/revalidate
 NEXTJS_REVALIDATE_TOKEN=<same-shared-secret-as-web>
 ```
 
@@ -251,7 +253,7 @@ chmod -R 755 storage bootstrap/cache public
 
 ## Notes
 
-- Ports 3000 and 3001 are occupied by other services (user studiovimana).
-- Next.js uses port 3002.
+- Ports 3000 (studiovimana), 3002 (soyplanb), and 3003 (moubix) are occupied by other users on this shared server.
+- Next.js uses port 3001.
 - Laravel uses port 8000.
 - All technical assets (code, builds) are owned by the `nolita` user.
