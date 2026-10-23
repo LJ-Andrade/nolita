@@ -2,6 +2,12 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Phase 105: PHP 8.5 Dependency Compatibility
+
+1. [x] `admin/backend/composer.json`: Raise the backend PHP minimum to 8.3 and Laravel Excel to 4.x for its PHP 8.5-compatible PhpSpreadsheet 5.x dependency; pin Laravel Permission to 8.x.
+2. [x] `admin/backend/composer.lock`: Update backend dependencies and security fixes against PHP 8.5.
+3. [x] Validation: Composer validation and PHP 8.5.12 platform checks pass, all 18 backend tests pass on PHP 8.5.12, XLSX export smoke test passes, and Composer audit reports no advisories.
+
 ## Phase 104: Customer Purchase Email
 
 1. [x] `docs/SPECS.md`: Document trigger, recipient, content, configuration, and preview command.

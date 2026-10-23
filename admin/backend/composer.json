@@ -6,16 +6,16 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "maatwebsite/excel": "^3.1",
+        "maatwebsite/excel": "^4.0",
         "sentry/sentry-laravel": "^4.25",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-medialibrary": "^11.0",
-        "spatie/laravel-permission": "*"
+        "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
