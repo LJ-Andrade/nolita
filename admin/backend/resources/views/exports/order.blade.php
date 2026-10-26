@@ -317,14 +317,18 @@
             <td>{{ $label('subtotal') }}</td>
             <td class="numeric">{{ $money($totals['subtotal']) }}</td>
         </tr>
-        <tr>
-            <td>{{ $label('delivery_fee') }}</td>
-            <td class="numeric">{{ $money($totals['delivery_fee']) }}</td>
-        </tr>
-        <tr>
-            <td>{{ $label('payment_fee') }}</td>
-            <td class="numeric">{{ $money($totals['payment_fee']) }}</td>
-        </tr>
+        @if((float) $totals['delivery_fee'] != 0)
+            <tr>
+                <td>{{ $label('delivery_fee') }}</td>
+                <td class="numeric">{{ $money($totals['delivery_fee']) }}</td>
+            </tr>
+        @endif
+        @if((float) $totals['payment_fee'] != 0)
+            <tr>
+                <td>{{ $label('payment_fee') }}</td>
+                <td class="numeric">{{ $money($totals['payment_fee']) }}</td>
+            </tr>
+        @endif
         @if($order['coupon_code'] || $totals['discount'] > 0)
             <tr>
                 <td>{{ $label('coupon') }} {{ $plain($order['coupon_code']) }}</td>
