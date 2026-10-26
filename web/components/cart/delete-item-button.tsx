@@ -11,11 +11,13 @@ export function DeleteItemButton({
   item,
   optimisticUpdate,
   onRemoveStart,
+  onRemoveEnd,
   tone = "dark",
 }: {
   item: CartItem;
   optimisticUpdate: any;
   onRemoveStart?: (merchandiseId: string) => void;
+  onRemoveEnd?: (merchandiseId: string) => void;
   tone?: "dark" | "light" | "checkout";
 }) {
   const [isPending, startTransition] = useTransition();
@@ -29,6 +31,7 @@ export function DeleteItemButton({
         toast.success(`${itemName} eliminado`);
         window.setTimeout(() => {
           optimisticUpdate(merchandiseId, "delete");
+          onRemoveEnd?.(merchandiseId);
         }, 260);
         return;
       }
@@ -41,6 +44,7 @@ export function DeleteItemButton({
         toast.success(`${itemName} eliminado`);
         window.setTimeout(() => {
           optimisticUpdate(merchandiseId, "delete");
+          onRemoveEnd?.(merchandiseId);
         }, 260);
       }
     });

@@ -545,6 +545,7 @@ The checkout backend must recalculate item `unit_price` and `subtotal` from curr
 8. **Summary UI**:
    - Shows detailed item options (Size, Color).
    - Dynamically loads the specific color image if the selected variant has a color match.
+   - Product detail options with exactly one value (including color and size) are selected automatically when no explicit URL selection exists. Options with multiple values require customer selection. The selector and add-to-cart resolution use the same defaults; stock restrictions still apply.
    - Allows removing items directly from the summary.
    - Redirects to the home page when the cart becomes empty while the user is on checkout, whether the last item is removed from the checkout summary or the cart sidebar.
 

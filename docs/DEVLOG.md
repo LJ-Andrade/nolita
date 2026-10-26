@@ -2,6 +2,16 @@
 
 This document tracks execution steps. One task per logical unit.
 
+## Cart Item Re-add Visibility
+
+1. [x] Clear removal animation state when deletion finishes in the cart sidebar and checkout summary.
+2. [x] Validate TypeScript, diff whitespace, and remove/re-add animation lifecycle for guest and persisted items with a focused component harness. Browser verification remains manual.
+
+## Product Single-Value Option Selection
+
+1. [x] Share default selection for product options with exactly one value across the selector and add-to-cart resolution.
+2. [x] Validate TypeScript and six focused selection scenarios; check formatting of modified TypeScript files.
+
 ## Phase 105: PHP 8.5 Dependency Compatibility
 
 1. [x] `admin/backend/composer.json`: Raise the backend PHP minimum to 8.3 and Laravel Excel to 4.x for its PHP 8.5-compatible PhpSpreadsheet 5.x dependency; pin Laravel Permission to 8.x.

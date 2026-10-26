@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { COLOR_MAP } from "lib/constants";
+import { getProductOptionParams } from "lib/product-options";
 import { ProductOption, ProductVariant } from "lib/vadmin/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ export function VariantSelector({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedOptions = getProductOptionParams(options, searchParams);
   const hasNoOptionsOrJustOneOption =
     !options.length ||
     (options.length === 1 && options[0]?.values.length === 1);
@@ -50,7 +52,7 @@ export function VariantSelector({
       return;
     }
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(selectedOptions.toString());
     params.set(name, value);
     router.replace(`?${params.toString()}`, { scroll: false });
   };
@@ -58,7 +60,7 @@ export function VariantSelector({
   return options.map((option) => {
     const optionNameLowerCase = option.name.toLowerCase();
     const isColor = optionNameLowerCase === "color";
-    const selectedValue = searchParams.get(optionNameLowerCase);
+    const selectedValue = selectedOptions.get(optionNameLowerCase);
 
     return (
       <div key={option.id} className={isColor ? "mb-7" : "mb-5"}>
@@ -78,7 +80,9 @@ export function VariantSelector({
           >
             {option.values.map((value, index) => {
               const optionParams: Record<string, string> = {};
-              searchParams.forEach((v, k) => (optionParams[k] = v));
+              selectedOptions.forEach(
+                (value, key) => (optionParams[key] = value),
+              );
               optionParams[optionNameLowerCase] = value;
 
               const filtered = Object.entries(optionParams).filter(

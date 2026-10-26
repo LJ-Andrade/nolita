@@ -5,6 +5,7 @@ import clsx from "clsx";
 import LoadingDots from "components/loading-dots";
 import { usePriceMode } from "components/price-mode/price-mode-context";
 import { isProductPurchasableInMode, priceVariantForMode } from "lib/pricing";
+import { getProductOptionParams } from "lib/product-options";
 import { Product, ProductVariant } from "lib/vadmin/types";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -127,6 +128,7 @@ export function AddToCart({ product }: { product: Product }) {
   const { cart, addCartItem, updateCartItem } = useCart();
   const { priceMode } = usePriceMode();
   const searchParams = useSearchParams();
+  const selectedOptions = getProductOptionParams(product.options, searchParams);
   const [quantity, setQuantity] = useState<number>(1);
   const [isPending, startTransition] = useTransition();
 
@@ -138,7 +140,7 @@ export function AddToCart({ product }: { product: Product }) {
     candidate.selectedOptions.every(
       (option) =>
         option.value.toLowerCase() ===
-        searchParams.get(option.name.toLowerCase())?.toLowerCase(),
+        selectedOptions.get(option.name.toLowerCase())?.toLowerCase(),
     ),
   );
 

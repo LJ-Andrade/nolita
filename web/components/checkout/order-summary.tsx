@@ -181,6 +181,13 @@ export default function OrderSummary({
                     item={item}
                     optimisticUpdate={updateCartItem}
                     tone="checkout"
+                    onRemoveEnd={(id) =>
+                      setRemovingItems((current) => {
+                        const remaining = new Set(current);
+                        remaining.delete(id);
+                        return remaining;
+                      })
+                    }
                     onRemoveStart={(id) =>
                       setRemovingItems((current) => new Set(current).add(id))
                     }

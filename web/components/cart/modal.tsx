@@ -316,6 +316,13 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                                   item={item}
                                   optimisticUpdate={updateCartItem}
                                   tone="dark"
+                                  onRemoveEnd={(id) =>
+                                    setRemovingItems((current) => {
+                                      const remaining = new Set(current);
+                                      remaining.delete(id);
+                                      return remaining;
+                                    })
+                                  }
                                   onRemoveStart={(id) =>
                                     setRemovingItems((cur) =>
                                       new Set(cur).add(id),
