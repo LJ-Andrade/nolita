@@ -1,0 +1,6 @@
+# Shell scripts run with bash on Linux and in Git Bash: keep LF line endings
+# even when core.autocrlf is enabled, or bash fails on the carriage returns.
+*.sh text eol=lf
+fulldeploy text eol=lf
+backup-production text eol=lf
+.backup-production.conf.example text eol=lf
