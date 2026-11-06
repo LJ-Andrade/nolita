@@ -24,6 +24,7 @@ db.json
 **/.env.backup
 !**/.env.example
 admin/frontend/.env
+.backup-production.conf
 
 # Leftover debug / key dumps (never commit)
 admin/backend/key.txt

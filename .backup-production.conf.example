@@ -1,0 +1,32 @@
+# Config for ./backup-production. Copy to .backup-production.conf (gitignored).
+# Paths in FILE_PATHS and ENV_PATHS are relative to the project root, and the
+# same on the server and locally. Database credentials are never stored here:
+# they are read from the remote and local Laravel .env files at run time.
+
+# PROJECT_NAME prefixes the zip names. BACKUP_DIR is absolute or relative to
+# the project root; the default "../backups" keeps backups outside the repo.
+PROJECT_NAME="Nolita"
+BACKUP_DIR="../backups"
+
+# SSH target: a Host alias from ~/.ssh/config, or user@host.
+SSH_HOST="NolitaProduccion"
+SSH_PORT=""          # Optional, defaults to 22 or the ssh config value.
+SSH_KEY=""           # Optional private key path, e.g. "C:/Users/me/.ssh/id_ed25519".
+
+# Project root on the server, and the Laravel app inside it.
+REMOTE_ROOT="/home/nolita/htdocs/nolita.com.ar/nolita"
+BACKEND_DIR="admin/backend"
+
+# Untracked data to back up and restore (uploads, product images, ...).
+FILE_PATHS="admin/backend/storage/app/public admin/backend/storage/app/private"
+
+# Production .env files: included in the zip, never restored locally.
+ENV_PATHS="admin/backend/.env admin/frontend/.env.production web/.env.production web/.env.local"
+
+# SQL run on the local database after loading production data. Empties the
+# queue so a local worker never sends production emails to real customers.
+POST_RESTORE_SQL="TRUNCATE TABLE jobs;"
+
+# Optional local tool overrides (auto-detected when empty).
+LOCAL_MYSQL_BIN=""   # Folder with mysql and mysqldump, e.g. "C:/Program Files/MySQL/MySQL Server 8.4/bin".
+LOCAL_PHP=""         # php executable, e.g. "C:/Users/me/.config/herd/bin/php.bat".

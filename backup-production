@@ -1,0 +1,481 @@
+#!/usr/bin/env bash
+#
+# Production backup tool for Laravel + MySQL projects.
+#
+# Connects to the production server over SSH and pulls a full backup: the
+# MySQL database, the files that are not tracked by git (uploads, product
+# images) and the production .env files. Then, depending on the chosen mode:
+#
+#   folder  Save everything as a single zip in $BACKUP_DIR (default: a
+#           "backups" folder next to the project, outside the repository).
+#   local   Also save the zip, then load the production data into this local
+#           project: replace the local database and the uploaded files. The
+#           local .env files are never touched. A safety backup of the local
+#           database and files is saved first.
+#
+# Usage: ./backup-production [options]
+#
+#   --mode folder|local  Skip the interactive menu.
+#   --yes                Do not ask for confirmation before replacing local data.
+#   --config FILE        Use another config file (default: .backup-production.conf).
+#
+# Settings live in .backup-production.conf next to this script (gitignored).
+# Copy .backup-production.conf.example to start. To reuse the tool in another
+# project, copy this script and the example config, then adjust the config.
+#
+# Requirements: bash, ssh, tar, gzip. The local mode also needs the mysql and
+# mysqldump clients (PATH, LOCAL_MYSQL_BIN, or an auto-detected DBngin install)
+# and php (PATH or Herd's php.bat).
+#
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$ROOT_DIR/.backup-production.conf"
+MODE=""
+ASSUME_YES=0
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+WORK_DIR=""
+SSH_ARGS=()
+MYSQL_BIN=""
+MYSQLDUMP_BIN=""
+PHP_BIN=""
+
+log() { printf '\n\033[1;36m==> %s\033[0m\n' "$1"; }
+info() { printf '    %s\n' "$1"; }
+warn() { printf '\033[1;33m    %s\033[0m\n' "$1"; }
+fail() { printf '\n\033[1;31mBackup failed: %s\033[0m\n' "$1" >&2; exit 1; }
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "missing command: $1"
+}
+
+is_windows() {
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Converts "D:\Vimana\Backups" or "D:/Vimana/Backups" into a path bash can use.
+unix_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -u "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+# Native Windows programs (mysql.exe, tar.exe, php.bat) need Windows paths.
+native_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+cleanup() {
+  [ -n "$WORK_DIR" ] && rm -rf "$WORK_DIR"
+  return 0
+}
+trap cleanup EXIT
+
+load_config() {
+  [ -f "$CONFIG_FILE" ] || fail "missing $CONFIG_FILE. Copy .backup-production.conf.example and fill it in."
+
+  # shellcheck source=/dev/null
+  source "$CONFIG_FILE"
+
+  : "${PROJECT_NAME:?PROJECT_NAME is not set in the config}"
+  : "${SSH_HOST:?SSH_HOST is not set in the config}"
+  : "${REMOTE_ROOT:?REMOTE_ROOT is not set in the config}"
+  BACKEND_DIR="${BACKEND_DIR:-.}"
+  FILE_PATHS="${FILE_PATHS:-}"
+  ENV_PATHS="${ENV_PATHS:-}"
+  POST_RESTORE_SQL="${POST_RESTORE_SQL:-}"
+
+  SSH_ARGS=(-o ConnectTimeout=15)
+  if [ -n "${SSH_PORT:-}" ]; then SSH_ARGS+=(-p "$SSH_PORT"); fi
+  if [ -n "${SSH_KEY:-}" ]; then SSH_ARGS+=(-i "$(unix_path "$SSH_KEY")" -o IdentitiesOnly=yes); fi
+
+  # Relative paths are resolved from the project root. The default sits next to
+  # the repository, so backups never end up inside it.
+  BACKUP_DIR="$(unix_path "${BACKUP_DIR:-../backups}")"
+  case "$BACKUP_DIR" in
+    /*) ;;
+    *) BACKUP_DIR="$ROOT_DIR/$BACKUP_DIR" ;;
+  esac
+  mkdir -p "$BACKUP_DIR" || fail "could not create $BACKUP_DIR"
+  BACKUP_DIR="$(cd "$BACKUP_DIR" && pwd)"
+  SLUG="$(printf '%s' "$PROJECT_NAME" | tr '[:upper:] ' '[:lower:]-')"
+}
+
+choose_mode() {
+  [ -n "$MODE" ] && return 0
+
+  printf '\nProduction backup for %s (%s)\n\n' "$PROJECT_NAME" "$SSH_HOST"
+  printf '  1) Save a backup zip in %s\n' "$BACKUP_DIR"
+  printf '  2) Load production into this local project (also saves the zip)\n\n'
+
+  local answer
+  read -r -p 'Choose an option [1/2]: ' answer
+  case "$answer" in
+    1) MODE="folder" ;;
+    2) MODE="local" ;;
+    *) fail "invalid option: $answer" ;;
+  esac
+}
+
+confirm() {
+  [ "$ASSUME_YES" = "1" ] && return 0
+  local answer
+  read -r -p "$1 Type 'yes' to continue: " answer
+  [ "$answer" = "yes" ] || fail "cancelled. Nothing was changed."
+}
+
+run_remote() {
+  # Every argument is quoted for the remote shell, then the script comes on stdin.
+  local quoted="" arg
+  for arg in "$@"; do
+    quoted+=" $(printf '%q' "$arg")"
+  done
+  ssh "${SSH_ARGS[@]}" "$SSH_HOST" "bash -s --$quoted"
+}
+
+# --- Production download ------------------------------------------------------
+
+# Remote side: reads the resolved Laravel database config (handles quoting and a
+# cached config) and streams a gzipped, consistent dump to stdout.
+REMOTE_DUMP_SCRIPT='
+set -euo pipefail
+cd "$1"
+db_output="$(php -r "
+  require \"vendor/autoload.php\";
+  \$app = require \"bootstrap/app.php\";
+  \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+  \$c = config(\"database.connections.\".config(\"database.default\"));
+  foreach ([\$c[\"driver\"] ?? \"\", \$c[\"host\"] ?? \"127.0.0.1\", \$c[\"port\"] ?? \"3306\",
+            \$c[\"database\"] ?? \"\", \$c[\"username\"] ?? \"\", \$c[\"password\"] ?? \"\"] as \$v) {
+      echo \$v, PHP_EOL;
+  }
+")"
+mapfile -t db <<< "${db_output//$'\''\r'\''/}"
+[ "${db[0]:-}" = "mysql" ] || { echo "expected the mysql driver but found ${db[0]:-none}" >&2; exit 1; }
+defaults_file="$(mktemp)"
+trap "rm -f \"$defaults_file\"" EXIT
+chmod 600 "$defaults_file"
+printf "[client]\nuser=%s\npassword=%s\nhost=%s\nport=%s\n" "${db[4]:-}" "${db[5]:-}" "${db[1]:-}" "${db[2]:-}" > "$defaults_file"
+echo "${db[3]:-}" >&2
+mysqldump --defaults-extra-file="$defaults_file" \
+  --single-transaction --quick --routines --events --triggers \
+  --no-tablespaces --default-character-set=utf8mb4 "${db[3]}" | gzip
+'
+
+# Remote side: streams a tar.gz with the requested paths (missing ones are
+# skipped) plus a small file with the deployed git commit.
+REMOTE_FILES_SCRIPT='
+set -euo pipefail
+cd "$1"
+shift
+meta_dir="$(mktemp -d)"
+trap "rm -rf \"$meta_dir\"" EXIT
+git rev-parse HEAD > "$meta_dir/production-commit.txt" 2>/dev/null || echo unknown > "$meta_dir/production-commit.txt"
+existing=()
+for path in "$@"; do
+  if [ -e "$path" ]; then existing+=("$path"); else echo "skipped (not found): $path" >&2; fi
+done
+tar -czf - "${existing[@]}" -C "$meta_dir" production-commit.txt
+'
+
+download_production() {
+  local stage="$1"
+  mkdir -p "$stage/files"
+
+  log "Dumping the production database"
+  local db_name_file="$WORK_DIR/remote-db-name"
+  if ! run_remote "$REMOTE_ROOT/$BACKEND_DIR" < <(printf '%s' "$REMOTE_DUMP_SCRIPT") \
+      > "$stage/database.sql.gz" 2> "$db_name_file"; then
+    cat "$db_name_file" >&2
+    fail "the remote database dump failed"
+  fi
+  verify_dump "$stage/database.sql.gz"
+  PROD_DB_NAME="$(head -n 1 "$db_name_file")"
+
+  log "Downloading files and .env files"
+  local paths=()
+  read -r -a paths <<< "$FILE_PATHS $ENV_PATHS"
+  if ! run_remote "$REMOTE_ROOT" "${paths[@]}" < <(printf '%s' "$REMOTE_FILES_SCRIPT") \
+      > "$WORK_DIR/files.tar.gz"; then
+    fail "the remote file archive failed"
+  fi
+  tar -xzf "$WORK_DIR/files.tar.gz" -C "$stage/files"
+  rm -f "$WORK_DIR/files.tar.gz"
+  mv "$stage/files/production-commit.txt" "$WORK_DIR/production-commit.txt"
+  info "Files: $(du -sh "$stage/files" | cut -f1)"
+}
+
+# A truncated dump still gunzips cleanly, so check the mysqldump trailer too.
+verify_dump() {
+  [ -s "$1" ] || fail "the dump is empty"
+  gzip -t "$1" 2>/dev/null || fail "the dump is corrupt"
+  gzip -dc "$1" | tail -n 5 | grep -q 'Dump completed' || fail "the dump is truncated: no completion marker"
+  info "Database: $(du -h "$1" | cut -f1), $(gzip -dc "$1" | grep -c '^CREATE TABLE' || true) tables"
+}
+
+write_manifest() {
+  local stage="$1" source="$2" database="$3" commit="$4"
+  cat > "$stage/manifest.json" <<EOF
+{
+  "project": "$PROJECT_NAME",
+  "source": "$source",
+  "created_at": "$(date '+%Y-%m-%dT%H:%M:%S%z')",
+  "database": "$database",
+  "git_commit": "$commit",
+  "file_paths": "$FILE_PATHS",
+  "env_paths": "$ENV_PATHS"
+}
+EOF
+}
+
+# Zips the stage directory. Windows ships bsdtar (tar.exe) with zip support;
+# elsewhere use zip, or fall back to tar.gz when zip is not installed.
+package_stage() {
+  local stage="$1" name="$2" target
+
+  mkdir -p "$BACKUP_DIR"
+  if is_windows && [ -x /c/Windows/System32/tar.exe ]; then
+    target="$BACKUP_DIR/$name.zip"
+    /c/Windows/System32/tar.exe -a -c -f "$(native_path "$target")" -C "$(native_path "$stage")" . \
+      || fail "could not create $target"
+  elif command -v zip >/dev/null 2>&1; then
+    target="$BACKUP_DIR/$name.zip"
+    (cd "$stage" && zip -qr "$target" .) || fail "could not create $target"
+  else
+    target="$BACKUP_DIR/$name.tar.gz"
+    tar -czf "$target" -C "$stage" . || fail "could not create $target"
+  fi
+
+  info "Saved $(native_path "$target") ($(du -h "$target" | cut -f1))"
+}
+
+# --- Local project -------------------------------------------------------------
+
+find_local_tools() {
+  local candidates=() dir
+
+  if [ -n "${LOCAL_MYSQL_BIN:-}" ]; then candidates+=("$(unix_path "$LOCAL_MYSQL_BIN")"); fi
+  if command -v mysql >/dev/null 2>&1; then
+    candidates+=("$(dirname "$(command -v mysql)")")
+  fi
+  if [ -n "${LOCALAPPDATA:-}" ]; then
+    # DBngin installs one folder per version; prefer the newest.
+    while IFS= read -r dir; do
+      candidates+=("$dir")
+    done < <(ls -d "$(unix_path "$LOCALAPPDATA")"/com.tinyapp.DBngin/Binaries/mysql/*/bin 2>/dev/null | sort -rV)
+  fi
+
+  for dir in "${candidates[@]}"; do
+    if [ -x "$dir/mysql" ] || [ -x "$dir/mysql.exe" ]; then
+      MYSQL_BIN="$dir/mysql"
+      MYSQLDUMP_BIN="$dir/mysqldump"
+      break
+    fi
+  done
+  [ -n "$MYSQL_BIN" ] || fail "mysql client not found. Set LOCAL_MYSQL_BIN in the config."
+
+  if [ -n "${LOCAL_PHP:-}" ]; then
+    PHP_BIN="$(unix_path "$LOCAL_PHP")"
+  elif command -v php >/dev/null 2>&1; then
+    PHP_BIN="php"
+  elif command -v php.bat >/dev/null 2>&1; then
+    PHP_BIN="php.bat"
+  else
+    fail "php not found. Set LOCAL_PHP in the config."
+  fi
+
+  info "mysql: $MYSQL_BIN"
+  info "php: $PHP_BIN"
+}
+
+# Reads DB_* from the local backend .env (simple KEY=value lines).
+read_local_db_config() {
+  local env_file="$ROOT_DIR/$BACKEND_DIR/.env"
+  [ -f "$env_file" ] || fail "missing $env_file"
+
+  env_value() {
+    local value
+    value="$(grep -E "^$1=" "$env_file" | tail -n 1 | cut -d= -f2- | tr -d '\r' || true)"
+    value="${value%\"}"; value="${value#\"}"
+    value="${value%\'}"; value="${value#\'}"
+    printf '%s' "${value:-$2}"
+  }
+
+  LOCAL_DB_DRIVER="$(env_value DB_CONNECTION mysql)"
+  LOCAL_DB_HOST="$(env_value DB_HOST 127.0.0.1)"
+  LOCAL_DB_PORT="$(env_value DB_PORT 3306)"
+  LOCAL_DB_NAME="$(env_value DB_DATABASE '')"
+  LOCAL_DB_USER="$(env_value DB_USERNAME root)"
+  LOCAL_DB_PASS="$(env_value DB_PASSWORD '')"
+
+  [ "$LOCAL_DB_DRIVER" = "mysql" ] || fail "local DB_CONNECTION is '$LOCAL_DB_DRIVER', expected mysql"
+  [ -n "$LOCAL_DB_NAME" ] || fail "local DB_DATABASE is empty"
+}
+
+# Credentials go in a private defaults file, never on the command line.
+write_local_defaults_file() {
+  LOCAL_DEFAULTS_FILE="$WORK_DIR/local-my.cnf"
+  printf '[client]\nuser=%s\npassword=%s\nhost=%s\nport=%s\n' \
+    "$LOCAL_DB_USER" "$LOCAL_DB_PASS" "$LOCAL_DB_HOST" "$LOCAL_DB_PORT" > "$LOCAL_DEFAULTS_FILE"
+  chmod 600 "$LOCAL_DEFAULTS_FILE"
+}
+
+local_mysql() {
+  "$MYSQL_BIN" --defaults-extra-file="$(native_path "$LOCAL_DEFAULTS_FILE")" "$@"
+}
+
+local_database_exists() {
+  [ -n "$(local_mysql -N -e "SHOW DATABASES LIKE '$1'")" ]
+}
+
+backup_local() {
+  local stage="$WORK_DIR/local"
+  mkdir -p "$stage/files"
+
+  log "Saving a safety backup of the local project"
+  if local_database_exists "$LOCAL_DB_NAME"; then
+    "$MYSQLDUMP_BIN" --defaults-extra-file="$(native_path "$LOCAL_DEFAULTS_FILE")" \
+      --single-transaction --quick --routines --events --triggers \
+      --no-tablespaces --default-character-set=utf8mb4 "$LOCAL_DB_NAME" | gzip > "$stage/database.sql.gz" \
+      || fail "the local database dump failed"
+    verify_dump "$stage/database.sql.gz"
+  else
+    warn "Local database $LOCAL_DB_NAME does not exist yet. Only files are saved."
+  fi
+
+  local path existing=()
+  for path in $FILE_PATHS; do
+    if [ -e "$ROOT_DIR/$path" ]; then existing+=("$path"); fi
+  done
+  if [ "${#existing[@]}" -gt 0 ]; then
+    tar -cf - -C "$ROOT_DIR" "${existing[@]}" | tar -xf - -C "$stage/files"
+  fi
+
+  write_manifest "$stage" "local" "$LOCAL_DB_NAME" "$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
+  package_stage "$stage" "$SLUG-local-before-restore-$TIMESTAMP"
+}
+
+# Imports a gzipped dump into a fresh database with the given name.
+import_database() {
+  local dump="$1" db_name="$2"
+
+  local_mysql -e "DROP DATABASE IF EXISTS \`$db_name\`; CREATE DATABASE \`$db_name\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" \
+    || fail "could not recreate the local database $db_name"
+  gzip -dc "$dump" | local_mysql --default-character-set=utf8mb4 "$db_name" \
+    || fail "the import into $db_name failed. Restore the safety backup if needed."
+  info "Imported $(local_mysql -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$db_name'") tables into $db_name"
+}
+
+# Replaces each local FILE_PATHS entry with the production copy. .env files are
+# never restored: the local project keeps its own configuration.
+restore_files() {
+  local stage="$1" path
+
+  for path in $FILE_PATHS; do
+    if [ -e "$stage/files/$path" ]; then
+      rm -rf "${ROOT_DIR:?}/$path"
+      mkdir -p "$(dirname "$ROOT_DIR/$path")"
+      cp -R "$stage/files/$path" "$ROOT_DIR/$path"
+      info "Restored $path"
+    else
+      warn "Not in the production backup, left as is: $path"
+    fi
+  done
+}
+
+artisan() {
+  (cd "$ROOT_DIR/$BACKEND_DIR" && "$PHP_BIN" artisan "$@")
+}
+
+restore_into_local() {
+  local stage="$1"
+
+  log "Loading production into the local project"
+  import_database "$stage/database.sql.gz" "$LOCAL_DB_NAME"
+
+  if [ -n "$POST_RESTORE_SQL" ]; then
+    local_mysql -e "$POST_RESTORE_SQL" "$LOCAL_DB_NAME" \
+      && info "Ran POST_RESTORE_SQL" \
+      || warn "POST_RESTORE_SQL failed: $POST_RESTORE_SQL"
+  fi
+
+  restore_files "$stage"
+
+  if [ -f "$ROOT_DIR/$BACKEND_DIR/artisan" ]; then
+    artisan storage:link >/dev/null 2>&1 || true
+    artisan optimize:clear >/dev/null || warn "php artisan optimize:clear failed"
+    info "Cleared Laravel caches"
+
+    if [ "$ASSUME_YES" = "0" ]; then
+      local answer
+      read -r -p 'Run local pending migrations now? [y/N]: ' answer
+      case "$answer" in
+        y|Y|yes) artisan migrate ;;
+      esac
+    fi
+  fi
+}
+
+# --- Entry point ---------------------------------------------------------------
+
+main() {
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --mode) MODE="${2:-}"; shift ;;
+      --yes) ASSUME_YES=1 ;;
+      --config) CONFIG_FILE="${2:-}"; shift ;;
+      -h|--help) sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+      *) fail "unknown option: $1" ;;
+    esac
+    shift
+  done
+  case "$MODE" in ""|folder|local) ;; *) fail "--mode must be folder or local" ;; esac
+
+  require_command ssh
+  require_command tar
+  require_command gzip
+  load_config
+  choose_mode
+
+  mkdir -p "$BACKUP_DIR" || fail "could not create $BACKUP_DIR"
+  WORK_DIR="$(mktemp -d "$BACKUP_DIR/.tmp-XXXXXX")"
+  local stage="$WORK_DIR/production"
+
+  # Check the local side before downloading, so a bad local setup fails fast.
+  if [ "$MODE" = "local" ]; then
+    log "Checking the local project"
+    find_local_tools
+    read_local_db_config
+    write_local_defaults_file
+    local_mysql -e "SELECT 1" >/dev/null || fail "cannot connect to the local MySQL at $LOCAL_DB_HOST:$LOCAL_DB_PORT"
+    info "Local database: $LOCAL_DB_NAME on $LOCAL_DB_HOST:$LOCAL_DB_PORT"
+    confirm "This replaces the local database '$LOCAL_DB_NAME' and these folders: $FILE_PATHS."
+  fi
+
+  download_production "$stage"
+  write_manifest "$stage" "$SSH_HOST:$REMOTE_ROOT" "$PROD_DB_NAME" "$(cat "$WORK_DIR/production-commit.txt")"
+
+  log "Packaging the production backup"
+  package_stage "$stage" "$SLUG-production-$TIMESTAMP"
+
+  if [ "$MODE" = "local" ]; then
+    backup_local
+    restore_into_local "$stage"
+  fi
+
+  log "Done"
+}
+
+# Only run when executed, so the functions can be sourced for testing.
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi
