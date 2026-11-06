@@ -132,6 +132,9 @@ cd /home/nolita/htdocs/nolita.com.ar/nolita
 - `APP_ENV=production`
 - `APP_DEBUG=false`
 - `APP_URL=https://nolita.com.ar`
+- `APP_NAME="<business name>"` (shown in email subjects and salutations; the default is `Laravel`)
+- `APP_FRONTEND_URL` (optional): public VADMIN panel URL used in password reset emails. Defaults to `APP_URL` + `/vadmin`.
+- `MAIL_MAILER`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`: must point to a real mailer in production (`log` only writes emails to `laravel.log`).
 
 ### Web Frontal (.env.production)
 - `NEXT_PUBLIC_VADMIN_API_URL=<public-vadmin-api-url>`
@@ -220,7 +223,7 @@ CLOUDFLARE_STOREFRONT_URL=https://nolita.com.ar
 CLOUDFLARE_PURGE_EVERYTHING=true
 ```
 
-VADMIN uses the same admin write revalidation flow to purge affected public storefront URLs from Cloudflare. Missing Cloudflare values or purge failures are logged but do not block admin saves.
+VADMIN uses the same admin write revalidation flow to purge affected public storefront URLs from Cloudflare. Missing Cloudflare values or purge failures are logged but do not block admin saves. Purges run after the response is sent, use a 5s connect / 10s request timeout, and retry up to 3 times on network errors, `429`, or `5xx` responses.
 
 `CLOUDFLARE_PURGE_EVERYTHING=true` is the production default for this project because catalog prices can be cached through query-string variants and price-mode responses. Set it to `false` only if URL-only purges are verified to cover the live Cloudflare cache rules.
 

@@ -20,9 +20,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
+
+        // This backend is API-only (no web login route): never redirect guests.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
+
+        // API requests always get JSON errors (401 instead of a redirect to a missing login route).
+        $exceptions->shouldRenderJsonWhen(
+            fn ($request, \Throwable $e) => $request->is('api/*') || $request->expectsJson()
+        );
 
         $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
 

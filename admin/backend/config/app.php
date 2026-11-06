@@ -136,4 +136,16 @@ return [
     'revalidate_webhook_url' => env('NEXTJS_REVALIDATE_WEBHOOK_URL'),
     'revalidate_token' => env('NEXTJS_REVALIDATE_TOKEN'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | VADMIN Panel URL
+    |--------------------------------------------------------------------------
+    |
+    | Public base URL of the VADMIN React panel. Used to build links sent by
+    | email, such as password reset links. Defaults to APP_URL + /vadmin.
+    |
+    */
+
+    'admin_frontend_url' => rtrim((string) (env('APP_FRONTEND_URL') ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/vadmin'), '/'),
+
 ];

@@ -23,8 +23,10 @@ class AppServiceProvider extends ServiceProvider
         ProductCategory::observe(CategoryObserver::class);
 
         \Illuminate\Auth\Notifications\ResetPassword::createUrlUsing(function (User $user, string $token) {
-            $baseUrl = env('APP_FRONTEND_URL', 'http://localhost:5173/vadmin');
-            return $baseUrl . '/reset-password?token=' . $token . '&email=' . $user->email;
+            return config('app.admin_frontend_url') . '/reset-password?' . http_build_query([
+                'token' => $token,
+                'email' => $user->getEmailForPasswordReset(),
+            ]);
         });
     }
 }

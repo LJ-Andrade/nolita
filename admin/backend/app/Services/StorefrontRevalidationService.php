@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -16,6 +18,12 @@ class StorefrontRevalidationService
     public const NEWSLETTER = 'newsletter';
     private const EXTERNAL_REQUEST_TIMEOUT = 2;
     private const EXTERNAL_CONNECT_TIMEOUT = 1;
+    // Cloudflare runs after the response is sent (app()->terminating), so it can afford
+    // longer timeouts and retries without slowing down admin saves.
+    private const CLOUDFLARE_REQUEST_TIMEOUT = 10;
+    private const CLOUDFLARE_CONNECT_TIMEOUT = 5;
+    private const CLOUDFLARE_RETRY_TIMES = 3;
+    private const CLOUDFLARE_RETRY_SLEEP_MS = 1000;
 
     private const DEFAULT_PATHS_BY_TAG = [
         self::PRODUCTS => [
@@ -137,27 +145,13 @@ class StorefrontRevalidationService
 
         try {
             if ($purgeEverything) {
-                Http::connectTimeout(self::EXTERNAL_CONNECT_TIMEOUT)
-                    ->timeout(self::EXTERNAL_REQUEST_TIMEOUT)
-                    ->acceptJson()
-                    ->withToken($apiToken)
-                    ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", [
-                        'purge_everything' => true,
-                    ])
-                    ->throw();
+                $this->sendCloudflarePurge($zoneId, $apiToken, ['purge_everything' => true]);
 
                 return;
             }
 
             foreach (array_chunk($urls, 30) as $chunk) {
-                Http::connectTimeout(self::EXTERNAL_CONNECT_TIMEOUT)
-                    ->timeout(self::EXTERNAL_REQUEST_TIMEOUT)
-                    ->acceptJson()
-                    ->withToken($apiToken)
-                    ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", [
-                        'files' => $chunk,
-                    ])
-                    ->throw();
+                $this->sendCloudflarePurge($zoneId, $apiToken, ['files' => $chunk]);
             }
         } catch (Throwable $e) {
             Log::warning('Failed to purge Cloudflare storefront cache.', [
@@ -168,6 +162,24 @@ class StorefrontRevalidationService
                 'purge_everything' => $purgeEverything,
             ]);
         }
+    }
+
+    private function sendCloudflarePurge(string $zoneId, string $apiToken, array $payload): void
+    {
+        Http::connectTimeout(self::CLOUDFLARE_CONNECT_TIMEOUT)
+            ->timeout(self::CLOUDFLARE_REQUEST_TIMEOUT)
+            ->retry(
+                self::CLOUDFLARE_RETRY_TIMES,
+                self::CLOUDFLARE_RETRY_SLEEP_MS,
+                // Retry only transient failures (network, 429, 5xx); auth/config errors fail fast.
+                fn (Throwable $e) => $e instanceof ConnectionException
+                    || ($e instanceof RequestException
+                        && ($e->response->serverError() || $e->response->status() === 429)),
+            )
+            ->acceptJson()
+            ->withToken($apiToken)
+            ->post("https://api.cloudflare.com/client/v4/zones/{$zoneId}/purge_cache", $payload)
+            ->throw();
     }
 
     private function resolvePaths(array $tags, array $paths): array
