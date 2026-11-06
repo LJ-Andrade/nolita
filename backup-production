@@ -6,26 +6,115 @@
 # MySQL database, the files that are not tracked by git (uploads, product
 # images) and the production .env files. Then, depending on the chosen mode:
 #
-#   folder  Save everything as a single zip in $BACKUP_DIR (default: a
-#           "backups" folder next to the project, outside the repository).
-#   local   Also save the zip, then load the production data into this local
-#           project: replace the local database and the uploaded files. The
-#           local .env files are never touched. A safety backup of the local
-#           database and files is saved first.
+#   folder  (option 1) Save everything, uncompressed, in a new timestamped
+#           folder inside $BACKUP_DIR (default: a "backups" folder next to the
+#           project, outside the repository).
+#   local   (option 2) Also save that folder, then load the production data
+#           into this local project: replace the local database and the
+#           uploaded files. The local .env files are never touched. A safety
+#           backup of the local database and files is saved first.
 #
-# Usage: ./backup-production [options]
+# USAGE
 #
-#   --mode folder|local  Skip the interactive menu.
-#   --yes                Do not ask for confirmation before replacing local data.
-#   --config FILE        Use another config file (default: .backup-production.conf).
+#   ./backup-production                 Interactive menu (1 = folder, 2 = local).
+#   ./backup-production folder          Option 1 directly: save a backup folder.
+#   ./backup-production local           Option 2 directly: load production locally
+#                                       (still asks to type 'yes' before replacing).
+#   ./backup-production local --yes     Option 2 with no questions at all
+#                                       (no confirmation, no migrate prompt).
 #
-# Settings live in .backup-production.conf next to this script (gitignored).
-# Copy .backup-production.conf.example to start. To reuse the tool in another
-# project, copy this script and the example config, then adjust the config.
+#   On Windows, run the same commands from PowerShell or cmd as
+#   .\backup-production [...]: backup-production.cmd launches Git Bash.
 #
-# Requirements: bash, ssh, tar, gzip. The local mode also needs the mysql and
-# mysqldump clients (PATH, LOCAL_MYSQL_BIN, or an auto-detected DBngin install)
-# and php (PATH or Herd's php.bat).
+#   Options:
+#     folder|local         Mode, as a plain word (same as --mode).
+#     --mode folder|local  Skip the interactive menu.
+#     --yes                Do not ask for confirmation before replacing local data.
+#     --config FILE        Use another config file (default: .backup-production.conf).
+#     -h, --help           Show this text.
+#
+# OUTPUT
+#
+#   $BACKUP_DIR/<project>-production-<timestamp>/
+#     database.sql     Plain mysqldump (--single-transaction, routines, triggers).
+#     files/           FILE_PATHS and ENV_PATHS, with the project's folder layout.
+#     manifest.json    Date, source, database name, deployed git commit.
+#   $BACKUP_DIR/<project>-local-before-restore-<timestamp>/   (local mode only)
+#     Same layout, with the local database and files as they were before.
+#
+#   Restore a folder by hand:
+#     mysql -u <user> -p <database> < database.sql
+#     cp -R files/<path> <project>/<path>
+#
+# CONFIG
+#
+#   Settings live in .backup-production.conf next to this script (gitignored).
+#   Copy .backup-production.conf.example to start; every key is commented there.
+#   Database credentials are never stored in the config: they are read at run
+#   time from the remote Laravel config and the local backend .env.
+#
+#   To reuse the tool in another project, copy this script,
+#   backup-production.cmd (Windows launcher), .backup-production.conf.example
+#   and the .gitattributes rules (LF for this script, CRLF for .cmd), then adjust
+#   the config and add .backup-production.conf to .gitignore.
+#
+# REQUIREMENTS
+#
+#   Local: bash (Git Bash on Windows), ssh, tar, gzip. The local mode also needs
+#   the mysql and mysqldump clients (PATH, LOCAL_MYSQL_BIN, or an auto-detected
+#   DBngin install) and php (PATH, LOCAL_PHP, or Herd's php.bat).
+#   Server: bash, php, mysqldump, tar, gzip, git, and passwordless SSH access.
+#
+# SSH KEY SETUP (passwordless access, needed once per machine)
+#
+#   1. Create a key if ~/.ssh/id_ed25519 does not exist yet:
+#        ssh-keygen -t ed25519
+#   2. Add a Host alias to ~/.ssh/config (C:\Users\<you>\.ssh\config on
+#      Windows) and use that alias as SSH_HOST. Keep one block per alias:
+#      with duplicates, ssh takes the first value of each setting.
+#        Host NolitaProduccion
+#            HostName 147.93.8.65
+#            User nolita
+#            Port 22
+#            IdentityFile ~/.ssh/id_ed25519
+#   3. Copy the public key to the server (asks for the password one last time):
+#        cat ~/.ssh/id_ed25519.pub | ssh NolitaProduccion "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+#      On CloudPanel servers the key can also be added from the panel:
+#      Site > SSH/FTP > edit the SSH user > SSH Keys.
+#   4. Test: ssh NolitaProduccion whoami   (must not ask for a password)
+#
+#   Still asks for a password? Diagnose in this order:
+#     - ssh -v NolitaProduccion true 2>&1 | grep -iE "identity|offering|denied"
+#       "no such identity" means a wrong IdentityFile path in ~/.ssh/config.
+#       "Offering public key" followed by "denied" means the server rejected it.
+#     - On the server: ssh-keygen -lf ~/.ssh/authorized_keys must list the same
+#       fingerprint that ssh -v printed when offering the key.
+#     - On the server: ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
+#       sshd ignores the key when the home folder is group or world writable
+#       (e.g. drwxrwx---). Fix with: chmod g-w,o-w ~
+#       Expected: ~ drwxr-x--- or drwxr-xr-x, ~/.ssh drwx------,
+#       authorized_keys -rw-------, all owned by the SSH user. CloudPanel can
+#       reset the home permissions, so check this first if it breaks again.
+#
+# NOTES FOR AGENTS
+#
+#   - Run it from a developer machine, never on the server. It only reads from
+#     production (mysqldump --single-transaction and tar, both non-locking).
+#   - The local mode is destructive for the local project: it drops and
+#     recreates the local database named in the backend .env and replaces the
+#     FILE_PATHS folders. Never pass --yes on the user's behalf without asking.
+#   - Backup folders contain production secrets (.env files): never commit,
+#     upload or paste them anywhere.
+#   - Flow: load_config > choose_mode > (local: tool and DB checks, confirm) >
+#     download_production (two SSH calls: REMOTE_DUMP_SCRIPT streams the gzipped
+#     dump, REMOTE_FILES_SCRIPT streams a tar.gz) > verify_dump > package_stage
+#     > (local: backup_local > restore_into_local).
+#   - Remote scripts receive REMOTE_ROOT as an argument; "~/" is expanded to the
+#     SSH user's home on the server.
+#   - Testing without a server: source this file (main only runs when it is
+#     executed), override run_remote to run "bash -s -- "$@"" locally, point
+#     REMOTE_ROOT at a local project, and use a scratch database name in a fake
+#     project's .env. See docs/DEPLOY_INFO.md for the user-facing summary.
 #
 set -euo pipefail
 
@@ -47,13 +136,6 @@ fail() { printf '\n\033[1;31mBackup failed: %s\033[0m\n' "$1" >&2; exit 1; }
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "missing command: $1"
-}
-
-is_windows() {
-  case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) return 0 ;;
-    *) return 1 ;;
-  esac
 }
 
 # Converts "D:\Vimana\Backups" or "D:/Vimana/Backups" into a path bash can use.
@@ -114,8 +196,8 @@ choose_mode() {
   [ -n "$MODE" ] && return 0
 
   printf '\nProduction backup for %s (%s)\n\n' "$PROJECT_NAME" "$SSH_HOST"
-  printf '  1) Save a backup zip in %s\n' "$BACKUP_DIR"
-  printf '  2) Load production into this local project (also saves the zip)\n\n'
+  printf '  1) Save a backup folder in %s\n' "$(native_path "$BACKUP_DIR")"
+  printf '  2) Load production into this local project (also saves the backup folder)\n\n'
 
   local answer
   read -r -p 'Choose an option [1/2]: ' answer
@@ -148,7 +230,9 @@ run_remote() {
 # cached config) and streams a gzipped, consistent dump to stdout.
 REMOTE_DUMP_SCRIPT='
 set -euo pipefail
-cd "$1"
+dir="$1"
+case "$dir" in "~") dir="$HOME" ;; "~/"*) dir="$HOME/${dir#"~/"}" ;; esac
+cd "$dir" 2>/dev/null || { echo "remote folder not found: $dir (user $(whoami), home $HOME)" >&2; exit 1; }
 db_output="$(php -r "
   require \"vendor/autoload.php\";
   \$app = require \"bootstrap/app.php\";
@@ -175,7 +259,9 @@ mysqldump --defaults-extra-file="$defaults_file" \
 # skipped) plus a small file with the deployed git commit.
 REMOTE_FILES_SCRIPT='
 set -euo pipefail
-cd "$1"
+dir="$1"
+case "$dir" in "~") dir="$HOME" ;; "~/"*) dir="$HOME/${dir#"~/"}" ;; esac
+cd "$dir" 2>/dev/null || { echo "remote folder not found: $dir (user $(whoami), home $HOME)" >&2; exit 1; }
 shift
 meta_dir="$(mktemp -d)"
 trap "rm -rf \"$meta_dir\"" EXIT
@@ -237,25 +323,21 @@ write_manifest() {
 EOF
 }
 
-# Zips the stage directory. Windows ships bsdtar (tar.exe) with zip support;
-# elsewhere use zip, or fall back to tar.gz when zip is not installed.
+# Turns a verified stage into a plain backup folder: the dump is stored as an
+# uncompressed database.sql (images are already compressed, so archiving them
+# saves nothing) and the folder is moved into $BACKUP_DIR. The stage lives in
+# $BACKUP_DIR too, so the move is instant. Sets PACKAGED_DIR.
 package_stage() {
-  local stage="$1" name="$2" target
+  local stage="$1" name="$2" target="$BACKUP_DIR/$2"
 
-  mkdir -p "$BACKUP_DIR"
-  if is_windows && [ -x /c/Windows/System32/tar.exe ]; then
-    target="$BACKUP_DIR/$name.zip"
-    /c/Windows/System32/tar.exe -a -c -f "$(native_path "$target")" -C "$(native_path "$stage")" . \
-      || fail "could not create $target"
-  elif command -v zip >/dev/null 2>&1; then
-    target="$BACKUP_DIR/$name.zip"
-    (cd "$stage" && zip -qr "$target" .) || fail "could not create $target"
-  else
-    target="$BACKUP_DIR/$name.tar.gz"
-    tar -czf "$target" -C "$stage" . || fail "could not create $target"
+  [ -e "$target" ] && fail "already exists: $target"
+  if [ -f "$stage/database.sql.gz" ]; then
+    gzip -d "$stage/database.sql.gz" || fail "could not decompress the dump"
   fi
+  mv "$stage" "$target" || fail "could not create $target"
 
-  info "Saved $(native_path "$target") ($(du -h "$target" | cut -f1))"
+  PACKAGED_DIR="$target"
+  info "Saved $(native_path "$target") ($(du -sh "$target" | cut -f1))"
 }
 
 # --- Local project -------------------------------------------------------------
@@ -364,13 +446,14 @@ backup_local() {
   package_stage "$stage" "$SLUG-local-before-restore-$TIMESTAMP"
 }
 
-# Imports a gzipped dump into a fresh database with the given name.
+# Imports a .sql or .sql.gz dump into a fresh database with the given name.
 import_database() {
-  local dump="$1" db_name="$2"
+  local dump="$1" db_name="$2" reader=(cat)
 
+  case "$dump" in *.gz) reader=(gzip -dc) ;; esac
   local_mysql -e "DROP DATABASE IF EXISTS \`$db_name\`; CREATE DATABASE \`$db_name\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" \
     || fail "could not recreate the local database $db_name"
-  gzip -dc "$dump" | local_mysql --default-character-set=utf8mb4 "$db_name" \
+  "${reader[@]}" "$dump" | local_mysql --default-character-set=utf8mb4 "$db_name" \
     || fail "the import into $db_name failed. Restore the safety backup if needed."
   info "Imported $(local_mysql -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$db_name'") tables into $db_name"
 }
@@ -400,7 +483,7 @@ restore_into_local() {
   local stage="$1"
 
   log "Loading production into the local project"
-  import_database "$stage/database.sql.gz" "$LOCAL_DB_NAME"
+  import_database "$stage/database.sql" "$LOCAL_DB_NAME"
 
   if [ -n "$POST_RESTORE_SQL" ]; then
     local_mysql -e "$POST_RESTORE_SQL" "$LOCAL_DB_NAME" \
@@ -430,10 +513,12 @@ restore_into_local() {
 main() {
   while [ $# -gt 0 ]; do
     case "$1" in
+      folder|local) MODE="$1" ;;
       --mode) MODE="${2:-}"; shift ;;
       --yes) ASSUME_YES=1 ;;
       --config) CONFIG_FILE="${2:-}"; shift ;;
-      -h|--help) sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+      # Prints the header comment block, from line 2 up to the first code line.
+      -h|--help) awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"; exit 0 ;;
       *) fail "unknown option: $1" ;;
     esac
     shift
@@ -466,10 +551,11 @@ main() {
 
   log "Packaging the production backup"
   package_stage "$stage" "$SLUG-production-$TIMESTAMP"
+  local production_dir="$PACKAGED_DIR"
 
   if [ "$MODE" = "local" ]; then
     backup_local
-    restore_into_local "$stage"
+    restore_into_local "$production_dir"
   fi
 
   log "Done"

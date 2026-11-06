@@ -77,19 +77,23 @@ Restore a backup: `gunzip -c ../backup/<file>.sql.gz | mysql -u <user> -p <db>`.
 
 ## Production Backups (`backup-production`)
 
-Run from a local machine (Git Bash on Windows), not on the server:
+Run from a local machine, not on the server. On Windows, `.\backup-production` in PowerShell or cmd goes through `backup-production.cmd`, which launches the script with Git Bash:
 
 ```bash
 cp .backup-production.conf.example .backup-production.conf   # once, gitignored
-./backup-production
+./backup-production              # interactive menu
+./backup-production folder       # option 1 directly
+./backup-production local        # option 2 directly (still asks to type 'yes')
+./backup-production local --yes  # option 2 with no questions
+./backup-production --help       # full usage, SSH key setup and agent notes
 ```
 
-It connects over SSH (`SSH_HOST`, an `~/.ssh/config` alias or `user@host`; key auth recommended) and offers two modes (`--mode folder|local`, `--yes` skips confirmations):
+It connects over SSH (`SSH_HOST`, an `~/.ssh/config` alias or `user@host`) and needs passwordless key access; the setup and troubleshooting steps (including the CloudPanel home-permission issue) are in the script header (`--help`). Modes:
 
-1. **Save a backup zip** in `BACKUP_DIR` (default `../backups`, next to the repository and outside it) as `<project>-production-<timestamp>.zip`: `database.sql.gz` (consistent `mysqldump`), `files/` with `FILE_PATHS` (product images and other uploads) and `ENV_PATHS` (production `.env` files, so the zip contains secrets), and `manifest.json` (date, database, deployed commit).
-2. **Load production into the local project**: saves the same zip, then a safety zip of the local database and files (`<project>-local-before-restore-<timestamp>.zip`), recreates the local database from the dump, replaces the local `FILE_PATHS`, runs `POST_RESTORE_SQL` (empties `jobs` so no production email is sent from local), `storage:link`, `optimize:clear`, and optionally `migrate`. Local `.env` files are never changed.
+1. **Save a backup folder** in `BACKUP_DIR` (default `../backups`, next to the repository and outside it), uncompressed, as `<project>-production-<timestamp>/`: `database.sql` (consistent `mysqldump`), `files/` with `FILE_PATHS` (product images and other uploads) and `ENV_PATHS` (production `.env` files, so the folder contains secrets), and `manifest.json` (date, database, deployed commit).
+2. **Load production into the local project**: saves the same folder, then a safety folder with the local database and files (`<project>-local-before-restore-<timestamp>/`), recreates the local database from the dump, replaces the local `FILE_PATHS`, runs `POST_RESTORE_SQL` (empties `jobs` so no production email is sent from local), `storage:link`, `optimize:clear`, and optionally `migrate`. Local `.env` files are never changed.
 
-Database credentials are read at run time from the remote Laravel config and the local backend `.env`. The local `mysql`/`mysqldump` clients are taken from `PATH`, `LOCAL_MYSQL_BIN`, or auto-detected from DBngin; PHP from `PATH`, `LOCAL_PHP`, or Herd's `php.bat`. The script is project-agnostic for Laravel + MySQL: copy `backup-production` and the example config to reuse it elsewhere.
+Database credentials are read at run time from the remote Laravel config and the local backend `.env`. The local `mysql`/`mysqldump` clients are taken from `PATH`, `LOCAL_MYSQL_BIN`, or auto-detected from DBngin; PHP from `PATH`, `LOCAL_PHP`, or Herd's `php.bat`. The script is project-agnostic for Laravel + MySQL: copy `backup-production`, `backup-production.cmd` and the example config to reuse it elsewhere.
 
 ## Queue Worker (Emails)
 

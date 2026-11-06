@@ -4,3 +4,4 @@
 fulldeploy text eol=lf
 backup-production text eol=lf
 .backup-production.conf.example text eol=lf
+*.cmd text eol=crlf
