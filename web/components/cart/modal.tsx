@@ -411,6 +411,10 @@ export default function CartModal({ shopConfig }: { shopConfig: ShopConfig }) {
                         </span>
                       </div>
                     )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Costo de envío</span>
+                      <span className="font-medium">No incluído</span>
+                    </div>
                     <div className="flex items-center justify-between border-t border-gray-100 pt-3">
                       <span className="text-base font-semibold">Total</span>
                       <AnimatedPrice

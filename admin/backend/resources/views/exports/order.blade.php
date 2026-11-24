@@ -317,12 +317,10 @@
             <td>{{ $label('subtotal') }}</td>
             <td class="numeric">{{ $money($totals['subtotal']) }}</td>
         </tr>
-        @if((float) $totals['delivery_fee'] != 0)
-            <tr>
-                <td>{{ $label('delivery_fee') }}</td>
-                <td class="numeric">{{ $money($totals['delivery_fee']) }}</td>
-            </tr>
-        @endif
+        <tr>
+            <td>{{ $label('delivery_fee') }}</td>
+            <td class="numeric">{{ (float) $totals['delivery_fee'] != 0 ? $money($totals['delivery_fee']) : 'No incluído' }}</td>
+        </tr>
         @if((float) $totals['payment_fee'] != 0)
             <tr>
                 <td>{{ $label('payment_fee') }}</td>
