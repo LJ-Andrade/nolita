@@ -27,7 +27,7 @@ Subtotal: {{ $money($data['subtotal'] ?? 0) }}
 @if ((float) ($data['coupon_discount'] ?? 0) > 0)
 Descuento @if (! empty($data['coupon_code']))({{ $data['coupon_code'] }})@endif: - {{ $money($data['coupon_discount']) }}
 @endif
-Envío: {{ (float) ($data['delivery_fee'] ?? 0) > 0 ? $money($data['delivery_fee']) : 'Sin cargo' }}
+Costo de envío: {{ (float) ($data['delivery_fee'] ?? 0) > 0 ? $money($data['delivery_fee']) : 'No incluído' }}
 @if ((float) ($data['payment_fee'] ?? 0) != 0)
 Ajuste por medio de pago: {{ $money($data['payment_fee']) }}
 @endif

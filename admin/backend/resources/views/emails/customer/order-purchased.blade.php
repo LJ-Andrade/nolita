@@ -61,8 +61,8 @@
             </tr>
         @endif
         <tr>
-            <td style="{{ $labelStyle }}">Envío</td>
-            <td align="right" style="{{ $valueStyle }}">{{ (float) ($data['delivery_fee'] ?? 0) > 0 ? $money($data['delivery_fee']) : 'Sin cargo' }}</td>
+            <td style="{{ $labelStyle }}">Costo de envío</td>
+            <td align="right" style="{{ $valueStyle }}">{{ (float) ($data['delivery_fee'] ?? 0) > 0 ? $money($data['delivery_fee']) : 'No incluído' }}</td>
         </tr>
         @if ((float) ($data['payment_fee'] ?? 0) != 0)
             <tr>
